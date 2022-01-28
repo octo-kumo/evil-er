@@ -87,9 +87,15 @@ public class InfoPanel extends JPanel implements ChangeListener<Entity> {
             public void setValueAt(Object value, int row, int column) {
                 super.setValueAt(value, row, column);
                 switch (column) {
-                    case 0 -> relationship.nodes.get(row).name = (String) value;
-                    case 1 -> relationship.specs.get(row).amm = (String) value;
-                    case 2 -> relationship.specs.get(row).total = (boolean) value;
+                    case 0:
+                        relationship.nodes.get(row).name = (String) value;
+                        break;
+                    case 1:
+                        relationship.specs.get(row).amm = (String) value;
+                        break;
+                    case 2:
+                        relationship.specs.get(row).total = (boolean) value;
+                        break;
                 }
                 evilEr.diagramPanel.diagram.repaint();
             }
@@ -161,9 +167,15 @@ public class InfoPanel extends JPanel implements ChangeListener<Entity> {
             public void setValueAt(Object value, int row, int column) {
                 super.setValueAt(value, row, column);
                 switch (column) {
-                    case 0 -> parent.attributes.get(row).name = (String) value;
-                    case 1 -> parent.attributes.get(row).derived = (boolean) value;
-                    case 2 -> parent.attributes.get(row).key = (boolean) value;
+                    case 0:
+                        parent.attributes.get(row).name = (String) value;
+                        break;
+                    case 1:
+                        parent.attributes.get(row).derived = (boolean) value;
+                        break;
+                    case 2:
+                        parent.attributes.get(row).key = (boolean) value;
+                        break;
                 }
                 evilEr.diagramPanel.diagram.repaint();
             }

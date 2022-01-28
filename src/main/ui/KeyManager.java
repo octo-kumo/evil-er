@@ -22,18 +22,30 @@ public class KeyManager implements KeyListener, KeyEventDispatcher {
     @Override
     public void keyPressed(KeyEvent e) {
         switch (e.getKeyCode()) {
-            case KeyEvent.VK_CONTROL -> CTRL = true;
-            case KeyEvent.VK_SHIFT -> SHIFT = true;
-            case KeyEvent.VK_ALT -> ALT = true;
+            case KeyEvent.VK_CONTROL:
+                CTRL = true;
+                break;
+            case KeyEvent.VK_SHIFT:
+                SHIFT = true;
+                break;
+            case KeyEvent.VK_ALT:
+                ALT = true;
+                break;
         }
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
         switch (e.getKeyCode()) {
-            case KeyEvent.VK_CONTROL -> CTRL = false;
-            case KeyEvent.VK_SHIFT -> SHIFT = false;
-            case KeyEvent.VK_ALT -> ALT = false;
+            case KeyEvent.VK_CONTROL:
+                CTRL = false;
+                break;
+            case KeyEvent.VK_SHIFT:
+                SHIFT = false;
+                break;
+            case KeyEvent.VK_ALT:
+                ALT = false;
+                break;
         }
     }
 
@@ -41,9 +53,15 @@ public class KeyManager implements KeyListener, KeyEventDispatcher {
     public boolean dispatchKeyEvent(KeyEvent e) {
         if (!diagram.acceptingKeys) return false;
         switch (e.getID()) {
-            case KeyEvent.KEY_PRESSED -> keyPressed(e);
-            case KeyEvent.KEY_RELEASED -> keyReleased(e);
-            case KeyEvent.KEY_TYPED -> keyTyped(e);
+            case KeyEvent.KEY_PRESSED:
+                keyPressed(e);
+                break;
+            case KeyEvent.KEY_RELEASED:
+                keyReleased(e);
+                break;
+            case KeyEvent.KEY_TYPED:
+                keyTyped(e);
+                break;
         }
         return false;
     }

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static main.renderer.DiagramGraphics.flatten;
@@ -86,7 +87,7 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
     }
 
     public void delete() {
-        List<Entity> targets = find(entity -> entity.highlighted).toList();
+        List<Entity> targets = find(entity -> entity.highlighted).collect(Collectors.toList());
         targets.forEach(this::delete);
         targets.forEach(this::burnBridges);
         repaint();
@@ -118,13 +119,18 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
         Vector pos = null;
         if (adding_buf != null) pos = adding_buf.pos();
         switch (type) {
-            case Select -> {
+            case Select:
                 adding_buf = null;
                 return;
-            }
-            case Entity -> adding_buf = new Entity().setName("Unnamed");
-            case Relationship -> adding_buf = new Relationship<>().setName("Unnamed");
-            case Attribute -> adding_buf = new Attribute().setParent(target).setName("Unnamed");
+            case Entity:
+                adding_buf = new Entity().setName("Unnamed");
+                break;
+            case Relationship:
+                adding_buf = new Relationship<>().setName("Unnamed");
+                break;
+            case Attribute:
+                adding_buf = new Attribute().setParent(target).setName("Unnamed");
+                break;
         }
         adding_buf.pos(pos);
     }
@@ -150,7 +156,7 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
             }
 
             Optional<Entity> found = getIntersect(e.getX(), e.getY());
-            if (found.isEmpty()) {
+            if (!found.isPresent()) {
                 setTarget(null);
                 diagramPanel.requestNameEdit(null);
                 return;
@@ -228,12 +234,10 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
             adding_buf.setY(e.getY());
             if (adding_buf instanceof Attribute) {
                 Optional<Entity> found = getIntersect(e.getX(), e.getY());
-                found.ifPresentOrElse(entity -> {
+                found.ifPresent(entity -> {
                     ((Attribute) adding_buf).parent = entity;
                     adding_buf.setX(e.getX());
                     adding_buf.setY(e.getY());
-                }, () -> {
-
                 });
             }
             repaint();

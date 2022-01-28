@@ -10,6 +10,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static main.renderer.DiagramGraphics.flatten;
@@ -90,7 +91,7 @@ public class Entity extends Node {
     }
 
     public static double applyForces(List<? extends Entity> entities, double pad) {
-        entities = flatten(entities).toList();
+        entities = flatten(entities).collect(Collectors.toList());
 
         int len = entities.size();
         Vector[] forces = IntStream.range(0, len).mapToObj(i -> new Vector()).toArray(Vector[]::new);

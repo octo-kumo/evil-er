@@ -11,11 +11,11 @@ public class FancyLine extends Path2D.Double {
         boolean horizontal = Math.abs(dy) < Math.abs(dx);
         double mid = horizontal ? (x1 + x2) / 2 : (y1 + y2) / 2;
         switch (style) {
-            case STRAIGHT -> {
+            case STRAIGHT:
                 moveTo(x1, y1);
                 lineTo(x2, y2);
-            }
-            case AXIS_ALIGNED -> {
+                break;
+            case AXIS_ALIGNED:
                 moveTo(x1, y1);
                 if (horizontal) {
                     lineTo(mid, y1);
@@ -25,12 +25,12 @@ public class FancyLine extends Path2D.Double {
                     lineTo(x2, mid);
                 }
                 lineTo(x2, y2);
-            }
-            case CURVE -> {
+                break;
+            case CURVE:
                 moveTo(x1, y1);
                 if (horizontal) curveTo(mid, y1, mid, y2, x2, y2);
                 else curveTo(x1, mid, x2, mid, x2, y2);
-            }
+                break;
         }
     }
 }

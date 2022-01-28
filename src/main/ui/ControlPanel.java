@@ -29,10 +29,10 @@ public class ControlPanel extends JPanel {
         this.evilEr = evilEr;
         setLayout(new FlowLayout());
         add(lock = new JCheckBox("Lock"));
-        add(typeBox = new JComboBox<>(Entity.Types.values()) {{
+        add(typeBox = new JComboBox<Entity.Types>(Entity.Types.values()) {{
             addActionListener(evt -> evilEr.diagramPanel.diagram.setAddingType((Entity.Types) getSelectedItem()));
         }});
-        add(styleBox = new JComboBox<>(Line.LineStyle.values()) {{
+        add(styleBox = new JComboBox<Line.LineStyle>(Line.LineStyle.values()) {{
             addActionListener(evt -> evilEr.diagramPanel.diagram.setStyle((Line.LineStyle) getSelectedItem()));
         }});
         add(new JCheckBox("Connect") {{

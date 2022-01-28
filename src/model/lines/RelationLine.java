@@ -11,7 +11,7 @@ public class RelationLine<T extends Node> extends Line<Relationship<T>, T> {
     public Relationship.RelationshipSpec spec;
 
     private static final BasicStroke base = new BasicStroke(4, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
-    private static final BasicStroke center = new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
+    private static final BasicStroke center = new BasicStroke(2.8f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
 
     public RelationLine(Relationship<T> nodeA, T nodeB, Relationship.RelationshipSpec spec) {
         super(nodeA, nodeB);
