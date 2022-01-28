@@ -20,6 +20,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -80,10 +81,34 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
 
         entities.forEach(d -> d.predraw(g));
         entities.forEach(d -> d.draw(g));
+
+        if (exporting) return;
         g.setColor(Color.GRAY);
         if (adding_buf != null) drawPendingAddition(g);
         if (connecting && connectBase != null) drawPendingConnection(g);
 //        g.draw(getAABB());
+    }
+
+    boolean exporting = false;
+
+    public BufferedImage export() {
+        setTarget(null);
+        find(entity -> entity.highlighted).forEach(entity -> entity.highlighted = false);
+
+        Rectangle2D.Double aabb = getAABB();
+        int padding = 20;
+        aabb.x -= padding;
+        aabb.y -= padding;
+        aabb.width += 2 * padding;
+        aabb.height += 2 * padding;
+        BufferedImage img = new BufferedImage((int) aabb.width, (int) aabb.height, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = img.createGraphics();
+        g.translate(-aabb.x, -aabb.y);
+        exporting = true;
+        evilEr.diagramPanel.diagram.draw(new DiagramGraphics(g));
+        exporting = false;
+        g.dispose();
+        return img;
     }
 
     public void delete() {

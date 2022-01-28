@@ -1,8 +1,6 @@
 package main.ui;
 
 import main.EvilEr;
-import main.renderer.DiagramGraphics;
-import model.Vector;
 import model.entities.Entity;
 import model.lines.Line;
 
@@ -11,14 +9,11 @@ import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
+import java.awt.datatransfer.*;
 import java.io.File;
 import java.io.IOException;
 
-import static main.renderer.DiagramGraphics.flatten;
-
-public class ControlPanel extends JPanel {
+public class ControlPanel extends JPanel implements ClipboardOwner {
 
     private final EvilEr evilEr;
     public final JCheckBox lock;
@@ -75,21 +70,51 @@ public class ControlPanel extends JPanel {
                 }
             });
         }});
+        add(new JButton("Copy") {{
+            addActionListener(evt -> {
+                saveToClipboard();
+            });
+        }});
     }
 
     private void saveTo(File file) throws IOException {
-        int padding = 20;
         if (!file.getName().contains(".")) file = new File(file.getAbsolutePath() + ".png");
-        Rectangle2D.Double aabb = evilEr.diagramPanel.diagram.getAABB();
-        aabb.x -= padding;
-        aabb.y -= padding;
-        aabb.width += 2 * padding;
-        aabb.height += 2 * padding;
-        BufferedImage img = new BufferedImage((int) aabb.width, (int) aabb.height, BufferedImage.TYPE_4BYTE_ABGR);
-        Graphics2D g = img.createGraphics();
-        g.translate(-aabb.x, -aabb.y);
-        evilEr.diagramPanel.diagram.draw(new DiagramGraphics(g));
-        g.dispose();
-        ImageIO.write(img, "png", file);
+        ImageIO.write(evilEr.diagramPanel.diagram.export(), "png", file);
     }
+
+    private void saveToClipboard() {
+        TransferableImage transferable = new TransferableImage(evilEr.diagramPanel.diagram.export());
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(transferable, this);
+    }
+
+    @Override
+    public void lostOwnership(Clipboard clipboard, Transferable contents) {
+        System.out.println("Lost Clipboard Ownership");
+    }
+
+    private static class TransferableImage implements Transferable {
+        private final Image i;
+
+        public TransferableImage(Image i) {
+            this.i = i;
+        }
+
+        public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
+            if (flavor.equals(DataFlavor.imageFlavor) && i != null) return i;
+            else throw new UnsupportedFlavorException(flavor);
+        }
+
+        public DataFlavor[] getTransferDataFlavors() {
+            DataFlavor[] flavors = new DataFlavor[1];
+            flavors[0] = DataFlavor.imageFlavor;
+            return flavors;
+        }
+
+        public boolean isDataFlavorSupported(DataFlavor flavor) {
+            DataFlavor[] flavors = getTransferDataFlavors();
+            for (DataFlavor dataFlavor : flavors) if (flavor.equals(dataFlavor)) return true;
+            return false;
+        }
+    }
+
 }
