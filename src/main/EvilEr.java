@@ -28,8 +28,12 @@ public class EvilEr extends JPanel {
     }
 
     public static void main(String... args) {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        }
         JFrame frame = new JFrame("Evil ER");
-        frame.setAlwaysOnTop(true);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setContentPane(new EvilEr());
         frame.pack();

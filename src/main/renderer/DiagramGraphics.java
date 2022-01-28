@@ -1,7 +1,7 @@
 package main.renderer;
 
-import model.entities.DrawContext;
 import model.entities.Entity;
+import model.i.DrawContext;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;

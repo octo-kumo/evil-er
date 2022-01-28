@@ -3,6 +3,7 @@ package model.entities;
 import model.Node;
 import model.Vector;
 import main.renderer.DiagramGraphics;
+import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -14,6 +15,10 @@ import java.util.stream.IntStream;
 import static main.renderer.DiagramGraphics.flatten;
 
 public class Entity extends Node {
+    public enum Types {
+        Select, Entity, Relationship, Attribute
+    }
+
     public static Color HIGHLIGHTED = new Color(230, 230, 230);
     public static final double WIDTH = 100;
     public static final double HEIGHT = 40;
@@ -23,14 +28,6 @@ public class Entity extends Node {
     public String name;
     public boolean weak;
     public boolean highlighted = false;
-
-    public double getX() {
-        return x;
-    }
-
-    public double getY() {
-        return y;
-    }
 
     public ArrayList<Attribute> attributes;
 
@@ -92,7 +89,7 @@ public class Entity extends Node {
         return tx.createTransformedShape(getShape());
     }
 
-    public static double applyForces(List<? extends Entity> entities, Vector center, double pad) {
+    public static double applyForces(List<? extends Entity> entities, double pad) {
         entities = flatten(entities).toList();
 
         int len = entities.size();
@@ -103,17 +100,18 @@ public class Entity extends Node {
             boolean aIsAttr = A instanceof Attribute;
             boolean aIsRel = A instanceof Relationship;
 
-            Vector diff = (aIsAttr ? ((Attribute) A).parent.pos() : center).minus(A.pos());
-            diff.x *= Entity.HEIGHT / Entity.WIDTH;
+            if (aIsAttr) {
+                Vector diff = ((Attribute) A).parent.pos().minus(A.pos());
+                diff.x *= Entity.HEIGHT / Entity.WIDTH;
 
-            Vector force = force(diff, Entity.A, B, pad);
-            forces[a].incre(force);
+                Vector force = force(diff, Entity.A, B, pad);
+                forces[a].incre(force);
+            }
 
             for (int b = 0; b < len; b++) {
                 if (a == b) continue;
-//                if(a instanceof Attribute){
                 Entity B = entities.get(b);
-                diff = B.pos().minus(A.pos());
+                Vector diff = B.pos().minus(A.pos());
                 diff.x *= Entity.HEIGHT / Entity.WIDTH;
 
                 boolean bIsAttr = B instanceof Attribute;
@@ -124,7 +122,7 @@ public class Entity extends Node {
                 boolean onlyA = aIsAttr && !bothAttr;
                 boolean onlyB = bIsAttr && !bothAttr;
 
-                force = force(diff, Entity.A, Entity.B, bothAttr ? pad / 1.5 : anyAttr ? pad / 1.3 : pad);
+                Vector force = force(diff, Entity.A, Entity.B, bothAttr ? pad / 1.5 : anyAttr ? pad / 1.3 : pad);
                 if (force.dot(B.pos().minus(A.pos())) > 0) {
                     // skip attribute attraction between attributes of different entities
                     if (bothAttr && ((Attribute) A).parent != ((Attribute) B).parent) continue;
@@ -147,9 +145,10 @@ public class Entity extends Node {
         return total;
     }
 
-    public void pos(Vector n) {
-        this.x = n.x;
-        this.y = n.y;
+    public Entity pos(@Nullable Vector n) {
+        if (n == null) return this;
+        setPos(n.x, n.y);
+        return this;
     }
 
     public Vector pos() {

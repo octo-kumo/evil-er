@@ -1,4 +1,4 @@
-package model.entities;
+package model.i;
 
 import model.lines.Line;
 

@@ -10,6 +10,7 @@ public class PlaceholderTextField extends JTextField {
     private String placeholder;
 
     public PlaceholderTextField() {
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
     }
 
     public PlaceholderTextField(
@@ -17,18 +18,22 @@ public class PlaceholderTextField extends JTextField {
             final String pText,
             final int pColumns) {
         super(pDoc, pText, pColumns);
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
     }
 
     public PlaceholderTextField(final int pColumns) {
         super(pColumns);
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
     }
 
     public PlaceholderTextField(final String pText) {
         super(pText);
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
     }
 
     public PlaceholderTextField(final String pText, final int pColumns) {
         super(pText, pColumns);
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
     }
 
     public String getPlaceholder() {

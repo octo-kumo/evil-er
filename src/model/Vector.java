@@ -12,11 +12,19 @@ public class Vector extends Point2D.Double {
     }
 
     public Vector add(Vector other) {
-        return new Vector(this.x + other.x, this.y + other.y);
+        return add(other.x, other.y);
+    }
+
+    public Vector add(double x, double y) {
+        return new Vector(this.x + x, this.y + y);
     }
 
     public Vector minus(Vector other) {
-        return new Vector(this.x - other.x, this.y - other.y);
+        return minus(other.x, other.y);
+    }
+
+    public Vector minus(double x, double y) {
+        return new Vector(this.x - x, this.y - y);
     }
 
     public Vector times(double scale) {

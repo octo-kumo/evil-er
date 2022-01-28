@@ -5,11 +5,27 @@ import main.renderer.DiagramGraphics;
 import java.awt.geom.AffineTransform;
 
 public abstract class Node implements Drawable {
-    public double x, y;
+    protected double x, y;
+
+    public double getX() {
+        return x;
+    }
+
+    public double getY() {
+        return y;
+    }
+
+    public double setX(double x) {
+        return this.x = x;
+    }
+
+    public double setY(double y) {
+        return this.y = y;
+    }
 
     public <T extends Node> T setPos(double x, double y) {
-        this.x = x;
-        this.y = y;
+        setX(x);
+        setY(y);
         return (T) this;
     }
 

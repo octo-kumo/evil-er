@@ -1,6 +1,5 @@
 package model.entities;
 
-import model.Vector;
 import main.renderer.DiagramGraphics;
 
 import java.awt.*;
@@ -21,9 +20,12 @@ public class Attribute extends Entity {
         return y + (parent == null ? 0 : parent.getY());
     }
 
-    public void pos(Vector n) {
-        this.x = n.x - (parent == null ? 0 : parent.getX());
-        this.y = n.y - (parent == null ? 0 : parent.getY());
+    public double setX(double x) {
+        return this.x = x - (parent == null ? 0 : parent.getX());
+    }
+
+    public double setY(double y) {
+        return this.y = y - (parent == null ? 0 : parent.getY());
     }
 
     public Attribute setParent(Entity parent) {

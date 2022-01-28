@@ -17,9 +17,6 @@ public class KeyManager implements KeyListener, KeyEventDispatcher {
 
     @Override
     public void keyTyped(KeyEvent e) {
-        switch (e.getKeyChar()) {
-            case KeyEvent.VK_DELETE, KeyEvent.VK_BACK_SPACE -> diagram.delete();
-        }
     }
 
     @Override
