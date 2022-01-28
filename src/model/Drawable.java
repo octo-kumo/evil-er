@@ -1,10 +1,10 @@
 package model;
 
-import java.awt.*;
+import main.renderer.DiagramGraphics;
 
 public interface Drawable {
-    default void predraw(Graphics2D g) {
+    default void predraw(DiagramGraphics g) {
     }
 
-    void draw(Graphics2D g);
+    void draw(DiagramGraphics g);
 }
