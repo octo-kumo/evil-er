@@ -21,6 +21,8 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import static main.ui.Prompts.report;
+
 public class EvilMenu extends JMenuBar {
 
     private final EvilEr evilEr;
@@ -37,6 +39,7 @@ public class EvilMenu extends JMenuBar {
                             evilEr.diagramPanel.diagram.entities.addAll(deserialized);
                             evilEr.diagramPanel.diagram.repaint();
                         } catch (IOException e) {
+                            report(e);
                             e.printStackTrace();
                         }
                     }
@@ -48,6 +51,7 @@ public class EvilMenu extends JMenuBar {
                     try (FileWriter fw = new FileWriter("session.json")) {
                         fw.write(json);
                     } catch (IOException e) {
+                        report(e);
                         e.printStackTrace();
                     }
                     ArrayList<Entity> deserialized = Serializer.deserialize(json);
@@ -64,6 +68,7 @@ public class EvilMenu extends JMenuBar {
                         try (Writer writer = new FileWriter(jsonChooser.getFinal())) {
                             Serializer.serialize(evilEr.diagramPanel.diagram.entities, writer);
                         } catch (IOException e) {
+                            report(e);
                             e.printStackTrace();
                         }
                     }
@@ -83,6 +88,7 @@ public class EvilMenu extends JMenuBar {
                     if (JFileChooser.APPROVE_OPTION == imageChooser.showSaveDialog(evilEr)) try {
                         ImageIO.write(evilEr.diagramPanel.diagram.export(), "PNG", imageChooser.getFinal());
                     } catch (IOException e) {
+                        report(e);
                         e.printStackTrace();
                     }
                 }

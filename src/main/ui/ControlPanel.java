@@ -14,6 +14,8 @@ import java.awt.datatransfer.*;
 import java.io.File;
 import java.io.IOException;
 
+import static main.ui.Prompts.report;
+
 public class ControlPanel extends JPanel implements ClipboardOwner {
 
     private final EvilEr evilEr;
@@ -58,6 +60,7 @@ public class ControlPanel extends JPanel implements ClipboardOwner {
                     try {
                         saveTo(fileToSave);
                     } catch (IOException e) {
+                        report(e);
                         e.printStackTrace();
                     }
                 }

@@ -8,6 +8,8 @@ import main.ui.InfoPanel;
 import javax.swing.*;
 import java.awt.*;
 
+import static main.ui.Prompts.report;
+
 public class EvilEr extends JPanel {
     private static EvilEr evilEr;
     public final ControlPanel controlPanel;
@@ -34,6 +36,7 @@ public class EvilEr extends JPanel {
             System.setProperty("apple.laf.useScreenMenuBar", "true");
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+            report(e);
             e.printStackTrace();
         }
         JFrame frame = new JFrame("Evil ER");
