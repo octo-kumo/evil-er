@@ -55,7 +55,7 @@ public class Attribute extends Entity {
 
     @Override
     public Shape getShape(double width, double height) {
-        return new Ellipse2D.Double(-width / 2d, -height / 2d, width, height);
+        return new Ellipse2D.Double(-width * 0.7 / 2d, -height * 0.7 / 2d, width * 0.7, height * 0.7);
     }
 
     public boolean isKey() {
