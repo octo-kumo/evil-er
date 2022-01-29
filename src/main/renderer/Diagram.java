@@ -2,7 +2,7 @@ package main.renderer;
 
 import main.EvilEr;
 import main.ui.DiagramPanel;
-import main.ui.KeyManager;
+import main.ui.components.KeyManager;
 import model.Drawable;
 import model.Vector;
 import model.entities.Attribute;
@@ -11,6 +11,7 @@ import model.entities.Relationship;
 import model.i.ChangeListener;
 import model.i.DrawContext;
 import model.lines.Line;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
@@ -51,15 +52,17 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
         entities = new ArrayList<>();
         listeners = new ArrayList<>();
 
-        Entity a = new Entity().setName("Entity A").setPos(500, 500);
-        Entity b = new Entity().setName("Entity B").setWeak(true).setPos(300, 500);
-        a.addAttribute(new Attribute().setName("haha").setPos(0, 100));
-        a.addAttribute(new Attribute().setName("nice").setWeak(true).setPos(200, 0));
-        Relationship<Entity> r = new Relationship<>()
-                .addNode(a, new Relationship.RelationshipSpec("1", false))
-                .addNode(b, new Relationship.RelationshipSpec("N", true))
-                .setName("R")
-                .setPos(400, 300);
+        Entity a = new Entity().setName("Entity A");
+        a.set(500, 500);
+        Entity b = new Entity().setName("Entity B").setWeak(true);
+        b.set(300, 500);
+        a.addAttribute((Attribute) new Attribute().setName("haha").set(0, 100));
+        a.addAttribute((Attribute) new Attribute().setName("nice").setWeak(true).set(200, 0));
+        Relationship<Entity> r = new Relationship<>();
+        r.addNode(a, new Relationship.RelationshipSpec("1", false));
+        r.addNode(b, new Relationship.RelationshipSpec("N", true));
+        r.setName("R");
+        r.set(400, 300);
         entities.add(a);
         entities.add(b);
         entities.add(r);
@@ -93,17 +96,15 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
 
     public BufferedImage export() {
         setTarget(null);
-        find(entity -> entity.highlighted).forEach(entity -> entity.highlighted = false);
+        find(Entity::isHighlighted).forEach(entity -> entity.setHighlighted(false));
 
-        Rectangle2D.Double aabb = getAABB();
+        Rectangle2D aabb = getAABB();
         int padding = 20;
-        aabb.x -= padding;
-        aabb.y -= padding;
-        aabb.width += 2 * padding;
-        aabb.height += 2 * padding;
-        BufferedImage img = new BufferedImage((int) aabb.width, (int) aabb.height, BufferedImage.TYPE_INT_RGB);
+        aabb.add(aabb.getMinX() - padding, aabb.getMinY() - padding);
+        aabb.add(aabb.getMaxX() + padding, aabb.getMaxY() + padding);
+        BufferedImage img = new BufferedImage((int) aabb.getWidth(), (int) aabb.getHeight(), BufferedImage.TYPE_INT_RGB);
         Graphics2D g = img.createGraphics();
-        g.translate(-aabb.x, -aabb.y);
+        g.translate(-aabb.getX(), -aabb.getY());
         exporting = true;
         evilEr.diagramPanel.diagram.draw(new DiagramGraphics(g));
         exporting = false;
@@ -112,7 +113,7 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
     }
 
     public void delete() {
-        List<Entity> targets = find(entity -> entity.highlighted).collect(Collectors.toList());
+        List<Entity> targets = find(Entity::isHighlighted).collect(Collectors.toList());
         targets.forEach(this::delete);
         targets.forEach(this::burnBridges);
         repaint();
@@ -120,7 +121,7 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
 
     public void delete(Entity entity) {
         if (target == entity) setTarget(null);
-        if (entity instanceof Attribute) ((Attribute) entity).parent.removeAttribute((Attribute) entity);
+        if (entity instanceof Attribute) ((Attribute) entity).getParent().removeAttribute((Attribute) entity);
         else entities.remove(entity);
     }
 
@@ -133,16 +134,16 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
      */
     private Entity adding_buf;
     private Entity target;
-    private double sx, sy, ex, ey;
+    private final Vector dragStart = new Vector(), targetStart = new Vector();
 
     private boolean connecting;
     private Relationship<Entity> connectBase;
     private Entity connectTarget;
-    private double cx, cy;
+    private Vector connectPos = new Vector();
 
     public void setAddingType(Entity.Types type) {
         Vector pos = null;
-        if (adding_buf != null) pos = adding_buf.pos();
+        if (adding_buf != null) pos = adding_buf.clone();
         switch (type) {
             case Select:
                 adding_buf = null;
@@ -157,46 +158,43 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
                 adding_buf = new Attribute().setParent(target).setName("Unnamed");
                 break;
         }
-        adding_buf.pos(pos);
+        adding_buf.set(pos);
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1) {
 
-            if (connecting) {
-                if (connectTarget != null && connectBase != null) {
-                    connectBase.addNode(connectTarget, new Relationship.RelationshipSpec("", false));
-                    repaint();
-                    return;
-                }
+            if (connecting && connectTarget != null && connectBase != null) {
+                connectBase.addNode(connectTarget, new Relationship.RelationshipSpec("", false));
+                repaint();
+                return;
             }
+            dragStart.set(e.getX(), e.getY());
 
-            sx = e.getX();
-            sy = e.getY();
-
+            /* SELECT ELEMENT */
+            /* IF NOT SELECT MULTIPLE, CLEAR HIGHLIGHT */
             if (target != null && !e.isShiftDown()) {
-                find(entity -> entity.highlighted).forEach(entity -> entity.highlighted = false); // clear previous selection
+                find(Entity::isHighlighted).forEach(entity -> entity.setHighlighted(false)); // clear previous selection
                 repaint();
             }
 
-            Optional<Entity> found = getIntersect(e.getX(), e.getY());
+            Optional<Entity> found = getIntersect(dragStart);
             if (!found.isPresent()) {
                 setTarget(null);
                 diagramPanel.requestNameEdit(null);
                 return;
             }
             setTarget(found.get());
-            target.highlighted = true;
-            ex = target.getX();
-            ey = target.getY();
+            targetStart.set(target);
             repaint();
         }
     }
 
-    public void setTarget(Entity entity) {
+    public void setTarget(@Nullable Entity entity) {
         listeners.forEach(e -> e.onChange(entity));
         target = entity;
+        if (entity != null) target.setHighlighted(true);
         if (connecting && entity instanceof Relationship) connectBase = (Relationship<Entity>) entity;
     }
 
@@ -204,16 +202,13 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
     public void mouseReleased(MouseEvent e) {
     }
 
+    public static double gridSize = 20;
+
     @Override
     public void mouseDragged(MouseEvent e) {
         if (target == null) return;
-        target.setX(ex + (e.getX() - sx));
-        target.setY(ey + (e.getY() - sy));
-        if (e.isControlDown()) {
-            int gridSize = 20;
-            target.setX((int) ((target.getX() + gridSize / 2) / gridSize) * gridSize);
-            target.setY((int) ((target.getY() + gridSize / 2) / gridSize) * gridSize);
-        }
+        target.set(targetStart.add(e.getX(), e.getY()).minus(dragStart));
+        if (e.isControlDown()) target.set(target).div(gridSize).round().scale(gridSize);
         repaint();
     }
 
@@ -222,11 +217,11 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
         if (e.getButton() == MouseEvent.BUTTON1) {
             if (adding_buf != null) {
                 if (adding_buf instanceof Attribute) {
-                    Entity parent = ((Attribute) adding_buf).parent;
+                    Entity parent = ((Attribute) adding_buf).getParent();
                     if (parent == null) return;
                     parent.addAttribute((Attribute) adding_buf);
                 } else entities.add(adding_buf);
-                adding_buf.highlighted = true;
+                adding_buf.setHighlighted(true);
                 setTarget(adding_buf);
                 if (connecting && connectBase != null && adding_buf.getClass() == Entity.class) {
                     connectBase.addNode(adding_buf, new Relationship.RelationshipSpec("", false));
@@ -255,27 +250,25 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
     @Override
     public void mouseMoved(MouseEvent e) {
         if (adding_buf != null) {
-            adding_buf.setX(e.getX());
-            adding_buf.setY(e.getY());
-            if (adding_buf instanceof Attribute) {
-                Optional<Entity> found = getIntersect(e.getX(), e.getY());
-                found.ifPresent(entity -> {
-                    ((Attribute) adding_buf).parent = entity;
-                    adding_buf.setX(e.getX());
-                    adding_buf.setY(e.getY());
-                });
-            }
-            repaint();
+            adding_buf.set(e.getX(), e.getY());
+            if (adding_buf instanceof Attribute) getIntersect(connectPos.set(e.getX(), e.getY()))
+                    .ifPresent(entity -> ((Attribute) adding_buf)
+                            .setParent(entity).set(e.getX(), e.getY()));
         }
-        if (connectBase != null) {
-            Optional<Entity> found = getIntersect(cx = e.getX(), cy = e.getY());
-            connectTarget = found.filter(entity -> !(entity instanceof Relationship) && !(entity instanceof Attribute)).orElse(null);
-            repaint();
+        if (connecting && connectBase != null) {
+            connectTarget = getIntersect(connectPos.set(e.getX(), e.getY()))
+                    .filter(entity -> !(entity instanceof Relationship) && !(entity instanceof Attribute))
+                    .orElse(null);
         }
+        repaint();
+    }
+
+    public Optional<Entity> getIntersect(Vector vector) {
+        return find(entity -> entity.getShapeWorld().contains(vector)).findAny();
     }
 
     public Optional<Entity> getIntersect(double x, double y) {
-        return find(entity -> entity.getShapeWorld().contains(x, y)).findAny();
+        return getIntersect(new Vector(x, y));
     }
 
     public Stream<Entity> find(Predicate<Entity> predicate) {
@@ -298,17 +291,17 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
 
     private void drawPendingConnection(DiagramGraphics g) {
         if (connectTarget != null)
-            g.dashed(new Line2D.Double(connectBase.getX(), connectBase.getY(), connectTarget.getX(), connectTarget.getY()));
+            g.dashed(new Line2D.Double(connectBase, connectTarget));
         else
-            g.dashed(new Line2D.Double(connectBase.getX(), connectBase.getY(), cx, cy));
+            g.dashed(new Line2D.Double(connectBase, connectPos));
     }
 
     private void drawPendingAddition(DiagramGraphics g) {
         AffineTransform transform = g.getTransform();
         if (adding_buf instanceof Attribute) {
-            Entity parent = ((Attribute) adding_buf).parent;
+            Entity parent = ((Attribute) adding_buf).getParent();
             if (parent != null) {
-                g.draw(new Line2D.Double(parent.getX(), parent.getY(), adding_buf.getX(), adding_buf.getY()));
+                g.draw(new Line2D.Double(parent, adding_buf));
                 g.translate(parent.getX(), parent.getY());
             }
         }
@@ -316,18 +309,8 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
         g.setTransform(transform);
     }
 
-    public Rectangle2D.Double getAABB() {
-        Vector tl = new Vector(Double.MAX_VALUE, Double.MAX_VALUE), tr = new Vector();
-        flatten(evilEr.diagramPanel.diagram.entities).map(e -> e.getShapeWorld().getBounds()).forEach(r -> {
-            synchronized (tl) {
-                tl.x = Math.min(r.x, tl.x);
-                tl.y = Math.min(r.y, tl.y);
-            }
-            synchronized (tr) {
-                tr.x = Math.max(r.x + r.width, tr.x);
-                tr.y = Math.max(r.y + r.height, tr.y);
-            }
-        });
-        return new Rectangle2D.Double(tl.x, tl.y, tr.x - tl.x, tr.y - tl.y);
+    public Rectangle2D getAABB() {
+        return flatten(evilEr.diagramPanel.diagram.entities).map(e -> e.getShapeWorld().getBounds2D())
+                .reduce(Rectangle2D::createUnion).orElse(new Rectangle2D.Double());
     }
 }

@@ -31,15 +31,15 @@ public class DiagramPanel extends JPanel implements ComponentListener {
     }
 
     public void requestNameEdit(Entity entity) {
-        if (inputTarget != null) inputTarget.name = input.getText();
+        if (inputTarget != null) inputTarget.setName(input.getText());
 
         if ((inputTarget = entity) == null) {
             input.setVisible(false);
             diagram.acceptingKeys = true;
         } else {
             input.setVisible(true);
-            input.setText(entity.name);
-            entity.name = "";
+            input.setText(entity.getName());
+            entity.setName("");
             input.setBounds((int) (entity.getX() - Entity.WIDTH / 2), (int) (entity.getY() - Entity.HEIGHT / 4), (int) Entity.WIDTH, (int) Entity.HEIGHT / 2);
             input.grabFocus();
             input.selectAll();

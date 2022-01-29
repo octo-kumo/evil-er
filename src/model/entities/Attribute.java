@@ -1,54 +1,56 @@
 package model.entities;
 
+import com.google.gson.annotations.Expose;
 import main.renderer.DiagramGraphics;
+import model.Vector;
 
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 
 public class Attribute extends Entity {
-    public Entity parent;
-
-    public boolean key;
-    public boolean derived;
+    private Entity parent;
+    @Expose
+    private boolean key;
+    @Expose
+    private boolean derived;
 
     public double getX() {
-        return x + (parent == null ? 0 : parent.getX());
+        return x + (getParent() == null ? 0 : getParent().getX());
     }
 
     public double getY() {
-        return y + (parent == null ? 0 : parent.getY());
+        return y + (getParent() == null ? 0 : getParent().getY());
     }
 
-    public double setX(double x) {
-        return this.x = x - (parent == null ? 0 : parent.getX());
+    public void setX(double x) {
+        this.x = x - (getParent() == null ? 0 : getParent().getX());
     }
 
-    public double setY(double y) {
-        return this.y = y - (parent == null ? 0 : parent.getY());
+    public void setY(double y) {
+        this.y = y - (getParent() == null ? 0 : getParent().getY());
     }
 
-    public Attribute setParent(Entity parent) {
-        this.parent = parent;
-        return this;
+    public Vector truePosition() {
+        return new Vector(x, y);
     }
 
     public void drawShape(DiagramGraphics g, Shape shape) {
         Color toUse = g.getColor();
-        if (isDerived()) g.dashed(shape, highlighted ? HIGHLIGHTED : Color.WHITE, toUse);
-        else g.draw(shape, highlighted ? HIGHLIGHTED : Color.WHITE, toUse);
+        if (isDerived()) g.dashed(shape, isHighlighted() ? HIGHLIGHTED : Color.WHITE, toUse);
+        else g.draw(shape, isHighlighted() ? HIGHLIGHTED : Color.WHITE, toUse);
     }
 
     @Override
     public void prepaint(DiagramGraphics g) {
         super.prepaint(g);
-        drawShape(g, new Line2D.Double(0, 0, -x, -y));
+        drawShape(g, new Line2D.Double(Vector.ZERO, truePosition().neg()));
     }
 
     @Override
     public void paint(DiagramGraphics g) {
         super.paint(g);
-        if (isKey()) drawShape(g, g.lineUnderString(name, 0, 3));
+        if (isKey()) drawShape(g, g.lineUnderString(getName(), 0, 3));
     }
 
     @Override
@@ -71,6 +73,15 @@ public class Attribute extends Entity {
 
     public Attribute setDerived(boolean derived) {
         this.derived = derived;
+        return this;
+    }
+
+    public Entity getParent() {
+        return parent;
+    }
+
+    public Attribute setParent(Entity parent) {
+        this.parent = parent;
         return this;
     }
 }

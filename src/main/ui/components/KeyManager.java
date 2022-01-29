@@ -1,4 +1,4 @@
-package main.ui;
+package main.ui.components;
 
 import main.renderer.Diagram;
 

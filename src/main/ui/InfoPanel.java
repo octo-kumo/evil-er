@@ -1,7 +1,8 @@
 package main.ui;
 
 import main.EvilEr;
-import model.Vector;
+import main.ui.components.ButtonColumn;
+import main.ui.components.PlaceholderTextField;
 import model.entities.Attribute;
 import model.entities.Entity;
 import model.entities.Relationship;
@@ -39,20 +40,20 @@ public class InfoPanel extends JPanel implements ChangeListener<Entity> {
         panel.setBorder(new TitledBorder("Entity"));
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-        panel.add(new PlaceholderTextField(entity.name) {{
+        panel.add(new PlaceholderTextField(entity.getName()) {{
             setPlaceholder("Name");
-            addTextListener(this, s -> entity.name = s, Function.identity());
+            addTextListener(this, entity::setName, Function.identity());
         }});
         panel.add(new PlaceholderTextField(String.valueOf(entity.getX())) {{
             setPlaceholder("X");
-            addTextListener(this, s -> entity.setPos(s, entity.getY()), Double::parseDouble);
+            addTextListener(this, entity::setX, Double::parseDouble);
         }});
         panel.add(new PlaceholderTextField(String.valueOf(entity.getY())) {{
             setPlaceholder("Y");
-            addTextListener(this, s -> entity.setPos(entity.getX(), s), Double::parseDouble);
+            addTextListener(this, entity::setY, Double::parseDouble);
         }});
         panel.add(new JCheckBox("Weak") {{
-            addBooleanListener(this, s -> entity.weak = s, () -> entity.weak);
+            addBooleanListener(this, entity::setWeak, entity::isWeak);
         }});
         return panel;
     }
@@ -62,10 +63,10 @@ public class InfoPanel extends JPanel implements ChangeListener<Entity> {
         panel.setBorder(new TitledBorder("Attribute"));
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.add(new JCheckBox("Key") {{
-            addBooleanListener(this, s -> attribute.key = s, () -> attribute.key);
+            addBooleanListener(this, attribute::setKey, attribute::isKey);
         }});
         panel.add(new JCheckBox("Derived") {{
-            addBooleanListener(this, s -> attribute.derived = s, () -> attribute.derived);
+            addBooleanListener(this, attribute::setDerived, attribute::isDerived);
         }});
         return panel;
     }
@@ -78,7 +79,7 @@ public class InfoPanel extends JPanel implements ChangeListener<Entity> {
         Object[][] data = IntStream.range(0, relationship.nodes.size()).mapToObj(i -> {
             Entity t = relationship.nodes.get(i);
             Relationship.RelationshipSpec spec = relationship.specs.get(i);
-            return new Object[]{t.name, spec.amm, spec.total, "✕"};
+            return new Object[]{t.getName(), spec.amm, spec.total, "✕"};
         }).toArray(Object[][]::new);
 
         DefaultTableModel tableModel;
@@ -88,7 +89,7 @@ public class InfoPanel extends JPanel implements ChangeListener<Entity> {
                 super.setValueAt(value, row, column);
                 switch (column) {
                     case 0:
-                        relationship.nodes.get(row).name = (String) value;
+                        relationship.nodes.get(row).setName((String) value);
                         break;
                     case 1:
                         relationship.specs.get(row).amm = (String) value;
@@ -132,16 +133,15 @@ public class InfoPanel extends JPanel implements ChangeListener<Entity> {
             add(total = new JCheckBox());
             ActionListener action = evt -> {
                 Entity entity = evilEr.diagramPanel.diagram.entities.stream()
-                        .filter(e -> e.name.equals(name.getText())).findAny().orElseGet(() -> {
+                        .filter(e -> e.getName().equals(name.getText())).findAny().orElseGet(() -> {
                             Entity n = new Entity().setName(name.getText());
                             evilEr.diagramPanel.diagram.entities.add(n);
                             double angle = Math.random() * Math.PI * 2;
-                            n.pos(relationship.pos().add(100 * Math.cos(angle), 100 * Math.sin(angle)));
-                            return n;
+                            return (Entity) n.set(relationship.add(100 * Math.cos(angle), 100 * Math.sin(angle)));
                         });
                 relationship.addNode(entity, new Relationship.RelationshipSpec(amm.getText(), total.isSelected()));
 
-                tableModel.addRow(new Object[]{entity.name, amm.getText(), total.isSelected(), "✕"});
+                tableModel.addRow(new Object[]{entity.getName(), amm.getText(), total.isSelected(), "✕"});
                 evilEr.diagramPanel.diagram.repaint();
                 name.setText("");
                 amm.setText("");
@@ -160,7 +160,7 @@ public class InfoPanel extends JPanel implements ChangeListener<Entity> {
         panel.setBorder(new TitledBorder("Attributes"));
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-        Object[][] data = parent.attributes.stream().map(a -> new Object[]{a.name, a.derived, a.key, "✕"}).toArray(Object[][]::new);
+        Object[][] data = parent.attributes.stream().map(a -> new Object[]{a.getName(), a.isDerived(), a.isKey(), "✕"}).toArray(Object[][]::new);
 
         DefaultTableModel tableModel;
         panel.add(new JScrollPane(new JTable(tableModel = new DefaultTableModel(data, new String[]{"Name", "Derived", "Key", ""}) {
@@ -168,13 +168,13 @@ public class InfoPanel extends JPanel implements ChangeListener<Entity> {
                 super.setValueAt(value, row, column);
                 switch (column) {
                     case 0:
-                        parent.attributes.get(row).name = (String) value;
+                        parent.attributes.get(row).setName((String) value);
                         break;
                     case 1:
-                        parent.attributes.get(row).derived = (boolean) value;
+                        parent.attributes.get(row).setDerived((boolean) value);
                         break;
                     case 2:
-                        parent.attributes.get(row).key = (boolean) value;
+                        parent.attributes.get(row).setKey((boolean) value);
                         break;
                 }
                 evilEr.diagramPanel.diagram.repaint();
@@ -212,7 +212,8 @@ public class InfoPanel extends JPanel implements ChangeListener<Entity> {
                 double angle = Math.random() * Math.PI * 2;
                 parent.addAttribute((Attribute) new Attribute()
                         .setDerived(derived.isSelected())
-                        .setKey(key.isSelected()).setName(name.getText()).pos(new Vector(100 * Math.cos(angle), 100 * Math.sin(angle))));
+                        .setKey(key.isSelected()).setName(name.getText())
+                        .set(100 * Math.cos(angle), 100 * Math.sin(angle)));
                 tableModel.addRow(new Object[]{name.getText(), derived.isSelected(), key.isSelected(), "✕"});
                 evilEr.diagramPanel.diagram.repaint();
                 name.setText("");

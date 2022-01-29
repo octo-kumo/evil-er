@@ -1,68 +1,131 @@
 package model;
 
+import com.google.gson.annotations.Expose;
+import org.jetbrains.annotations.Nullable;
+
 import java.awt.geom.Point2D;
 
-public class Vector extends Point2D.Double {
+public class Vector extends Point2D {
+    @Expose
+    protected double x;
+    @Expose
+    protected double y;
+    public static final Vector ZERO = new Immutable(0, 0);
+
+    public double getX() {
+        return x;
+    }
+
+    public double getY() {
+        return y;
+    }
+
+    @Override
+    public void setLocation(double x, double y) {
+        set(x, y);
+    }
+
+    public void setX(double x) {
+        this.x = x;
+    }
+
+    public void setY(double y) {
+        this.y = y;
+    }
+
     public Vector(double x, double y) {
-        super(x, y);
+        set(x, y);
     }
 
     public Vector() {
         this(0, 0);
     }
 
+    public Vector set(@Nullable Vector other) {
+        if (other == null) return this;
+        return set(other.getX(), other.getY());
+    }
+
+    public Vector set(double x, double y) {
+        setX(x);
+        setY(y);
+        return this;
+    }
+
     public Vector add(Vector other) {
-        return add(other.x, other.y);
+        return add(other.getX(), other.getY());
     }
 
     public Vector add(double x, double y) {
-        return new Vector(this.x + x, this.y + y);
+        return clone().incre(x, y);
     }
 
     public Vector minus(Vector other) {
-        return minus(other.x, other.y);
+        return minus(other.getX(), other.getY());
     }
 
     public Vector minus(double x, double y) {
-        return new Vector(this.x - x, this.y - y);
-    }
-
-    public Vector times(double scale) {
-        return new Vector(this.x * scale, this.y * scale);
+        return clone().decre(x, y);
     }
 
     public Vector incre(Vector other) {
-        this.x += other.x;
-        this.y += other.y;
+        return incre(other.getX(), other.getY());
+    }
+
+    public Vector incre(double x, double y) {
+        setX(getX() + x);
+        setY(getY() + y);
         return this;
     }
 
     public Vector decre(Vector other) {
-        this.x -= other.x;
-        this.y -= other.y;
-        return this;
+        return decre(other.getX(), other.getY());
+    }
+
+    public Vector decre(double x, double y) {
+        return incre(-x, -y);
     }
 
     public Vector scale(double scale) {
-        this.x *= scale;
-        this.y *= scale;
+        return scale(scale, scale);
+    }
+
+    public Vector scale(double x, double y) {
+        setX(this.getX() * x);
+        setY(this.getY() * y);
         return this;
+    }
+
+    public Vector multi(double scale) {
+        return clone().scale(scale);
+    }
+
+    public Vector multi(double x, double y) {
+        return clone().scale(x, y);
+    }
+
+    public Vector divide(double scale) {
+        return clone().div(scale);
+    }
+
+    public Vector div(double scale) {
+        return scale(1 / scale);
     }
 
     public Vector norm() {
         return scale(1 / len());
     }
 
-    public Vector normalize() {
-        return times(1 / len());
+    public Vector normalized() {
+        return clone().norm();
     }
 
     public double len() {
-        return Math.hypot(x, y);
+        return Math.hypot(getX(), getY());
     }
 
-    public double ang() {
-        return Math.atan2(y, x);
+    public double angle() {
+        return Math.atan2(getY(), getX());
     }
 
     public Vector cap(double len) {
@@ -71,12 +134,37 @@ public class Vector extends Point2D.Double {
         return this;
     }
 
-    @Override
-    public String toString() {
-        return String.format("(%.3f, %.3f)", x, y);
+    public double dot(Vector other) {
+        return getX() * other.getX() + getY() * other.getY();
     }
 
-    public double dot(Vector other) {
-        return x * other.x + y * other.y;
+    public Vector round() {
+        setX(Math.round(getX()));
+        setY(Math.round(getY()));
+        return this;
+    }
+
+    public Vector rounded() {
+        return clone().round();
+    }
+
+    public Vector neg() {
+        setX(-getX());
+        setY(-getY());
+        return this;
+    }
+
+    public Vector negate() {
+        return clone().neg();
+    }
+
+    @Override
+    public Vector clone() {
+        return new Vector(getX(), getY());
+    }
+
+    @Override
+    public String toString() {
+        return String.format("(%.3f, %.3f)", getX(), getY());
     }
 }

@@ -1,5 +1,6 @@
 package main.renderer;
 
+import model.Vector;
 import model.entities.Entity;
 import model.i.DrawContext;
 
@@ -34,6 +35,10 @@ public class DiagramGraphics extends Graphics2D {
 
     public void drawStringCenter(String text) {
         drawStringCenter(text, 0, 0);
+    }
+
+    public void drawStringCenter(String string, Vector vector) {
+        drawStringCenter(string, (float) vector.getX(), (float) vector.getY());
     }
 
     public void drawStringCenter(String text, float cx, float cy) {

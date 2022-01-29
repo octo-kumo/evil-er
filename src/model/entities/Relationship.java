@@ -1,18 +1,25 @@
 package model.entities;
 
-import model.lines.Line;
-import model.Node;
-import model.lines.RelationLine;
+import com.google.gson.annotations.Expose;
 import main.renderer.DiagramGraphics;
+import model.lines.Line;
+import model.lines.RelationLine;
 import shapes.Diamond;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.List;
 
-public class Relationship<T extends Node> extends Entity {
-    public ArrayList<T> nodes;
-    public ArrayList<RelationshipSpec> specs;
-    public ArrayList<Line<Relationship<T>, T>> lines;
+public class Relationship<T extends Entity> extends Entity {
+    public List<Entity> nodes;
+    @Expose
+    public List<RelationshipSpec> specs;
+    public List<Line<Relationship<T>, T>> lines;
+
+    /**
+     * Used in deserialization when only the name is supplied
+     */
+    public String[] _nodes;
 
     public Relationship() {
         nodes = new ArrayList<>();
@@ -20,18 +27,17 @@ public class Relationship<T extends Node> extends Entity {
         lines = new ArrayList<>();
     }
 
-    public Relationship<T> addNode(T node, RelationshipSpec spec) {
+    public void addNode(T node, RelationshipSpec spec) {
         if (nodes.contains(node)) {
             int i = nodes.indexOf(node);
             nodes.set(i, node);
             specs.set(i, spec);
             lines.set(i, new RelationLine<>(this, node, spec));
-            return this;
+            return;
         }
         nodes.add(node);
         specs.add(spec);
         lines.add(new RelationLine<>(this, node, spec));
-        return this;
     }
 
     public void remove(int index) {
@@ -58,7 +64,7 @@ public class Relationship<T extends Node> extends Entity {
 
     public void drawShape(DiagramGraphics g) {
         drawShape(g, getShape());
-        if (weak) drawShape(g, getShape(WIDTH - 15, INNER_HEIGHT));
+        if (isWeak()) drawShape(g, getShape(WIDTH - 15, INNER_HEIGHT));
     }
 
     @Override
@@ -67,12 +73,33 @@ public class Relationship<T extends Node> extends Entity {
     }
 
     public static class RelationshipSpec {
+        @Expose
         public String amm;
+        @Expose
         public boolean total;
+        @Expose
+        public boolean subset;
+
+        public RelationshipSpec() {
+            this("", false, false);
+        }
+
+        public RelationshipSpec(boolean total, boolean subset) {
+            this("", total, subset);
+        }
+
+        public RelationshipSpec(boolean total) {
+            this("", total, false);
+        }
 
         public RelationshipSpec(String amm, boolean total) {
+            this(amm, total, false);
+        }
+
+        public RelationshipSpec(String amm, boolean total, boolean subset) {
             this.amm = amm;
             this.total = total;
+            this.subset = subset;
         }
     }
 }

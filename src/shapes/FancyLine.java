@@ -1,35 +1,36 @@
 package shapes;
 
+import model.Vector;
 import model.lines.Line;
 
 import java.awt.geom.Path2D;
 
 public class FancyLine extends Path2D.Double {
-    public FancyLine(double x1, double y1, double x2, double y2, Line.LineStyle style) {
-        double dx = x2 - x1;
-        double dy = y2 - y1;
-        boolean horizontal = Math.abs(dy) < Math.abs(dx);
-        double mid = horizontal ? (x1 + x2) / 2 : (y1 + y2) / 2;
+    public FancyLine(Vector a, Vector b, Line.LineStyle style) {
+        Vector d = b.minus(a);
+        Vector s = a.add(b);
+        boolean horizontal = Math.abs(d.getY()) < Math.abs(d.getX());
+        double mid = horizontal ? s.getX() / 2 : s.getY() / 2;
         switch (style) {
             case STRAIGHT:
-                moveTo(x1, y1);
-                lineTo(x2, y2);
+                moveTo(a.getX(), a.getY());
+                lineTo(b.getX(), b.getY());
                 break;
             case AXIS_ALIGNED:
-                moveTo(x1, y1);
+                moveTo(a.getX(), a.getY());
                 if (horizontal) {
-                    lineTo(mid, y1);
-                    lineTo(mid, y2);
+                    lineTo(mid, a.getY());
+                    lineTo(mid, b.getY());
                 } else {
-                    lineTo(x1, mid);
-                    lineTo(x2, mid);
+                    lineTo(a.getX(), mid);
+                    lineTo(b.getX(), mid);
                 }
-                lineTo(x2, y2);
+                lineTo(b.getX(), b.getY());
                 break;
             case CURVE:
-                moveTo(x1, y1);
-                if (horizontal) curveTo(mid, y1, mid, y2, x2, y2);
-                else curveTo(x1, mid, x2, mid, x2, y2);
+                moveTo(a.getX(), a.getY());
+                if (horizontal) curveTo(mid, a.getY(), mid, b.getY(), b.getX(), b.getY());
+                else curveTo(a.getX(), mid, b.getX(), mid, b.getX(), b.getY());
                 break;
         }
     }

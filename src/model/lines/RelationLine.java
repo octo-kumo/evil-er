@@ -1,13 +1,14 @@
 package model.lines;
 
-import model.Node;
-import model.entities.Relationship;
 import main.renderer.DiagramGraphics;
+import model.Vector;
+import model.entities.Entity;
+import model.entities.Relationship;
 import shapes.FancyLine;
 
 import java.awt.*;
 
-public class RelationLine<T extends Node> extends Line<Relationship<T>, T> {
+public class RelationLine<T extends Entity> extends Line<Relationship<T>, T> {
     public Relationship.RelationshipSpec spec;
 
     private static final BasicStroke base = new BasicStroke(4, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
@@ -20,7 +21,7 @@ public class RelationLine<T extends Node> extends Line<Relationship<T>, T> {
 
     @Override
     public void predraw(DiagramGraphics g) {
-        FancyLine line = new FancyLine(a.getX(), a.getY(), b.getX(), b.getY(), g.getContext().getStyle());
+        FancyLine line = new FancyLine(a, b, g.getContext().getStyle());
         Color toUse = g.getColor();
         if (spec.total) {
             Stroke stroke = g.getStroke();
@@ -36,13 +37,13 @@ public class RelationLine<T extends Node> extends Line<Relationship<T>, T> {
 
     @Override
     public void draw(DiagramGraphics g) {
-        double cx = (b.getX() + a.getX()) / 2;
-        double cy = (b.getY() + a.getY()) / 2;
+        Vector d = b.minus(a);
+        Vector c = a.add(b).div(2);
         double dist = 10;
-        double angle = Math.atan2(b.getY() - a.getY(), b.getX() - a.getX()) + Math.PI / 2;
+        double angle = d.angle() + Math.PI / 2;
         if (angle > Math.PI) angle -= 2 * Math.PI;
         if (angle < -Math.PI) angle += 2 * Math.PI;
         if (angle > 0) angle -= Math.PI;
-        g.drawStringCenter(spec.amm, (float) (cx + Math.cos(angle) * dist), (float) (cy + Math.sin(angle) * dist));
+        g.drawStringCenter(spec.amm, c.add(Math.cos(angle) * dist, Math.sin(angle) * dist));
     }
 }

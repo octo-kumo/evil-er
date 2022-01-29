@@ -42,7 +42,7 @@ public class ControlPanel extends JPanel implements ClipboardOwner {
                 do {
                     total = Entity.applyForces(evilEr.diagramPanel.diagram.entities, 100);
                     ops++;
-                } while (total > 0.1);
+                } while (total > 0.1 && ops < 10000);
                 System.out.println("Regression Complete, Operations = " + ops);
                 evilEr.diagramPanel.diagram.repaint();
             });
