@@ -1,6 +1,5 @@
 package main.renderer;
 
-import main.EvilEr;
 import main.ui.DiagramPanel;
 import main.ui.components.KeyManager;
 import model.Drawable;
@@ -8,9 +7,11 @@ import model.Vector;
 import model.entities.Attribute;
 import model.entities.Entity;
 import model.entities.Relationship;
-import model.i.ChangeListener;
+import model.entities.Specialization;
 import model.i.DrawContext;
 import model.lines.Line;
+import model.others.Examples;
+import model.others.Reactive;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -32,40 +33,48 @@ import java.util.stream.Stream;
 import static main.renderer.DiagramGraphics.flatten;
 
 public class Diagram extends JComponent implements MouseListener, MouseMotionListener, DrawContext, Drawable {
-    private final EvilEr evilEr;
-    private final DiagramPanel diagramPanel;
 
     public boolean acceptingKeys = true;
     public final KeyManager keyManager;
     public final ArrayList<Entity> entities;
-    public final ArrayList<ChangeListener<Entity>> listeners;
 
-    public Line.LineStyle style = Line.LineStyle.STRAIGHT;
+    public Reactive<Line.LineStyle> lineStyle = new Reactive<>(Line.LineStyle.STRAIGHT);
+    boolean exporting = false;
 
-    public Diagram(EvilEr evilEr, DiagramPanel diagramPanel) {
-        this.evilEr = evilEr;
+    /**
+     * PARAMS
+     */
+    private Entity adding_buf;
+    private final Vector dragStart = new Vector(), targetStart = new Vector();
+
+    public final Reactive<Entity> target = new Reactive<>();
+    public final Reactive<Entity.Type> addingType = new Reactive<>(Entity.Type.Select);
+    public final Reactive<Boolean> connecting = new Reactive<>(false);
+    public final Reactive<Boolean> locked = new Reactive<>(false);
+    public final Reactive<Boolean> aabb = new Reactive<>(false);
+    public final Reactive<Entity> connectTarget = new Reactive<>();
+
+    private Relationship<Entity> connectBase;
+    private final Vector connectPos = new Vector();
+    private final DiagramPanel diagramPanel;
+
+    public Diagram(DiagramPanel diagramPanel) {
         this.diagramPanel = diagramPanel;
         addMouseListener(this);
         addMouseMotionListener(this);
         keyManager = new KeyManager(this);
 
         entities = new ArrayList<>();
-        listeners = new ArrayList<>();
+        Examples.populate(entities);
+        addListeners();
+    }
 
-        Entity a = new Entity().setName("Entity A");
-        a.set(500, 500);
-        Entity b = new Entity().setName("Entity B").setWeak(true);
-        b.set(300, 500);
-        a.addAttribute((Attribute) new Attribute().setName("haha").set(0, 100));
-        a.addAttribute((Attribute) new Attribute().setName("nice").setWeak(true).set(200, 0));
-        Relationship<Entity> r = new Relationship<>();
-        r.addNode(a, new Relationship.RelationshipSpec("1", false));
-        r.addNode(b, new Relationship.RelationshipSpec("N", true));
-        r.setName("R");
-        r.set(400, 300);
-        entities.add(a);
-        entities.add(b);
-        entities.add(r);
+    private void addListeners() {
+        lineStyle.addListener(s -> repaint());
+        connecting.addListener(s -> connectBase = s ? connectBase : null);
+        locked.addListener(s -> {
+            if (!s) setAddingType(Entity.Type.Select);
+        });
     }
 
     @Override
@@ -86,13 +95,12 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
         entities.forEach(d -> d.draw(g));
 
         if (exporting) return;
+        g.drawStringCenter("@yun", getWidth() - 25, getHeight() - 15);
         g.setColor(Color.GRAY);
         if (adding_buf != null) drawPendingAddition(g);
-        if (connecting && connectBase != null) drawPendingConnection(g);
-//        g.draw(getAABB());
+        if (connecting.get() && connectBase != null) drawPendingConnection(g);
+        if (aabb.get()) g.draw(getAABB());
     }
-
-    boolean exporting = false;
 
     public BufferedImage export() {
         setTarget(null);
@@ -104,9 +112,11 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
         aabb.add(aabb.getMaxX() + padding, aabb.getMaxY() + padding);
         BufferedImage img = new BufferedImage((int) aabb.getWidth(), (int) aabb.getHeight(), BufferedImage.TYPE_INT_RGB);
         Graphics2D g = img.createGraphics();
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, (int) aabb.getWidth(), (int) aabb.getHeight());
         g.translate(-aabb.getX(), -aabb.getY());
         exporting = true;
-        evilEr.diagramPanel.diagram.draw(new DiagramGraphics(g));
+        draw(new DiagramGraphics(g));
         exporting = false;
         g.dispose();
         return img;
@@ -120,7 +130,7 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
     }
 
     public void delete(Entity entity) {
-        if (target == entity) setTarget(null);
+        if (target.get() == entity) setTarget(null);
         if (entity instanceof Attribute) ((Attribute) entity).getParent().removeAttribute((Attribute) entity);
         else entities.remove(entity);
     }
@@ -129,19 +139,8 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
         entities.stream().filter(e -> e instanceof Relationship).map(e -> (Relationship<?>) e).forEach(r -> r.remove(entity));
     }
 
-    /**
-     * PARAMS
-     */
-    private Entity adding_buf;
-    private Entity target;
-    private final Vector dragStart = new Vector(), targetStart = new Vector();
-
-    private boolean connecting;
-    private Relationship<Entity> connectBase;
-    private Entity connectTarget;
-    private Vector connectPos = new Vector();
-
-    public void setAddingType(Entity.Types type) {
+    public void setAddingType(Entity.Type type) {
+        addingType.set(type);
         Vector pos = null;
         if (adding_buf != null) pos = adding_buf.clone();
         switch (type) {
@@ -155,7 +154,10 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
                 adding_buf = new Relationship<>().setName("Unnamed");
                 break;
             case Attribute:
-                adding_buf = new Attribute().setParent(target).setName("Unnamed");
+                adding_buf = new Attribute().setParent(target.get()).setName("Unnamed");
+                break;
+            case Specialization:
+                adding_buf = new Specialization(target.get());
                 break;
         }
         adding_buf.set(pos);
@@ -165,8 +167,8 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
     public void mousePressed(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1) {
 
-            if (connecting && connectTarget != null && connectBase != null) {
-                connectBase.addNode(connectTarget, new Relationship.RelationshipSpec("", false));
+            if (connecting.get() && connectTarget.get() != null && connectBase != null) {
+                connectBase.addNode(connectTarget.get(), new Relationship.RelationshipSpec("", false));
                 repaint();
                 return;
             }
@@ -174,7 +176,7 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
 
             /* SELECT ELEMENT */
             /* IF NOT SELECT MULTIPLE, CLEAR HIGHLIGHT */
-            if (target != null && !e.isShiftDown()) {
+            if (target.get() != null && !e.isShiftDown()) {
                 find(Entity::isHighlighted).forEach(entity -> entity.setHighlighted(false)); // clear previous selection
                 repaint();
             }
@@ -186,16 +188,15 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
                 return;
             }
             setTarget(found.get());
-            targetStart.set(target);
+            targetStart.set(target.get());
             repaint();
         }
     }
 
     public void setTarget(@Nullable Entity entity) {
-        listeners.forEach(e -> e.onChange(entity));
-        target = entity;
-        if (entity != null) target.setHighlighted(true);
-        if (connecting && entity instanceof Relationship) connectBase = (Relationship<Entity>) entity;
+        target.set(entity);
+        if (entity != null) entity.setHighlighted(true);
+        if (connecting.get() && entity instanceof Relationship) connectBase = (Relationship<Entity>) entity;
     }
 
     @Override
@@ -206,10 +207,12 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        if (target == null) return;
-        target.set(targetStart.add(e.getX(), e.getY()).minus(dragStart));
-        if (e.isControlDown()) target.set(target).div(gridSize).round().scale(gridSize);
-        repaint();
+        if (SwingUtilities.isLeftMouseButton(e)) {
+            if (target.get() == null) return;
+            target.get().set(targetStart.add(e.getX(), e.getY()).minus(dragStart));
+            if (e.isControlDown()) target.get().div(gridSize).round().scale(gridSize);
+            repaint();
+        }
     }
 
     @Override
@@ -221,20 +224,25 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
                     if (parent == null) return;
                     parent.addAttribute((Attribute) adding_buf);
                 } else entities.add(adding_buf);
-                adding_buf.setHighlighted(true);
-                setTarget(adding_buf);
-                if (connecting && connectBase != null && adding_buf.getClass() == Entity.class) {
-                    connectBase.addNode(adding_buf, new Relationship.RelationshipSpec("", false));
+
+                if (!(adding_buf instanceof Attribute)) {
+                    adding_buf.setHighlighted(true);
+                    setTarget(adding_buf);
                 }
+
+                if (connecting.get() && connectBase != null && adding_buf.getClass() == Entity.class)
+                    connectBase.addNode(adding_buf, new Relationship.RelationshipSpec("", false));
+
                 diagramPanel.requestNameEdit(adding_buf);
-                if (!evilEr.controlPanel.lock.isSelected()) {
-                    evilEr.controlPanel.typeBox.setSelectedItem(Entity.Types.Select);
-                    adding_buf = null;
-                } else setAddingType((Entity.Types) evilEr.controlPanel.typeBox.getSelectedItem());
+                setAddingType(!locked.get() ? Entity.Type.Select : addingType.get());
             } else {
                 Optional<Entity> found = getIntersect(e.getX(), e.getY());
                 if (e.getClickCount() == 2 && found.isPresent()) diagramPanel.requestNameEdit(found.get());
             }
+            repaint();
+        }
+        if (e.getButton() == MouseEvent.BUTTON3) {
+            if (connecting.get()) connecting.set(false);
             repaint();
         }
     }
@@ -250,15 +258,20 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
     @Override
     public void mouseMoved(MouseEvent e) {
         if (adding_buf != null) {
-            adding_buf.set(e.getX(), e.getY());
+
+            if (adding_buf instanceof Specialization)
+                ((Specialization) adding_buf).setSuperclass(getIntersect(connectPos.set(e.getX(), e.getY()))
+                        .orElse(null));
+            if (!(adding_buf instanceof Specialization && ((Specialization) adding_buf).getSuperclass() != null))
+                adding_buf.set(e.getX(), e.getY());
             if (adding_buf instanceof Attribute) getIntersect(connectPos.set(e.getX(), e.getY()))
                     .ifPresent(entity -> ((Attribute) adding_buf)
                             .setParent(entity).set(e.getX(), e.getY()));
         }
-        if (connecting && connectBase != null) {
-            connectTarget = getIntersect(connectPos.set(e.getX(), e.getY()))
+        if (connecting.get() && connectBase != null) {
+            connectTarget.set(getIntersect(connectPos.set(e.getX(), e.getY()))
                     .filter(entity -> !(entity instanceof Relationship) && !(entity instanceof Attribute))
-                    .orElse(null);
+                    .orElse(null));
         }
         repaint();
     }
@@ -275,23 +288,9 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
         return flatten(entities).filter(predicate);
     }
 
-    public void setStyle(Line.LineStyle style) {
-        this.style = style;
-        repaint();
-    }
-
-    @Override
-    public Line.LineStyle getStyle() {
-        return style;
-    }
-
-    public void setConnecting(boolean connecting) {
-        this.connecting = connecting;
-    }
-
     private void drawPendingConnection(DiagramGraphics g) {
-        if (connectTarget != null)
-            g.dashed(new Line2D.Double(connectBase, connectTarget));
+        if (connectTarget.get() != null)
+            g.dashed(new Line2D.Double(connectBase, connectTarget.get()));
         else
             g.dashed(new Line2D.Double(connectBase, connectPos));
     }
@@ -310,7 +309,12 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
     }
 
     public Rectangle2D getAABB() {
-        return flatten(evilEr.diagramPanel.diagram.entities).map(e -> e.getShapeWorld().getBounds2D())
+        return flatten(entities).map(e -> e.getShapeWorld().getBounds2D())
                 .reduce(Rectangle2D::createUnion).orElse(new Rectangle2D.Double());
+    }
+
+    @Override
+    public Line.LineStyle getLineStyle() {
+        return lineStyle.get();
     }
 }

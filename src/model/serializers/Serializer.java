@@ -3,11 +3,15 @@ package model.serializers;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.stream.JsonReader;
 import model.entities.Attribute;
 import model.entities.Entity;
 import model.entities.Relationship;
+import model.entities.Specialization;
 import model.lines.RelationLine;
 
+import java.io.Writer;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,6 +24,9 @@ public class Serializer {
     public static final Gson specialize;
     public static final Gson attribute;
     public static final Gson relationship;
+    public static final Gson specialization;
+    private static final Type ARRAYLIST_ENTITY = new TypeToken<ArrayList<Entity>>() {
+    }.getType();
 
     static {
         GsonBuilder builder = new GsonBuilder()
@@ -27,12 +34,14 @@ public class Serializer {
                 .excludeFieldsWithoutExposeAnnotation()
                 .registerTypeAdapter(Attribute.class, new AttributeSerializer())
                 .registerTypeAdapter(Entity.class, new TypedEntitySerializer())
+                .registerTypeAdapter(Specialization.class, new SpecializationSerializer())
                 .registerTypeAdapter(Relationship.class, new RelationshipSerializer());
         gson = builder.create();
 
         builder = new GsonBuilder()
                 .excludeFieldsWithoutExposeAnnotation()
                 .registerTypeAdapter(Attribute.class, new AttributeSerializer())
+                .registerTypeAdapter(Specialization.class, new SpecializationSerializer())
                 .registerTypeAdapter(Relationship.class, new RelationshipSerializer());
         specialize = builder.create();
 
@@ -40,10 +49,16 @@ public class Serializer {
                 .excludeFieldsWithoutExposeAnnotation()
                 .registerTypeAdapter(Attribute.class, new AttributeSerializer());
         attribute = builder.create();
+
         builder = new GsonBuilder()
                 .excludeFieldsWithoutExposeAnnotation()
                 .registerTypeAdapter(Relationship.class, new RelationshipSerializer());
         relationship = builder.create();
+
+        builder = new GsonBuilder()
+                .excludeFieldsWithoutExposeAnnotation()
+                .registerTypeAdapter(Specialization.class, new SpecializationSerializer());
+        specialization = builder.create();
 
         builder = new GsonBuilder()
                 .excludeFieldsWithoutExposeAnnotation();
@@ -54,10 +69,23 @@ public class Serializer {
         return gson.toJson(entities);
     }
 
+    public static void serialize(List<Entity> entities, Writer writer) {
+        gson.toJson(entities, writer);
+    }
+
     public static ArrayList<Entity> deserialize(String json) {
-        ArrayList<Entity> entities = gson.fromJson(json, new TypeToken<ArrayList<Entity>>() {
-        }.getType());
-        // fill relationships
+        ArrayList<Entity> entities = gson.fromJson(json, ARRAYLIST_ENTITY);
+        postprocess(entities);
+        return entities;
+    }
+
+    public static ArrayList<Entity> deserialize(JsonReader json) {
+        ArrayList<Entity> entities = gson.fromJson(json, ARRAYLIST_ENTITY);
+        postprocess(entities);
+        return entities;
+    }
+
+    private static void postprocess(ArrayList<Entity> entities) {
         for (Entity o : entities) {
             Entity.updateParents(o);
             if (o instanceof Relationship) { // inflate relationships
@@ -70,6 +98,5 @@ public class Serializer {
                 ).collect(Collectors.toList());
             }
         }
-        return entities;
     }
 }

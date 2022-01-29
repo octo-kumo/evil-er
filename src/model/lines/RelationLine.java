@@ -5,6 +5,7 @@ import model.Vector;
 import model.entities.Entity;
 import model.entities.Relationship;
 import shapes.FancyLine;
+import shapes.SubsetSymbol;
 
 import java.awt.*;
 
@@ -21,7 +22,7 @@ public class RelationLine<T extends Entity> extends Line<Relationship<T>, T> {
 
     @Override
     public void predraw(DiagramGraphics g) {
-        FancyLine line = new FancyLine(a, b, g.getContext().getStyle());
+        FancyLine line = new FancyLine(a, b, g.getContext().getLineStyle());
         Color toUse = g.getColor();
         if (spec.total) {
             Stroke stroke = g.getStroke();
@@ -33,6 +34,11 @@ public class RelationLine<T extends Entity> extends Line<Relationship<T>, T> {
             g.setStroke(stroke);
         } else g.draw(line);
         g.setColor(toUse);
+        if (spec.subset) {
+            Vector diff = b.minus(a);
+            Vector mid = b.add(a).div(2);
+            g.draw(new SubsetSymbol(mid, diff, 10, g.getContext().getLineStyle()));
+        }
     }
 
     @Override

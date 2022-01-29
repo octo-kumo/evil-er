@@ -16,6 +16,11 @@ import java.util.stream.IntStream;
 import static main.renderer.DiagramGraphics.flatten;
 
 public class Entity extends Node {
+    public Entity(String name) {
+        this();
+        setName(name);
+    }
+
     public static void updateParents(Entity entity) {
         entity.attributes.forEach(a -> {
             a.setParent(entity);
@@ -39,8 +44,8 @@ public class Entity extends Node {
         this.highlighted = highlighted;
     }
 
-    public enum Types {
-        Select, Entity, Relationship, Attribute
+    public enum Type {
+        Select, Entity, Relationship, Attribute, Specialization
     }
 
     public static Color HIGHLIGHTED = new Color(230, 230, 230);
@@ -119,34 +124,36 @@ public class Entity extends Node {
         List<Entity> objects = flatten(entities).collect(Collectors.toList());
 
         int len = objects.size();
+        Vector com = objects.stream().map(e -> (Vector) e).reduce(Vector::add).orElse(Vector.ZERO).div(len);
         Vector[] forces = IntStream.range(0, len).mapToObj(i -> new Vector()).toArray(Vector[]::new);
         IntStream.range(0, len).forEach(a -> {
             Entity A = objects.get(a);
             boolean aIsAttr = A instanceof Attribute;
-            boolean aIsRel = A instanceof Relationship;
 
-            if (aIsAttr) {
-                Vector diff = A.minus(((Attribute) A).getParent());
-                Vector force = force(diff, Entity.A, B, pad);
-                forces[a].incre(force);
+            if (A.getClass() != Attribute.class) {
+                Vector diff = A.minus(com);
+                forces[a].incre(diff.log().scale(-1).cap(1));
             }
             IntStream.range(0, len).forEach(b -> {
                 Entity B = objects.get(b);
-                Vector diff = B.minus(A);
-
+                if (shouldSkip(A, B) || shouldSkip(B, A)) return;
                 boolean bIsAttr = B instanceof Attribute;
-                boolean bIsRel = B instanceof Relationship;
 
-                Vector force = force(diff, Entity.A, Entity.B, aIsAttr && bIsAttr ? pad / 1.5 : aIsAttr || bIsAttr ? pad / 1.3 : pad);
-                if (force.dot(diff) > 0) {
-                    // skip attribute attraction between attributes of different entities
-                    if (aIsAttr && bIsAttr && ((Attribute) A).getParent() != ((Attribute) B).getParent()) return;
-                    // skip entity attraction
-                    if (!aIsRel && !aIsAttr && !bIsRel && !bIsAttr) return;
+                Vector diff = B.minus(A);
+                double p;
+                if ((p = shouldAttract(objects, A, B)) != 0 || (p = shouldAttract(objects, A, B)) != 0) {
+                    Vector force = attract(diff, pad * p, 1);
+                    forces[a].incre(force);
+                    forces[b].incre(force.neg());
+                } else if (A instanceof Relationship && B instanceof Relationship) {
+                    Vector force = repulsion(diff, pad * 2, 0.1);
+                    forces[a].incre(force);
+                    forces[b].incre(force.neg());
+                } else {
+                    Vector force = repulsion(diff, pad, 0.001);
+                    forces[a].incre(force);
+                    forces[b].incre(force.neg());
                 }
-                // skip force on non attributes, by attributes
-                if (!bIsAttr || aIsAttr) forces[a].incre(force);
-                if (!aIsAttr || bIsAttr) forces[b].decre(force);
             });
         });
 
@@ -160,21 +167,67 @@ public class Entity extends Node {
         return total;
     }
 
-    static final double A = 0.5;
-    static final double B = 1;
-
+    //    public static Vector force(Vector diff, double A, double B, double R) {
+//        diff = diff.multi(Entity.HEIGHT / Entity.WIDTH, 1);
+//        double r = diff.len() / R;
+//        if (r == 0) return new Vector();
+//        if (r > 3) r = 3;
+//        double v = A / Math.pow(r, 4) - B / Math.pow(r, 2);
+//        return diff.norm().scale(-v * 0.1).cap(10);
+//    }
     public static Vector force(Vector diff, double A, double B, double R) {
         diff = diff.multi(Entity.HEIGHT / Entity.WIDTH, 1);
         double r = diff.len() / R;
-        Vector n = diff.norm();
         if (r == 0) return new Vector();
-        if (r > 3) r = 3;
-        double v = A / Math.pow(r, 4) - B / Math.pow(r, 2);
-        return n.scale(-v * 0.2).cap(10);
+        double v = 1 / (1 + Math.exp(-r + 1)) - 0.5;
+        return diff.norm().scale(v * 0.1).cap(50);
     }
 
-    public static Vector force(Vector diff) {
-        return force(diff, A, B, 100);
+    public static boolean shouldSkip(Entity a, Entity b) {
+        return a instanceof Specialization && ((Specialization) a).getSuperclass() == b;
+    }
+
+    public static double shouldAttract(List<Entity> entities, Entity a, Entity b) {
+
+        if (a.getClass() == Entity.class && b.getClass() == Entity.class) {
+            boolean related = entities.stream().anyMatch(e -> e.getClass() == Relationship.class &&
+                    ((Relationship<?>) e).nodes.contains(a) && ((Relationship<?>) e).nodes.contains(b));
+
+            boolean shareSubclass = entities.stream().anyMatch(e -> e.getClass() == Specialization.class &&
+                    ((Relationship<?>) e).nodes.indexOf(a) > 0 && ((Relationship<?>) e).nodes.indexOf(b) > 0);
+
+            return shareSubclass ? 0.8 : related ? 1.5 : 3; // all entities attract
+        }
+        if (b instanceof Attribute)
+            return ((Attribute) b).getParent() == a || // only attract to parent or if same parent
+                    (a instanceof Attribute && ((Attribute) a).getParent() == ((Attribute) b).getParent()) ? 0.5 : 0;
+        if (a.getClass() == Entity.class && b instanceof Specialization)
+            return ((Specialization) b).nodes.indexOf(a) > 0 ? 0.6 : 0; // not super class and also in the set
+        if (a.getClass() == Entity.class && b instanceof Relationship)
+            return ((Relationship<?>) b).nodes.contains(a) ? 1 : 0; // not specialization, hence just check if in
+
+        return 0;
+    }
+
+    public static Vector attract(Vector diff, double R, double p) {
+        diff = diff.multi(Entity.HEIGHT / Entity.WIDTH, 1);
+        double len = diff.len();
+        if (len > R * 3) return Vector.ZERO;
+        double f = p * Math.pow(Math.log(ensureNonZero(len) / R), 3);
+        return diff.norm().scale(f).cap(10);
+    }
+
+    public static Vector repulsion(Vector diff, double R, double p) {
+        diff = diff.multi(Entity.HEIGHT / Entity.WIDTH, 1);
+        double len = diff.len();
+        if (len > R) return Vector.ZERO;
+        double f = -p / Math.pow(Math.log(ensureNonZero(len) / R + 1), 2);
+        return diff.norm().scale(f).cap(1);
+    }
+
+    public static double ensureNonZero(double num) {
+        if (num == 0) return 1;
+        return num;
     }
 
     public String toString() {

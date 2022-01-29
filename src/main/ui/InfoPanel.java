@@ -6,6 +6,7 @@ import main.ui.components.PlaceholderTextField;
 import model.entities.Attribute;
 import model.entities.Entity;
 import model.entities.Relationship;
+import model.entities.Specialization;
 import model.i.ChangeListener;
 import model.i.Consumer;
 import model.i.Getter;
@@ -32,7 +33,7 @@ public class InfoPanel extends JPanel implements ChangeListener<Entity> {
             setBorder(new TitledBorder("Entity Control"));
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         }});
-        evilEr.diagramPanel.diagram.listeners.add(this);
+        evilEr.diagramPanel.diagram.target.addListener(this);
     }
 
     public JPanel entityWindow(Entity entity) {
@@ -75,6 +76,14 @@ public class InfoPanel extends JPanel implements ChangeListener<Entity> {
         JPanel panel = new JPanel();
         panel.setBorder(new TitledBorder("Relation"));
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        if (relationship instanceof Specialization)
+            panel.add(new JCheckBox("Disjoint", ((Specialization) relationship).isDisjointSpecialization()) {{
+                setAlignmentX(Component.LEFT_ALIGNMENT);
+                addActionListener(e -> {
+                    ((Specialization) relationship).setDisjointSpecialization(isSelected());
+                    evilEr.diagramPanel.diagram.repaint();
+                });
+            }});
 
         Object[][] data = IntStream.range(0, relationship.nodes.size()).mapToObj(i -> {
             Entity t = relationship.nodes.get(i);
@@ -112,9 +121,10 @@ public class InfoPanel extends JPanel implements ChangeListener<Entity> {
                     public void actionPerformed(ActionEvent e) {
                         JTable table = (JTable) e.getSource();
                         int row = Integer.parseInt(e.getActionCommand());
-                        relationship.remove(row);
-                        ((DefaultTableModel) table.getModel()).removeRow(row);
-                        evilEr.diagramPanel.diagram.repaint();
+                        if (relationship.remove(row)) {
+                            ((DefaultTableModel) table.getModel()).removeRow(row);
+                            evilEr.diagramPanel.diagram.repaint();
+                        }
                     }
                 }, 3);
             }

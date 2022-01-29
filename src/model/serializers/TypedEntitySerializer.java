@@ -4,6 +4,7 @@ import com.google.gson.*;
 import model.entities.Attribute;
 import model.entities.Entity;
 import model.entities.Relationship;
+import model.entities.Specialization;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -17,6 +18,7 @@ public class TypedEntitySerializer implements JsonSerializer<Entity>, JsonDeseri
         typeRegistry.put("entity", Entity.class);
         typeRegistry.put("relationship", Relationship.class);
         typeRegistry.put("attribute", Attribute.class);
+        typeRegistry.put("specialization", Specialization.class);
     }
 
     @Override

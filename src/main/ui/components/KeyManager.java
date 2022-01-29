@@ -29,7 +29,7 @@ public class KeyManager implements KeyListener, KeyEventDispatcher {
                 SHIFT = true;
                 break;
             case KeyEvent.VK_ALT:
-                ALT = true;
+                diagram.locked.set(ALT = true);
                 break;
         }
     }
@@ -44,7 +44,7 @@ public class KeyManager implements KeyListener, KeyEventDispatcher {
                 SHIFT = false;
                 break;
             case KeyEvent.VK_ALT:
-                ALT = false;
+                diagram.locked.set(ALT = false);
                 break;
         }
     }

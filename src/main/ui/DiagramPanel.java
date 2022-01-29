@@ -27,7 +27,7 @@ public class DiagramPanel extends JPanel implements ComponentListener {
             setHorizontalAlignment(CENTER);
             addActionListener(e -> requestNameEdit(null));
         }});
-        add(diagram = new Diagram(evilEr, this));
+        add(diagram = new Diagram(this));
     }
 
     public void requestNameEdit(Entity entity) {

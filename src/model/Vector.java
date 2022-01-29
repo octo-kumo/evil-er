@@ -113,7 +113,13 @@ public class Vector extends Point2D {
     }
 
     public Vector norm() {
-        return scale(1 / len());
+        double len = len();
+        if (len == 0) return Vector.ZERO;
+        return scale(1 / len);
+    }
+
+    public Vector log() {
+        return this.normalized().scale(Math.log(len()));
     }
 
     public Vector normalized() {
@@ -124,12 +130,17 @@ public class Vector extends Point2D {
         return Math.hypot(getX(), getY());
     }
 
+    public double len2() {
+        return getY() * getY() + getX() * getX();
+    }
+
     public double angle() {
         return Math.atan2(getY(), getX());
     }
 
     public Vector cap(double len) {
         double clen = len();
+        if (clen == 0) return Vector.ZERO;
         if (clen > len) return scale(len / clen);
         return this;
     }
@@ -166,5 +177,9 @@ public class Vector extends Point2D {
     @Override
     public String toString() {
         return String.format("(%.3f, %.3f)", getX(), getY());
+    }
+
+    public Vector rot90() {
+        return new Vector(getY(), -getX());
     }
 }

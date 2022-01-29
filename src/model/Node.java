@@ -6,9 +6,6 @@ import main.renderer.DiagramGraphics;
 import java.awt.geom.AffineTransform;
 
 public abstract class Node extends Vector implements Drawable {
-    @Expose
-    public final String type = "Node";
-
     public void predraw(DiagramGraphics g) {
         AffineTransform transform = g.getTransform();
         g.translate(x, y);

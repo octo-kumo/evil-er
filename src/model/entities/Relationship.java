@@ -27,6 +27,11 @@ public class Relationship<T extends Entity> extends Entity {
         lines = new ArrayList<>();
     }
 
+    public Relationship(String name) {
+        this();
+        setName(name);
+    }
+
     public void addNode(T node, RelationshipSpec spec) {
         if (nodes.contains(node)) {
             int i = nodes.indexOf(node);
@@ -40,19 +45,19 @@ public class Relationship<T extends Entity> extends Entity {
         lines.add(new RelationLine<>(this, node, spec));
     }
 
-    public void remove(int index) {
-        if (index >= nodes.size()) return;
+    public boolean remove(int index) {
+        if (index >= nodes.size()) return false;
         nodes.remove(index);
         specs.remove(index);
         lines.remove(index);
+        return true;
     }
 
-    public void remove(Entity entity) {
+    public boolean remove(Entity entity) {
         @SuppressWarnings("unchecked")
         int index = nodes.indexOf((T) entity);
-        if (index != -1) {
-            remove(index);
-        }
+        if (index == -1) return false;
+        else return remove(index);
     }
 
     @Override
