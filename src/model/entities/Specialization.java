@@ -53,11 +53,11 @@ public class Specialization extends Relationship<Entity> {
         if (nodes.size() > 0) {
             nodes.set(0, superclass);
             lines.set(0, new RelationLine<>(this, superclass,
-                    specs.set(0, new RelationshipSpec(true))));
+                    specs.get(0)));
         } else {
             nodes.add(superclass);
             RelationshipSpec spec;
-            specs.add(spec = new RelationshipSpec(true));
+            specs.add(spec = new RelationshipSpec());
             lines.add(new RelationLine<>(this, superclass, spec));
         }
         setName("Family Tree: " + (getSuperclass() == null ? "null" : getSuperclass().getName()));
