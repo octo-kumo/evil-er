@@ -1,6 +1,7 @@
 package main.ui;
 
 import main.EvilEr;
+import model.Vector;
 import model.entities.Entity;
 import main.renderer.Diagram;
 
@@ -39,8 +40,10 @@ public class DiagramPanel extends JPanel implements ComponentListener {
         } else {
             input.setVisible(true);
             input.setText(entity.getName());
+            input.setFont(new Font(null, Font.PLAIN, (int) (12 * diagram.scale)));
             entity.setName("");
-            input.setBounds((int) (entity.getX() - Entity.WIDTH / 2), (int) (entity.getY() - Entity.HEIGHT / 4), (int) Entity.WIDTH, (int) Entity.HEIGHT / 2);
+            Vector pos = diagram.project(entity.minus(Entity.WIDTH / 2, Entity.HEIGHT / 4));
+            input.setBounds((int) pos.getX(), (int) pos.getY(), (int) (Entity.WIDTH * diagram.scale), (int) (Entity.HEIGHT * diagram.scale / 2));
             input.grabFocus();
             input.selectAll();
             diagram.acceptingKeys = false;

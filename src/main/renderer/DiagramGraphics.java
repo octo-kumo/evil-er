@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 public class DiagramGraphics extends Graphics2D {
-    private static final Stroke dashed = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{5}, 0);
+    private static final Stroke dashed = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{2}, 0);
     private final Graphics2D g;
 
     public DiagramGraphics(Graphics2D g) {
@@ -229,8 +229,8 @@ public class DiagramGraphics extends Graphics2D {
     }
 
     @Override
-    public Graphics create() {
-        return g.create();
+    public DiagramGraphics create() {
+        return new DiagramGraphics((Graphics2D) g.create());
     }
 
     @Override

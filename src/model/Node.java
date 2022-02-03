@@ -1,6 +1,5 @@
 package model;
 
-import com.google.gson.annotations.Expose;
 import main.renderer.DiagramGraphics;
 
 import java.awt.geom.AffineTransform;

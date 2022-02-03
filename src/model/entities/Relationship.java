@@ -54,8 +54,7 @@ public class Relationship<T extends Entity> extends Entity {
     }
 
     public boolean remove(Entity entity) {
-        @SuppressWarnings("unchecked")
-        int index = nodes.indexOf((T) entity);
+        int index = nodes.indexOf(entity);
         if (index == -1) return false;
         else return remove(index);
     }
@@ -82,29 +81,19 @@ public class Relationship<T extends Entity> extends Entity {
         public String amm;
         @Expose
         public boolean total;
-        @Expose
-        public boolean subset;
 
         public RelationshipSpec() {
-            this("", false, false);
+            this("", false);
         }
 
-        public RelationshipSpec(boolean total, boolean subset) {
-            this("", total, subset);
-        }
 
         public RelationshipSpec(boolean total) {
-            this("", total, false);
+            this("", total);
         }
 
         public RelationshipSpec(String amm, boolean total) {
-            this(amm, total, false);
-        }
-
-        public RelationshipSpec(String amm, boolean total, boolean subset) {
             this.amm = amm;
             this.total = total;
-            this.subset = subset;
         }
     }
 }

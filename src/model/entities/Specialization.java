@@ -65,7 +65,6 @@ public class Specialization extends Relationship<Entity> {
 
     public void addNode(Entity subclass, RelationshipSpec spec) {
         if (nodes.indexOf(subclass) == 0) return; // cant replace super
-        spec.subset = true;
         super.addNode(subclass, spec);
     }
 

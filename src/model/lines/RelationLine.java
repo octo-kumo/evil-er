@@ -4,6 +4,7 @@ import main.renderer.DiagramGraphics;
 import model.Vector;
 import model.entities.Entity;
 import model.entities.Relationship;
+import model.entities.Specialization;
 import shapes.FancyLine;
 import shapes.SubsetSymbol;
 
@@ -34,9 +35,10 @@ public class RelationLine<T extends Entity> extends Line<Relationship<T>, T> {
             g.setStroke(stroke);
         } else g.draw(line);
         g.setColor(toUse);
-        if (spec.subset) {
+        if (a instanceof Specialization && b != ((Specialization) a).getSuperclass()) {
             Vector diff = b.minus(a);
-            Vector mid = b.add(a).div(2);
+            double dis = 0.4;
+            Vector mid = b.multi(1 - dis).add(a.multi(dis));
             g.draw(new SubsetSymbol(mid, diff, 10, g.getContext().getLineStyle()));
         }
     }

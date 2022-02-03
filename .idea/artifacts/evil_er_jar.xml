@@ -1,5 +1,5 @@
 <component name="ArtifactManager">
-  <artifact type="jar" name="evil-er:jar">
+  <artifact type="jar" build-on-make="true" name="evil-er:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/evil_er_jar</output-path>
     <root id="archive" name="evil-er.jar">
       <element id="module-output" name="evil-er" />

@@ -128,7 +128,6 @@ public class Entity extends Node {
         Vector[] forces = IntStream.range(0, len).mapToObj(i -> new Vector()).toArray(Vector[]::new);
         IntStream.range(0, len).forEach(a -> {
             Entity A = objects.get(a);
-            boolean aIsAttr = A instanceof Attribute;
 
             if (A.getClass() != Attribute.class) {
                 Vector diff = A.minus(com);
@@ -137,7 +136,6 @@ public class Entity extends Node {
             IntStream.range(0, len).forEach(b -> {
                 Entity B = objects.get(b);
                 if (shouldSkip(A, B) || shouldSkip(B, A)) return;
-                boolean bIsAttr = B instanceof Attribute;
 
                 Vector diff = B.minus(A);
                 double p;
@@ -165,22 +163,6 @@ public class Entity extends Node {
         }
 
         return total;
-    }
-
-    //    public static Vector force(Vector diff, double A, double B, double R) {
-//        diff = diff.multi(Entity.HEIGHT / Entity.WIDTH, 1);
-//        double r = diff.len() / R;
-//        if (r == 0) return new Vector();
-//        if (r > 3) r = 3;
-//        double v = A / Math.pow(r, 4) - B / Math.pow(r, 2);
-//        return diff.norm().scale(-v * 0.1).cap(10);
-//    }
-    public static Vector force(Vector diff, double A, double B, double R) {
-        diff = diff.multi(Entity.HEIGHT / Entity.WIDTH, 1);
-        double r = diff.len() / R;
-        if (r == 0) return new Vector();
-        double v = 1 / (1 + Math.exp(-r + 1)) - 0.5;
-        return diff.norm().scale(v * 0.1).cap(50);
     }
 
     public static boolean shouldSkip(Entity a, Entity b) {

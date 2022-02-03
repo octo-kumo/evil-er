@@ -41,6 +41,10 @@ public class Vector extends Point2D {
         this(0, 0);
     }
 
+    public Vector(Vector vector) {
+        this(vector.x, vector.y);
+    }
+
     public Vector set(@Nullable Vector other) {
         if (other == null) return this;
         return set(other.getX(), other.getY());

@@ -176,6 +176,13 @@ public class EvilMenu extends JMenuBar {
                     evilEr.diagramPanel.diagram.repaint();
                 });
             }});
+            add(new JCheckBoxMenuItem("Grid") {{
+                evilEr.diagramPanel.diagram.grid.addListener(this::setState);
+                addActionListener(e -> {
+                    evilEr.diagramPanel.diagram.grid.set(getState());
+                    evilEr.diagramPanel.diagram.repaint();
+                });
+            }});
         }});
     }
 
@@ -219,8 +226,9 @@ public class EvilMenu extends JMenuBar {
 
     private void center(ActionEvent evt) {
         Vector com = evilEr.diagramPanel.diagram.entities.stream().map(e -> (Vector) e).reduce(Vector::add).orElse(Vector.ZERO).div(evilEr.diagramPanel.diagram.entities.size());
-        Vector diff = com.minus(evilEr.diagramPanel.diagram.getWidth() / 2d, evilEr.diagramPanel.diagram.getHeight() / 2d);
-        evilEr.diagramPanel.diagram.entities.stream().filter(e -> !(e instanceof Specialization)).forEach(e -> e.decre(diff));
+        evilEr.diagramPanel.diagram.origin.set(com.negate()
+                .add(evilEr.diagramPanel.diagram.getWidth() / 2d / evilEr.diagramPanel.diagram.scale,
+                        evilEr.diagramPanel.diagram.getHeight() / 2d / evilEr.diagramPanel.diagram.scale));
         evilEr.diagramPanel.diagram.repaint();
     }
 }

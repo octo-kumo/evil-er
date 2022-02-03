@@ -44,7 +44,7 @@ public class Attribute extends Entity {
     @Override
     public void prepaint(DiagramGraphics g) {
         super.prepaint(g);
-        drawShape(g, new Line2D.Double(Vector.ZERO, truePosition().neg()));
+        g.draw(new Line2D.Double(Vector.ZERO, truePosition().neg()));
     }
 
     @Override
