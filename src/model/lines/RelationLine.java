@@ -37,7 +37,7 @@ public class RelationLine<T extends Entity> extends Line<Relationship<T>, T> {
         g.setColor(toUse);
         if (a instanceof Specialization && b != ((Specialization) a).getSuperclass()) {
             Vector diff = b.minus(a);
-            double dis = 0.4;
+            double dis = 0.6;
             Vector mid = b.multi(1 - dis).add(a.multi(dis));
             g.draw(new SubsetSymbol(mid, diff, 10, g.getContext().getLineStyle()));
         }

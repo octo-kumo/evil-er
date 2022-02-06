@@ -49,6 +49,7 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
     private final Vector dragStart = new Vector(), targetStart = new Vector();
     public final Vector origin = new Vector();
     public double scale = 1;
+    public double exportScale = 4;
 
     public final Reactive<Entity> target = new Reactive<>();
     public final Reactive<Entity.Type> addingType = new Reactive<>(Entity.Type.Select);
@@ -132,11 +133,13 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
         int padding = 20;
         aabb.add(aabb.getMinX() - padding, aabb.getMinY() - padding);
         aabb.add(aabb.getMaxX() + padding, aabb.getMaxY() + padding);
+        aabb.setRect(aabb.getX() * exportScale, aabb.getY() * exportScale, aabb.getWidth() * exportScale, aabb.getHeight() * exportScale);
         BufferedImage img = new BufferedImage((int) aabb.getWidth(), (int) aabb.getHeight(), BufferedImage.TYPE_INT_RGB);
         Graphics2D g = img.createGraphics();
         g.setColor(Color.WHITE);
         g.fillRect(0, 0, (int) aabb.getWidth(), (int) aabb.getHeight());
         g.translate(-aabb.getX(), -aabb.getY());
+        g.scale(exportScale, exportScale);
         exporting = true;
         draw(new DiagramGraphics(g));
         exporting = false;

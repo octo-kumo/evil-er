@@ -163,11 +163,14 @@ public class EvilMenu extends JMenuBar {
             add(new JMenu("Line Style") {{
                 ButtonGroup group = new ButtonGroup();
                 Line.LineStyle[] values = Line.LineStyle.values();
-                for (Line.LineStyle type : values) {
-                    JRadioButtonMenuItem button;
-                    group.add(add(button = new JRadioButtonMenuItem(type.toString())));
-                    button.addActionListener(evt -> evilEr.diagramPanel.diagram.lineStyle.set(type));
+                Arrays.sort(values);
+                JRadioButtonMenuItem[] buttons = new JRadioButtonMenuItem[values.length];
+                for (int i = 0; i < values.length; i++) {
+                    Line.LineStyle type = values[i];
+                    group.add(add(buttons[i] = new JRadioButtonMenuItem(type.toString())));
+                    buttons[i].addActionListener(evt -> evilEr.diagramPanel.diagram.lineStyle.set(type));
                 }
+                evilEr.diagramPanel.diagram.lineStyle.addListener(s -> group.setSelected(buttons[Arrays.binarySearch(values, s)].getModel(), true));
             }});
             add(new JCheckBoxMenuItem("AABB") {{
                 evilEr.diagramPanel.diagram.aabb.addListener(this::setState);
