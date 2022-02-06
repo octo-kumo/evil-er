@@ -2,9 +2,11 @@ package model.rs;
 
 import main.renderer.DiagramGraphics;
 import model.Drawable;
-import model.Pair;
 import model.Vector;
+import model.others.Tuple;
+import shapes.lines.RangeLine;
 
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
@@ -17,10 +19,12 @@ public class Table extends Vector implements Drawable {
     public Map<String, Attribute> attributeMap;
 
     private List<Attribute> sorted;
-    private final List<Pair<Boolean, Table>> foreign;
+    private final List<Tuple<Boolean, String, Table>> foreign;
     private boolean highlighted;
     public long keyCount = 0;
     public long colCount = 0;
+
+    private List<Attribute> keys;
 
     public Table(String name) {
         this.name = name;
@@ -35,8 +39,8 @@ public class Table extends Vector implements Drawable {
         revalidate();
     }
 
-    public void add(Table other, boolean required) {
-        this.foreign.add(new Pair<>(required, other));
+    public void add(Table other, String name, boolean required) {
+        this.foreign.add(new Tuple<>(required, name, other));
         revalidate();
     }
 
@@ -48,15 +52,15 @@ public class Table extends Vector implements Drawable {
     public void revalidate() {
         this.sorted = attributeMap.values().stream().sorted(Comparator.naturalOrder()).collect(Collectors.toList());
         for (int i = 0; i < this.sorted.size(); i++) this.sorted.get(i).index = i;
-        keyCount = keys().count();
-        colCount = sorted.size() + foreign.stream().mapToLong(t -> t.getB().keyCount).sum();
+        keyCount = getKeys().size();
+        colCount = cols().count();
     }
 
     @Override
     public void draw(DiagramGraphics g) {
         AffineTransform transform = g.getTransform();
         g.translate(getX(), getY());
-        g.drawStringCenter(name, (float) (Attribute.WIDTH / 2), (float) (Attribute.HEIGHT / 2));
+        g.drawStringCenter(name, (float) (Attribute.WIDTH / 2), (float) (Attribute.HEIGHT / 2 + 5));
         if (highlighted) g.draw(getShape());
         g.translate(0, Attribute.HEIGHT);
         for (Attribute e : sorted) {
@@ -64,45 +68,64 @@ public class Table extends Vector implements Drawable {
             g.translate(Attribute.WIDTH, 0);
         }
         g.setTransform(transform);
-        int offset = 0;
-        for (Pair<Boolean, Table> other : foreign) {
-            other.getB().drawAsForeign(g, this.add((sorted.size() + offset) * Attribute.WIDTH, Attribute.HEIGHT));
-            offset += other.getB().keyCount;
+
+        Vector offset = this.add(sorted.size() * Attribute.WIDTH, Attribute.HEIGHT);
+        for (Tuple<Boolean, String, Table> other : foreign) {
+            other.getC().drawAsForeign(g, other.getA(), other.getB(), offset.clone());
+            offset.incre(other.getC().keyCount * Attribute.WIDTH, 0);
         }
+        if (highlighted) g.draw(getShapeWorld(), new Color(0, 0, 0, 30), Color.BLACK);
     }
 
     @Override
     public void predraw(DiagramGraphics g) {
-        int offset = 0;
-        for (Pair<Boolean, Table> other : foreign) {
-            other.getB().predrawAsForeign(g, this.add((sorted.size() + offset) * Attribute.WIDTH, Attribute.HEIGHT));
-            offset += other.getB().keyCount;
+        Vector offset = this.add(sorted.size() * Attribute.WIDTH, Attribute.HEIGHT);
+        for (Tuple<Boolean, String, Table> other : foreign) {
+            other.getC().predrawAsForeign(g, offset.clone());
+            offset.incre(other.getC().keyCount * Attribute.WIDTH, 0);
         }
     }
 
-    public void drawAsForeign(DiagramGraphics g, Vector origin) {
-        selfKeys().forEach(e -> {
-            e.drawAsForeign(g, origin);
+    static final Font small = new Font(null, Font.PLAIN, 10);
+
+    public void drawAsForeign(DiagramGraphics g, Boolean isKey, String b, Vector origin) {
+        double diff = keyCount * .5 * Attribute.WIDTH;
+        Vector center = origin.add(diff, 7);
+        keys.forEach(e -> {
+            e.drawAsForeign(g, isKey,origin);
             origin.incre(Attribute.WIDTH, 0);
         });
-        foreign.stream().filter(Pair::getA).forEach(e -> e.getB().drawAsForeign(g, origin));
+        g.draw(new RangeLine(center.add(-diff, 0), center.add(diff, 0)));
+        Font font = g.getFont();
+        g.setFont(small);
+        g.drawStringCenter(b, center, Color.WHITE);
+        g.setFont(font);
     }
 
     public void predrawAsForeign(DiagramGraphics g, Vector origin) {
-        selfKeys().forEach(e -> {
+        keys.forEach(e -> {
             e.drawLine(g, origin);
             origin.incre(Attribute.WIDTH, 0);
         });
-        foreign.stream().filter(Pair::getA).forEach(e -> e.getB().predrawAsForeign(g, origin));
     }
 
-    public Stream<Attribute> selfKeys() {
-        return sorted.stream().filter(e -> e.key);
+    /**
+     * Combines keys and all required foreign keys
+     *
+     * @return minimal set of keys
+     */
+    public List<Attribute> getKeys() {
+        return keys = Stream.concat(sorted.stream().filter(e -> e.key),
+                foreign.stream().filter(Tuple::getA).flatMap(e -> e.getC().getKeys().stream())).collect(Collectors.toList());
     }
 
-    public Stream<Attribute> keys() {
-        return Stream.concat(sorted.stream().filter(e -> e.key),
-                foreign.stream().filter(Pair::getA).flatMap(e -> e.getB().keys()));
+    /**
+     * Combine all columns and all foreign keys
+     *
+     * @return all columns
+     */
+    public Stream<Attribute> cols() {
+        return Stream.concat(sorted.stream(), foreign.stream().flatMap(e -> e.getC().getKeys().stream()));
     }
 
     public Rectangle2D getShapeWorld() {

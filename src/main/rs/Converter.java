@@ -9,6 +9,7 @@ import model.rs.Table;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -16,10 +17,11 @@ import java.util.stream.Stream;
 public class Converter {
     public static void convert(ArrayList<Entity> entities, ArrayList<Table> tables) {
         HashMap<Entity, Table> tableMap = new HashMap<>();
+        AtomicInteger numEntity = new AtomicInteger();
         entities.stream().filter(entity -> entity.getClass() == Entity.class).filter(entity -> !entity.attributes.isEmpty()).forEach(entity -> {
             Table table = new Table(entity.getName());
             flatten(entity.attributes).forEach(e -> table.add(new Attribute(e.getName(), e.isKey())));
-            table.set(Math.random() * 1000, Math.random() * 1000);
+            table.set(0, numEntity.getAndIncrement() * Attribute.HEIGHT * 2);
             tables.add(table);
             tableMap.put(entity, table);
         });
@@ -29,10 +31,8 @@ public class Converter {
             int combineTo = findEntityToMerge((Relationship<?>) entity);
             if (combineTo != -1) {
                 Entity combineToEntity = ((Relationship<?>) entity).nodes.get(combineTo);
-                if (combineToEntity != entity) {
-                    System.out.println("\tCombining into " + combineTo + ": " + combineToEntity.getName());
-                    nTable = tableMap.get(combineToEntity);
-                }
+                System.out.println("\tCombining into " + combineTo + ": " + combineToEntity.getName());
+                nTable = tableMap.get(combineToEntity);
             }
 
             Table table = nTable;
@@ -44,12 +44,13 @@ public class Converter {
                 Table found = firstIdentifiableTable(tableMap, entities, nodes.get(i));
                 if (found != null) {
                     System.out.println("\tAdded table, " + found.name);
-                    table.add(found, entity.isWeak());
+                    table.add(found, found.name, entity.isWeak());
                 }
             }
-            table.set(Vector.average(((Relationship<?>) entity).nodes.stream()
+
+            if (combineTo == -1) table.set(600, Vector.average(((Relationship<?>) entity).nodes.stream()
                     .map(tableMap::get).filter(Objects::nonNull)
-                    .collect(Collectors.toList())));
+                    .collect(Collectors.toList())).getY());
 
             tables.add(table);
             tableMap.put(entity, table);
@@ -63,22 +64,16 @@ public class Converter {
             if (parent == null) return;
             ((Specialization) entity).getSubclasses().forEach(e -> {
                 if (tableMap.get(e) != null) {
-                    tableMap.get(e).add(parent, true);
+                    tableMap.get(e).add(parent, "inherits", true);
                 }
             });
         });
+        tables.forEach(Table::revalidate);
     }
 
     public static @Nullable Entity findSuperclass(ArrayList<Entity> entities, Entity entity) {
         return entities.stream().filter(e -> e instanceof Specialization && ((Specialization) e).hasSubclass(entity))
                 .map(e -> ((Specialization) e).getSuperclass()).findAny().orElse(null);
-    }
-
-    public static Stream<model.er.Attribute> findIdentifiers(ArrayList<Entity> entities, Entity entity) {
-        Stream<model.er.Attribute> attributeStream = entity.attributes.stream().filter(model.er.Attribute::isKey);
-        Entity sp = findSuperclass(entities, entity);
-        if (sp != null) attributeStream = Stream.concat(attributeStream, findIdentifiers(entities, sp));
-        return attributeStream;
     }
 
     public static int findEntityToMerge(Relationship<?> relationship) {

@@ -50,11 +50,12 @@ public class Attribute extends Vector implements Drawable, Comparable<Attribute>
     }
 
     public void drawLine(DiagramGraphics g, Vector origin) {
-        g.draw(new SchemaLine(origin.add(OFFSET), this.add(OFFSET)));
+        g.draw(new SchemaLine(origin.add(OFFSET), this.add(OFFSET), true));
     }
 
-    public void drawAsForeign(DiagramGraphics g, Vector origin) {
+    public void drawAsForeign(DiagramGraphics g, Boolean key, Vector origin) {
         g.draw(new Rectangle2D.Double(origin.getX(), origin.getY(), WIDTH, HEIGHT), Color.WHITE, Color.BLACK);
-        g.drawStringCenter(name + " (FK)", (float) (origin.getX() + WIDTH / 2), (float) (origin.getY() + HEIGHT / 2));
+        g.drawStringCenter(name + " (FK)", origin.add(WIDTH / 2, HEIGHT / 2));
+        if (key) g.draw(g.lineUnderString(name + " (FK)", origin.add(WIDTH / 2, HEIGHT / 2 + 3)));
     }
 }

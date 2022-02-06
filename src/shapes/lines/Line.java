@@ -1,7 +1,7 @@
 package shapes.lines;
 
 import model.Drawable;
-import model.Node;
+import model.er.Node;
 
 public abstract class Line<A extends Node, B extends Node> implements Drawable {
     public enum LineStyle {

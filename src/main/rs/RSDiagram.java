@@ -9,6 +9,7 @@ import model.others.Reactive;
 import model.rs.Table;
 import org.jetbrains.annotations.Nullable;
 import shapes.lines.Line;
+import shapes.lines.SchemaLine;
 
 import javax.swing.*;
 import java.awt.*;
@@ -94,6 +95,7 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
     }
 
     public void draw(DiagramGraphics g) {
+        SchemaLine.resetLines();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g.setColor(Color.BLACK);

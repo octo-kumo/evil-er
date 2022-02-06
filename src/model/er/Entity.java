@@ -1,7 +1,6 @@
 package model.er;
 
 import com.google.gson.annotations.Expose;
-import model.Node;
 import model.Vector;
 import main.renderer.DiagramGraphics;
 

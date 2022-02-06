@@ -1,7 +1,6 @@
 package model;
 
 import com.google.gson.annotations.Expose;
-import model.er.Entity;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.geom.Point2D;

@@ -1,4 +1,4 @@
-package model;
+package model.others;
 
 public class Pair<A, B> {
     private A a;

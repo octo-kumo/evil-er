@@ -1,6 +1,8 @@
-package model;
+package model.er;
 
 import main.renderer.DiagramGraphics;
+import model.Drawable;
+import model.Vector;
 
 import java.awt.geom.AffineTransform;
 
