@@ -1,9 +1,4 @@
-package main;
-
-import main.ui.ControlPanel;
-import main.ui.DiagramPanel;
-import main.ui.EvilMenu;
-import main.ui.InfoPanel;
+package main.er;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,21 +6,20 @@ import java.awt.*;
 import static main.ui.Prompts.report;
 
 public class EvilEr extends JPanel {
-    private static EvilEr evilEr;
-    public final ControlPanel controlPanel;
-    public final DiagramPanel diagramPanel;
-    public final InfoPanel infoPanel;
+    public final ERControlPanel controlPanel;
+    public final ERDiagramPanel diagramPanel;
+    public final ERInfoPanel infoPanel;
 
     public EvilEr() {
         setLayout(new BorderLayout());
 
-        diagramPanel = new DiagramPanel(this);
+        diagramPanel = new ERDiagramPanel(this);
         add(diagramPanel, BorderLayout.CENTER);
 
-        controlPanel = new ControlPanel(this);
+        controlPanel = new ERControlPanel(this);
         add(controlPanel, BorderLayout.NORTH);
 
-        infoPanel = new InfoPanel(this);
+        infoPanel = new ERInfoPanel(this);
         add(infoPanel, BorderLayout.EAST);
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(diagramPanel.diagram.keyManager);
@@ -41,8 +35,9 @@ public class EvilEr extends JPanel {
         }
         JFrame frame = new JFrame("Evil ER");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        EvilEr evilEr;
         frame.setContentPane(evilEr = new EvilEr());
-        frame.setJMenuBar(new EvilMenu(evilEr));
+        frame.setJMenuBar(new ERMenu(evilEr));
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);

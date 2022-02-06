@@ -4,11 +4,11 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
-import model.entities.Attribute;
-import model.entities.Entity;
-import model.entities.Relationship;
-import model.entities.Specialization;
-import model.lines.RelationLine;
+import model.er.Attribute;
+import model.er.Entity;
+import model.er.Relationship;
+import model.er.Specialization;
+import shapes.lines.RelationLine;
 
 import java.io.Writer;
 import java.lang.reflect.Type;

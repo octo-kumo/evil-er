@@ -1,7 +1,7 @@
 package model.serializers;
 
 import com.google.gson.*;
-import model.entities.Attribute;
+import model.er.Attribute;
 
 import java.lang.reflect.Type;
 

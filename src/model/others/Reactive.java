@@ -1,6 +1,6 @@
 package model.others;
 
-import model.i.ChangeListener;
+import model.callbacks.ChangeListener;
 
 import java.util.ArrayList;
 

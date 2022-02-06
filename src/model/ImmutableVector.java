@@ -1,11 +1,11 @@
 package model;
 
-public class Immutable extends Vector {
-    public Immutable(double x, double y) {
+public class ImmutableVector extends Vector {
+    public ImmutableVector(double x, double y) {
         super(x, y);
     }
 
-    public Immutable() {
+    public ImmutableVector() {
         super(0, 0);
     }
 

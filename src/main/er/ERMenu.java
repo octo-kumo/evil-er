@@ -1,11 +1,9 @@
-package main.ui;
+package main.er;
 
 import com.google.gson.stream.JsonReader;
-import main.EvilEr;
 import model.Vector;
-import model.entities.Entity;
-import model.entities.Specialization;
-import model.lines.Line;
+import model.er.Entity;
+import shapes.lines.Line;
 import model.others.TransferableImage;
 import model.serializers.Serializer;
 
@@ -23,11 +21,11 @@ import java.util.Arrays;
 
 import static main.ui.Prompts.report;
 
-public class EvilMenu extends JMenuBar {
+public class ERMenu extends JMenuBar {
 
     private final EvilEr evilEr;
 
-    public EvilMenu(EvilEr evilEr) {
+    public ERMenu(EvilEr evilEr) {
         this.evilEr = evilEr;
         add(new JMenu("File") {{
             add(new JMenuItem(new AbstractAction("Open") {
@@ -100,7 +98,7 @@ public class EvilMenu extends JMenuBar {
                 setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
             }});
             add(new JMenuItem("Center") {{
-                addActionListener(EvilMenu.this::center);
+                addActionListener(ERMenu.this::center);
                 setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C,
                         InputEvent.SHIFT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
             }});

@@ -1,9 +1,9 @@
-package model.entities;
+package model.er;
 
 import com.google.gson.annotations.Expose;
 import main.renderer.DiagramGraphics;
-import model.lines.Line;
-import model.lines.RelationLine;
+import shapes.lines.Line;
+import shapes.lines.RelationLine;
 import shapes.Diamond;
 
 import java.awt.*;

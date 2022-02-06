@@ -1,10 +1,16 @@
 package model.others;
 
-import model.entities.Attribute;
-import model.entities.Entity;
-import model.entities.Relationship;
-import model.entities.Specialization;
+import com.google.gson.stream.JsonReader;
+import main.rs.Converter;
+import model.er.Attribute;
+import model.er.Entity;
+import model.er.Relationship;
+import model.er.Specialization;
+import model.rs.Table;
+import model.serializers.Serializer;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.ArrayList;
 
 public class Examples {
@@ -36,5 +42,15 @@ public class Examples {
         s.addNode(c, new Relationship.RelationshipSpec(false));
         s.addNode(d, new Relationship.RelationshipSpec(true));
         s.set(500, 300);
+    }
+
+    public static void populateTables(ArrayList<Table> tables) {
+        try {
+            JsonReader reader = new JsonReader(new FileReader("C:\\Users\\zy\\OneDrive\\Documents\\diagram.dig"));
+            ArrayList<Entity> deserialized = Serializer.deserialize(reader);
+            Converter.convert(deserialized, tables);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -1,11 +1,8 @@
 package model.serializers;
 
-import com.google.common.reflect.TypeToken;
 import com.google.gson.*;
-import model.entities.Attribute;
-import model.entities.Entity;
-import model.entities.Relationship;
-import model.entities.Specialization;
+import model.er.Entity;
+import model.er.Specialization;
 
 import java.lang.reflect.Type;
 

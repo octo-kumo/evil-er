@@ -1,7 +1,6 @@
-package shapes;
+package shapes.lines;
 
 import model.Vector;
-import model.lines.Line;
 
 import java.awt.geom.Path2D;
 

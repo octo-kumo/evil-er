@@ -1,11 +1,12 @@
-package model.entities;
+package model.er;
 
 import com.google.gson.annotations.Expose;
 import main.renderer.DiagramGraphics;
-import model.lines.RelationLine;
+import shapes.lines.RelationLine;
 
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
+import java.util.List;
 
 public class Specialization extends Relationship<Entity> {
     @Expose
@@ -93,5 +94,13 @@ public class Specialization extends Relationship<Entity> {
 
     public void setDisjointSpecialization(boolean disjointSpecialization) {
         this.disjointSpecialization = disjointSpecialization;
+    }
+
+    public boolean hasSubclass(Entity subclass) {
+        return nodes.indexOf(subclass) > 0;
+    }
+
+    public List<Entity> getSubclasses() {
+        return nodes.subList(1, nodes.size());
     }
 }

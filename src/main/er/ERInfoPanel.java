@@ -1,15 +1,14 @@
-package main.ui;
+package main.er;
 
-import main.EvilEr;
 import main.ui.components.ButtonColumn;
 import main.ui.components.PlaceholderTextField;
-import model.entities.Attribute;
-import model.entities.Entity;
-import model.entities.Relationship;
-import model.entities.Specialization;
-import model.i.ChangeListener;
-import model.i.Consumer;
-import model.i.Getter;
+import model.er.Attribute;
+import model.er.Entity;
+import model.er.Relationship;
+import model.er.Specialization;
+import model.callbacks.ChangeListener;
+import model.callbacks.Consumer;
+import model.callbacks.Getter;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -20,11 +19,11 @@ import java.awt.event.ActionListener;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-public class InfoPanel extends JPanel implements ChangeListener<Entity> {
+public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
     private final JPanel entityControls;
     private final EvilEr evilEr;
 
-    public InfoPanel(EvilEr evilEr) {
+    public ERInfoPanel(EvilEr evilEr) {
         this.evilEr = evilEr;
         setPreferredSize(new Dimension(256, 0));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));

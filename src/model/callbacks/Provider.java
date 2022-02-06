@@ -1,4 +1,4 @@
-package model.i;
+package model.callbacks;
 
 public interface Provider<S, T> {
     T provide(S s);

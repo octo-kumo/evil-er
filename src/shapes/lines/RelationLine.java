@@ -1,11 +1,10 @@
-package model.lines;
+package shapes.lines;
 
 import main.renderer.DiagramGraphics;
 import model.Vector;
-import model.entities.Entity;
-import model.entities.Relationship;
-import model.entities.Specialization;
-import shapes.FancyLine;
+import model.er.Entity;
+import model.er.Relationship;
+import model.er.Specialization;
 import shapes.SubsetSymbol;
 
 import java.awt.*;

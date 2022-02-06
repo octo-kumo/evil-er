@@ -1,6 +1,6 @@
 package main.ui.components;
 
-import main.renderer.Diagram;
+import main.er.ERDiagram;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -9,9 +9,9 @@ import java.awt.event.KeyListener;
 public class KeyManager implements KeyListener, KeyEventDispatcher {
 
     public boolean CTRL, SHIFT, ALT;
-    private final Diagram diagram;
+    private final ERDiagram diagram;
 
-    public KeyManager(Diagram diagram) {
+    public KeyManager(ERDiagram diagram) {
         this.diagram = diagram;
     }
 

@@ -1,15 +1,15 @@
-package main.renderer;
+package main.er;
 
-import main.ui.DiagramPanel;
+import main.renderer.DiagramGraphics;
 import main.ui.components.KeyManager;
 import model.Drawable;
 import model.Vector;
-import model.entities.Attribute;
-import model.entities.Entity;
-import model.entities.Relationship;
-import model.entities.Specialization;
-import model.i.DrawContext;
-import model.lines.Line;
+import model.er.Attribute;
+import model.er.Entity;
+import model.er.Relationship;
+import model.er.Specialization;
+import model.callbacks.DrawContext;
+import shapes.lines.Line;
 import model.others.Examples;
 import model.others.Reactive;
 import org.jetbrains.annotations.Nullable;
@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 
 import static main.renderer.DiagramGraphics.flatten;
 
-public class Diagram extends JComponent implements MouseListener, MouseMotionListener, DrawContext, Drawable, MouseWheelListener {
+public class ERDiagram extends JComponent implements MouseListener, MouseMotionListener, DrawContext, Drawable, MouseWheelListener {
 
     public boolean acceptingKeys = true;
     public final KeyManager keyManager;
@@ -61,9 +61,9 @@ public class Diagram extends JComponent implements MouseListener, MouseMotionLis
 
     private Relationship<Entity> connectBase;
     private final Vector connectPos = new Vector();
-    private final DiagramPanel diagramPanel;
+    private final ERDiagramPanel diagramPanel;
 
-    public Diagram(DiagramPanel diagramPanel) {
+    public ERDiagram(ERDiagramPanel diagramPanel) {
         this.diagramPanel = diagramPanel;
         addMouseListener(this);
         addMouseMotionListener(this);

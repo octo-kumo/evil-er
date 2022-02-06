@@ -1,8 +1,8 @@
 package main.renderer;
 
 import model.Vector;
-import model.entities.Entity;
-import model.i.DrawContext;
+import model.er.Entity;
+import model.callbacks.DrawContext;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;

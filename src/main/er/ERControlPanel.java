@@ -1,8 +1,7 @@
-package main.ui;
+package main.er;
 
-import main.EvilEr;
-import model.entities.Entity;
-import model.lines.Line;
+import model.er.Entity;
+import shapes.lines.Line;
 import model.others.TransferableImage;
 
 import javax.imageio.ImageIO;
@@ -16,14 +15,14 @@ import java.io.IOException;
 
 import static main.ui.Prompts.report;
 
-public class ControlPanel extends JPanel implements ClipboardOwner {
+public class ERControlPanel extends JPanel implements ClipboardOwner {
 
     private final EvilEr evilEr;
     public final JCheckBox lock;
     public final JComboBox<Entity.Type> typeBox;
     public final JComboBox<Line.LineStyle> styleBox;
 
-    public ControlPanel(EvilEr evilEr) {
+    public ERControlPanel(EvilEr evilEr) {
         this.evilEr = evilEr;
         setLayout(new FlowLayout());
         add(lock = new JCheckBox("Lock") {{

@@ -1,4 +1,4 @@
-package model.lines;
+package shapes.lines;
 
 import model.Drawable;
 import model.Node;

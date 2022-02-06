@@ -1,4 +1,4 @@
-package model.entities;
+package model.er;
 
 import com.google.gson.annotations.Expose;
 import main.renderer.DiagramGraphics;

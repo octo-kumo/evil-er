@@ -1,21 +1,19 @@
-package main.ui;
+package main.er;
 
-import main.EvilEr;
 import model.Vector;
-import model.entities.Entity;
-import main.renderer.Diagram;
+import model.er.Entity;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-public class DiagramPanel extends JPanel implements ComponentListener {
-    public final Diagram diagram;
+public class ERDiagramPanel extends JPanel implements ComponentListener {
+    public final ERDiagram diagram;
     private final JTextField input;
     private Entity inputTarget = null;
     private EvilEr evilEr;
 
-    public DiagramPanel(EvilEr evilEr) {
+    public ERDiagramPanel(EvilEr evilEr) {
         this.evilEr = evilEr;
         setLayout(null);
         addComponentListener(this);
@@ -28,7 +26,7 @@ public class DiagramPanel extends JPanel implements ComponentListener {
             setHorizontalAlignment(CENTER);
             addActionListener(e -> requestNameEdit(null));
         }});
-        add(diagram = new Diagram(this));
+        add(diagram = new ERDiagram(this));
     }
 
     public void requestNameEdit(Entity entity) {

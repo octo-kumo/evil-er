@@ -1,16 +1,25 @@
 package model;
 
 import com.google.gson.annotations.Expose;
+import model.er.Entity;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.geom.Point2D;
+import java.util.List;
 
 public class Vector extends Point2D {
     @Expose
     protected double x;
     @Expose
     protected double y;
-    public static final Vector ZERO = new Immutable(0, 0);
+    public static final ImmutableVector ZERO = new ImmutableVector();
+
+    public static Vector average(List<? extends Vector> nodes) {
+        return nodes.stream()
+                .map(Vector.class::cast)
+                .reduce(Vector::add)
+                .orElse(Vector.ZERO).div(nodes.size());
+    }
 
     public double getX() {
         return x;

@@ -1,6 +1,6 @@
-package model.i;
+package model.callbacks;
 
-import model.lines.Line;
+import shapes.lines.Line;
 
 public interface DrawContext {
     Line.LineStyle getLineStyle();
