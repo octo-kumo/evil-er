@@ -50,7 +50,10 @@ public class Attribute extends Entity {
     @Override
     public void paint(DiagramGraphics g) {
         super.paint(g);
-        if (isKey()) drawShape(g, g.lineUnderString(getName(), 0, 3));
+        if (isKey()) {
+            if (parent.isWeak()) g.dashed(g.lineUnderString(getName(), 0, 3));
+            else drawShape(g, g.lineUnderString(getName(), 0, 3));
+        }
     }
 
     @Override

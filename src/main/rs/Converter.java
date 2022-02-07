@@ -44,7 +44,7 @@ public class Converter {
                 Table found = firstIdentifiableTable(tableMap, entities, nodes.get(i));
                 if (found != null) {
                     System.out.println("\tAdded table, " + found.name);
-                    table.add(found, found.name, entity.isWeak());
+                    table.add(found, combineTo == -1 ? found.name : entity.getName(), entity.isWeak());
                 }
             }
 
@@ -62,6 +62,7 @@ public class Converter {
             if (tableMap.get(sp) == null) sp = findSuperclass(entities, sp);
             Table parent = tableMap.get(sp);
             if (parent == null) return;
+            parent.add(new Attribute("type", false));
             ((Specialization) entity).getSubclasses().forEach(e -> {
                 if (tableMap.get(e) != null) {
                     tableMap.get(e).add(parent, "inherits", true);

@@ -7,7 +7,7 @@ import static main.ui.Prompts.report;
 
 public class EvilRs extends JPanel {
 
-    private final RSDiagram diagram;
+    public final RSDiagram diagram;
 
     public EvilRs() {
         setLayout(new BorderLayout());
@@ -26,7 +26,9 @@ public class EvilRs extends JPanel {
         }
         JFrame frame = new JFrame("Evil RS");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        frame.setContentPane(new EvilRs());
+        EvilRs evilRs = new EvilRs();
+        frame.setContentPane(evilRs);
+        frame.setJMenuBar(new RSMenu(evilRs));
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);

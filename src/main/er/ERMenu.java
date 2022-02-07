@@ -1,16 +1,18 @@
 package main.er;
 
 import com.google.gson.stream.JsonReader;
+import main.rs.Converter;
+import main.rs.EvilRs;
+import main.rs.RSMenu;
+import main.ui.Prompts;
 import model.Vector;
 import model.er.Entity;
-import shapes.lines.Line;
 import model.others.TransferableImage;
 import model.serializers.Serializer;
+import shapes.lines.Line;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
@@ -30,8 +32,8 @@ public class ERMenu extends JMenuBar {
         add(new JMenu("File") {{
             add(new JMenuItem(new AbstractAction("Open") {
                 public void actionPerformed(ActionEvent ae) {
-                    if (JFileChooser.APPROVE_OPTION == jsonChooser.showOpenDialog(evilEr)) {
-                        try (JsonReader reader = new JsonReader(new FileReader(jsonChooser.getFinal()))) {
+                    if (JFileChooser.APPROVE_OPTION == main.ui.Chooser.jsonChooser.showOpenDialog(evilEr)) {
+                        try (JsonReader reader = new JsonReader(new FileReader(main.ui.Chooser.jsonChooser.getFinal()))) {
                             ArrayList<Entity> deserialized = Serializer.deserialize(reader);
                             evilEr.diagramPanel.diagram.entities.clear();
                             evilEr.diagramPanel.diagram.entities.addAll(deserialized);
@@ -62,8 +64,8 @@ public class ERMenu extends JMenuBar {
             }});
             add(new JMenuItem(new AbstractAction("Save as...") {
                 public void actionPerformed(ActionEvent ae) {
-                    if (JFileChooser.APPROVE_OPTION == jsonChooser.showSaveDialog(evilEr)) {
-                        try (Writer writer = new FileWriter(jsonChooser.getFinal())) {
+                    if (JFileChooser.APPROVE_OPTION == main.ui.Chooser.jsonChooser.showSaveDialog(evilEr)) {
+                        try (Writer writer = new FileWriter(main.ui.Chooser.jsonChooser.getFinal())) {
                             Serializer.serialize(evilEr.diagramPanel.diagram.entities, writer);
                         } catch (IOException e) {
                             report(e);
@@ -80,11 +82,29 @@ public class ERMenu extends JMenuBar {
             }) {{
                 setAccelerator(KeyStroke.getKeyStroke('C', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
             }});
+            add(new JMenuItem(new AbstractAction("To schema") {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    EvilRs rs = new EvilRs();
+                    JDialog dialog = new JDialog(evilEr.frame, "Relational Schema");
+                    dialog.setJMenuBar(new RSMenu(rs));
+                    dialog.setContentPane(rs);
+                    dialog.pack();
+                    dialog.setLocationRelativeTo(null);
+                    dialog.setVisible(true);
+
+                    try {
+                        Converter.convert(evilEr.diagramPanel.diagram.entities, rs.diagram.tables);
+                    } catch (Exception ex) {
+                        Prompts.report(ex);
+                    }
+                }
+            }));
             add(new JSeparator());
             add(new JMenuItem(new AbstractAction("Export...") {
                 public void actionPerformed(ActionEvent ae) {
-                    if (JFileChooser.APPROVE_OPTION == imageChooser.showSaveDialog(evilEr)) try {
-                        ImageIO.write(evilEr.diagramPanel.diagram.export(), "PNG", imageChooser.getFinal());
+                    if (JFileChooser.APPROVE_OPTION == main.ui.Chooser.imageChooser.showSaveDialog(evilEr)) try {
+                        ImageIO.write(evilEr.diagramPanel.diagram.export(), "PNG", main.ui.Chooser.imageChooser.getFinal());
                     } catch (IOException e) {
                         report(e);
                         e.printStackTrace();
@@ -186,38 +206,6 @@ public class ERMenu extends JMenuBar {
             }});
         }});
     }
-
-    private static final Chooser jsonChooser = new Chooser() {
-
-        public File getFinal() {
-            File file = getSelectedFile();
-            if (getDialogType() == SAVE_DIALOG && !getFileFilter().accept(file) && file != null)
-                file = new File(file.getAbsolutePath() + ".dig");
-            return file;
-        }
-
-        {
-            FileFilter imageFilter = new FileNameExtensionFilter("Diagram File", "json", "dig");
-            setDialogTitle("Select...");
-            setFileFilter(imageFilter);
-        }
-    };
-
-    private static final Chooser imageChooser = new Chooser() {
-
-        public File getFinal() {
-            File file = getSelectedFile();
-            if (getDialogType() == SAVE_DIALOG && !getFileFilter().accept(file) && file != null)
-                file = new File(file.getAbsolutePath() + ".png");
-            return file;
-        }
-
-        {
-            FileFilter imageFilter = new FileNameExtensionFilter("Image files", ImageIO.getReaderFileSuffixes());
-            setDialogTitle("Select...");
-            setFileFilter(imageFilter);
-        }
-    };
 
     private static class Chooser extends JFileChooser {
         public File getFinal() {

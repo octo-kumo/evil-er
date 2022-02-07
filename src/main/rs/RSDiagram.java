@@ -56,7 +56,6 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
         addMouseWheelListener(this);
 
         tables = new ArrayList<>();
-        Examples.populateTables(tables);
         addListeners();
         setPreferredSize(new Dimension(1280, 720));
     }

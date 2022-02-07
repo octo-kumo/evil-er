@@ -9,8 +9,10 @@ public class EvilEr extends JPanel {
     public final ERControlPanel controlPanel;
     public final ERDiagramPanel diagramPanel;
     public final ERInfoPanel infoPanel;
+    public JFrame frame;
 
-    public EvilEr() {
+    public EvilEr(JFrame frame) {
+        this.frame = frame;
         setLayout(new BorderLayout());
 
         diagramPanel = new ERDiagramPanel(this);
@@ -36,7 +38,7 @@ public class EvilEr extends JPanel {
         JFrame frame = new JFrame("Evil ER");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         EvilEr evilEr;
-        frame.setContentPane(evilEr = new EvilEr());
+        frame.setContentPane(evilEr = new EvilEr(frame));
         frame.setJMenuBar(new ERMenu(evilEr));
         frame.pack();
         frame.setLocationRelativeTo(null);
