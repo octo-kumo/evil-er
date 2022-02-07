@@ -9,6 +9,7 @@ import model.others.Pair;
 import model.rs.Column;
 import model.rs.Table;
 import org.jetbrains.annotations.Nullable;
+import utils.EnglishNoun;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -82,11 +83,11 @@ public class Converter {
         });
         tables.forEach(Table::revalidate);
         multiAttributes.forEach(p -> {
-            Table table = new Table(p.getB().name + "::" + p.getA().getName());
+            Table table = new Table(p.getB().name + "::" + EnglishNoun.pluralOf(p.getA().getName()));
             if (p.getA().attributes.size() > 0) // wtf composite multivalued attribute, ignoring recursive ones
                 flatten(p.getA().attributes).forEach(e -> table.add(new Column(e.getName(), true)));
             else
-                table.add(new Column(p.getA().getName(), true));
+                table.add(new Column(EnglishNoun.singularOf(p.getA().getName()), true));
             table.add(p.getB(), "attribute of", true);
             table.set(p.getB().add(p.getB().getShape().getWidth() + Column.WIDTH, 0));
             tables.add(table);
