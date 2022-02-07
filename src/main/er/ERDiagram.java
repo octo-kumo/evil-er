@@ -10,7 +10,7 @@ import model.er.Relationship;
 import model.er.Specialization;
 import model.callbacks.DrawContext;
 import shapes.lines.Line;
-import model.others.Examples;
+import utils.Examples;
 import model.others.Reactive;
 import org.jetbrains.annotations.Nullable;
 
