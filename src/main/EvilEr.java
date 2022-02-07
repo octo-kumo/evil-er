@@ -1,4 +1,9 @@
-package main.er;
+package main;
+
+import main.er.ERControlPanel;
+import main.er.ERDiagramPanel;
+import main.er.ERInfoPanel;
+import main.er.ERMenu;
 
 import javax.swing.*;
 import java.awt.*;
@@ -35,7 +40,7 @@ public class EvilEr extends JPanel {
             report(e);
             e.printStackTrace();
         }
-        JFrame frame = new JFrame("Evil ER");
+        JFrame frame = new JFrame("Evil ER :: " + Version.CURRENT);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         EvilEr evilEr;
         frame.setContentPane(evilEr = new EvilEr(frame));
@@ -43,5 +48,7 @@ public class EvilEr extends JPanel {
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+
+        Version.asyncUpdate();
     }
 }

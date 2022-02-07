@@ -1,6 +1,7 @@
 package main.er;
 
 import com.google.gson.stream.JsonReader;
+import main.EvilEr;
 import main.rs.Converter;
 import main.rs.EvilRs;
 import main.rs.RSMenu;

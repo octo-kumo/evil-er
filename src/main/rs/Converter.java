@@ -1,10 +1,12 @@
 package main.rs;
 
 import model.Vector;
+import model.er.Attribute;
 import model.er.Entity;
 import model.er.Relationship;
 import model.er.Specialization;
-import model.rs.Attribute;
+import model.others.Pair;
+import model.rs.Column;
 import model.rs.Table;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,37 +20,46 @@ public class Converter {
     public static void convert(ArrayList<Entity> entities, ArrayList<Table> tables) {
         HashMap<Entity, Table> tableMap = new HashMap<>();
         AtomicInteger numEntity = new AtomicInteger();
+        ArrayList<Pair<Attribute, Table>> multiAttributes = new ArrayList<>();
         entities.stream().filter(entity -> entity.getClass() == Entity.class).filter(entity -> !entity.attributes.isEmpty()).forEach(entity -> {
+            System.out.printf("Entity, %s%n", entity.getName());
             Table table = new Table(entity.getName());
-            flatten(entity.attributes).forEach(e -> table.add(new Attribute(e.getName(), e.isKey())));
-            table.set(0, numEntity.getAndIncrement() * Attribute.HEIGHT * 2);
+
+            flatten(entity.attributes).forEach(e -> table.add(new Column(e.getName(), e.isKey())));
+            entity.attributes.stream().filter(Attribute::isWeak).forEach(a -> {
+                System.out.println("\tMultivalued attribute " + entity.getName() + "::" + a.getName() + ", saving for later");
+                multiAttributes.add(new Pair<>(a, table));
+            });
+
+            table.set(0, numEntity.getAndIncrement() * Column.HEIGHT * 2);
             tables.add(table);
             tableMap.put(entity, table);
         });
         entities.stream().filter(entity -> entity.getClass() == Relationship.class).forEach(entity -> {
             System.out.printf("Relationship, %s, %s%n", entity.getName(), ((Relationship<?>) entity).nodes.stream().map(Entity::getName).collect(Collectors.toList()));
             Table nTable = new Table(entity.getName());
-            int combineTo = findEntityToMerge((Relationship<?>) entity);
-            if (combineTo != -1) {
-                Entity combineToEntity = ((Relationship<?>) entity).nodes.get(combineTo);
-                System.out.println("\tCombining into " + combineTo + ": " + combineToEntity.getName());
+            int combinedInTo = findEntityToMerge((Relationship<?>) entity);
+            if (combinedInTo != -1) {
+                Entity combineToEntity = ((Relationship<?>) entity).nodes.get(combinedInTo);
+                System.out.printf("\tCombining into (%d): %s%n", combinedInTo, combineToEntity.getName());
                 nTable = tableMap.get(combineToEntity);
             }
 
             Table table = nTable;
-            flatten(entity.attributes).forEach(e -> table.add(new Attribute(e.getName(), e.isKey())));
+
+            flatten(entity.attributes).forEach(e -> table.add(new Column(e.getName(), e.isKey())));
+            entity.attributes.stream().filter(Attribute::isWeak).forEach(a -> multiAttributes.add(new Pair<>(a, table)));
 
             List<Entity> nodes = ((Relationship<?>) entity).nodes;
-            for (int i = 0; i < nodes.size(); i++) {
-                if (combineTo == i) continue;
-                Table found = firstIdentifiableTable(tableMap, entities, nodes.get(i));
-                if (found != null) {
-                    System.out.println("\tAdded table, " + found.name);
-                    table.add(found, combineTo == -1 ? found.name : entity.getName(), entity.isWeak());
-                }
-            }
+            IntStream.range(0, nodes.size()).filter(i -> i != combinedInTo)
+                    .mapToObj(nodes::get)
+                    .map(e -> firstIdentifiableTable(tableMap, entities, e))
+                    .filter(Objects::nonNull).forEach(found -> {
+                        System.out.printf("\tAdded table, %s%n", found.name);
+                        table.add(found, combinedInTo == -1 ? found.name : entity.getName(), entity.isWeak());
+                    });
 
-            if (combineTo == -1) table.set(600, Vector.average(((Relationship<?>) entity).nodes.stream()
+            if (combinedInTo == -1) table.set(600, Vector.average(((Relationship<?>) entity).nodes.stream()
                     .map(tableMap::get).filter(Objects::nonNull)
                     .collect(Collectors.toList())).getY());
 
@@ -62,12 +73,24 @@ public class Converter {
             if (tableMap.get(sp) == null) sp = findSuperclass(entities, sp);
             Table parent = tableMap.get(sp);
             if (parent == null) return;
-            parent.add(new Attribute("type", false));
+            parent.add(new Column("type", false));
             ((Specialization) entity).getSubclasses().forEach(e -> {
                 if (tableMap.get(e) != null) {
                     tableMap.get(e).add(parent, "inherits", true);
                 }
             });
+        });
+        tables.forEach(Table::revalidate);
+        multiAttributes.forEach(p -> {
+            Table table = new Table(p.getB().name + "::" + p.getA().getName());
+            if (p.getA().attributes.size() > 0) // wtf composite multivalued attribute, ignoring recursive ones
+                flatten(p.getA().attributes).forEach(e -> table.add(new Column(e.getName(), true)));
+            else
+                table.add(new Column(p.getA().getName(), true));
+            table.add(p.getB(), "attribute of", true);
+            table.set(p.getB().add(p.getB().getShape().getWidth() + Column.WIDTH, 0));
+            tables.add(table);
+            tableMap.put(p.getA(), table);
         });
         tables.forEach(Table::revalidate);
     }
@@ -86,8 +109,8 @@ public class Converter {
         return -1;
     }
 
-    private static Stream<model.er.Attribute> flatten(ArrayList<model.er.Attribute> attributes) {
-        return attributes.stream().flatMap(a -> a.attributes.size() > 0 ? flatten(a.attributes) : Stream.of(a));
+    private static Stream<Attribute> flatten(ArrayList<Attribute> attributes) {
+        return attributes.stream().filter(a -> !a.isWeak()).flatMap(a -> a.attributes.size() > 0 ? flatten(a.attributes) : Stream.of(a));
     }
 
     public static @Nullable Table firstIdentifiableTable(HashMap<Entity, Table> tables, ArrayList<Entity> entities, Entity entity) {

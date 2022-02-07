@@ -10,7 +10,7 @@ import shapes.lines.SchemaLine;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 
-public class Attribute extends Vector implements Drawable, Comparable<Attribute> {
+public class Column extends Vector implements Drawable, Comparable<Column> {
     public static final double WIDTH = 100;
     public static final double HEIGHT = 40;
     public static final ImmutableVector OFFSET = new ImmutableVector() {{
@@ -23,7 +23,7 @@ public class Attribute extends Vector implements Drawable, Comparable<Attribute>
     public String name;
     public boolean key;
 
-    public Attribute(String name, boolean key) {
+    public Column(String name, boolean key) {
         this.name = name;
         this.key = key;
     }
@@ -45,12 +45,12 @@ public class Attribute extends Vector implements Drawable, Comparable<Attribute>
 
 
     @Override
-    public int compareTo(@NotNull Attribute other) {
+    public int compareTo(@NotNull Column other) {
         return Boolean.compare(other.key, this.key);
     }
 
     public void drawLine(DiagramGraphics g, Vector origin) {
-        g.draw(new SchemaLine(origin.add(OFFSET), this.add(OFFSET), true));
+        g.draw(new SchemaLine(origin.add(OFFSET), this.add(OFFSET), g.getContext().getLineStyle()));
     }
 
     public void drawAsForeign(DiagramGraphics g, Boolean key, Vector origin) {

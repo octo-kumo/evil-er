@@ -16,15 +16,15 @@ import java.util.stream.Stream;
 
 public class Table extends Vector implements Drawable {
     public String name;
-    public Map<String, Attribute> attributeMap;
+    public Map<String, Column> attributeMap;
 
-    private List<Attribute> sorted;
+    private List<Column> sorted;
     private final List<Tuple<Boolean, String, Table>> foreign;
     private boolean highlighted;
     public long keyCount = 0;
     public long colCount = 0;
 
-    private List<Attribute> keys;
+    private List<Column> keys;
 
     public Table(String name) {
         this.name = name;
@@ -33,9 +33,9 @@ public class Table extends Vector implements Drawable {
         this.foreign = new ArrayList<>();
     }
 
-    public void add(Attribute attribute) {
-        attribute.parent = this;
-        this.attributeMap.put(attribute.name, attribute);
+    public void add(Column column) {
+        column.parent = this;
+        this.attributeMap.put(column.name, column);
         revalidate();
     }
 
@@ -44,8 +44,8 @@ public class Table extends Vector implements Drawable {
         revalidate();
     }
 
-    public void remove(Attribute attribute) {
-        if (this.attributeMap.remove(attribute.name, attribute)) attribute.parent = null;
+    public void remove(Column column) {
+        if (this.attributeMap.remove(column.name, column)) column.parent = null;
         revalidate();
     }
 
@@ -60,40 +60,40 @@ public class Table extends Vector implements Drawable {
     public void draw(DiagramGraphics g) {
         AffineTransform transform = g.getTransform();
         g.translate(getX(), getY());
-        g.drawStringCenter(name, (float) (Attribute.WIDTH / 2), (float) (Attribute.HEIGHT / 2 + 5));
+        g.drawStringCenter(name, (float) (Column.WIDTH / 2), (float) (Column.HEIGHT / 2 + 5));
         if (highlighted) g.draw(getShape());
-        g.translate(0, Attribute.HEIGHT);
-        for (Attribute e : sorted) {
+        g.translate(0, Column.HEIGHT);
+        for (Column e : sorted) {
             e.draw(g);
-            g.translate(Attribute.WIDTH, 0);
+            g.translate(Column.WIDTH, 0);
         }
         g.setTransform(transform);
 
-        Vector offset = this.add(sorted.size() * Attribute.WIDTH, Attribute.HEIGHT);
+        Vector offset = this.add(sorted.size() * Column.WIDTH, Column.HEIGHT);
         for (Tuple<Boolean, String, Table> other : foreign) {
             other.getC().drawAsForeign(g, other.getA(), other.getB(), offset.clone());
-            offset.incre(other.getC().keyCount * Attribute.WIDTH, 0);
+            offset.incre(other.getC().keyCount * Column.WIDTH, 0);
         }
         if (highlighted) g.draw(getShapeWorld(), new Color(0, 0, 0, 30), Color.BLACK);
     }
 
     @Override
     public void predraw(DiagramGraphics g) {
-        Vector offset = this.add(sorted.size() * Attribute.WIDTH, Attribute.HEIGHT);
+        Vector offset = this.add(sorted.size() * Column.WIDTH, Column.HEIGHT);
         for (Tuple<Boolean, String, Table> other : foreign) {
             other.getC().predrawAsForeign(g, offset.clone());
-            offset.incre(other.getC().keyCount * Attribute.WIDTH, 0);
+            offset.incre(other.getC().keyCount * Column.WIDTH, 0);
         }
     }
 
     static final Font small = new Font(null, Font.PLAIN, 10);
 
     public void drawAsForeign(DiagramGraphics g, Boolean isKey, String b, Vector origin) {
-        double diff = keyCount * .5 * Attribute.WIDTH;
+        double diff = keyCount * .5 * Column.WIDTH;
         Vector center = origin.add(diff, 7);
         keys.forEach(e -> {
             e.drawAsForeign(g, isKey,origin);
-            origin.incre(Attribute.WIDTH, 0);
+            origin.incre(Column.WIDTH, 0);
         });
         g.draw(new RangeLine(center.add(-diff, 0), center.add(diff, 0)));
         Font font = g.getFont();
@@ -105,7 +105,7 @@ public class Table extends Vector implements Drawable {
     public void predrawAsForeign(DiagramGraphics g, Vector origin) {
         keys.forEach(e -> {
             e.drawLine(g, origin);
-            origin.incre(Attribute.WIDTH, 0);
+            origin.incre(Column.WIDTH, 0);
         });
     }
 
@@ -114,7 +114,7 @@ public class Table extends Vector implements Drawable {
      *
      * @return minimal set of keys
      */
-    public List<Attribute> getKeys() {
+    public List<Column> getKeys() {
         return keys = Stream.concat(sorted.stream().filter(e -> e.key),
                 foreign.stream().filter(Tuple::getA).flatMap(e -> e.getC().getKeys().stream())).collect(Collectors.toList());
     }
@@ -124,16 +124,16 @@ public class Table extends Vector implements Drawable {
      *
      * @return all columns
      */
-    public Stream<Attribute> cols() {
+    public Stream<Column> cols() {
         return Stream.concat(sorted.stream(), foreign.stream().flatMap(e -> e.getC().getKeys().stream()));
     }
 
     public Rectangle2D getShapeWorld() {
-        return new Rectangle2D.Double(getX(), getY(), colCount * Attribute.WIDTH, Attribute.HEIGHT * 2);
+        return new Rectangle2D.Double(getX(), getY(), colCount * Column.WIDTH, Column.HEIGHT * 2);
     }
 
     public Rectangle2D getShape() {
-        return new Rectangle2D.Double(0, 0, colCount * Attribute.WIDTH, Attribute.HEIGHT * 2);
+        return new Rectangle2D.Double(0, 0, colCount * Column.WIDTH, Column.HEIGHT * 2);
     }
 
     public void setHighlighted(boolean highlighted) {

@@ -1,5 +1,6 @@
 package main.er;
 
+import main.EvilEr;
 import model.er.Entity;
 import shapes.lines.Line;
 import model.others.TransferableImage;

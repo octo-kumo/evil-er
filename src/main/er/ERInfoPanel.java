@@ -1,5 +1,6 @@
 package main.er;
 
+import main.EvilEr;
 import main.ui.components.ButtonColumn;
 import main.ui.components.PlaceholderTextField;
 import model.er.Attribute;

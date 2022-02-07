@@ -1,7 +1,7 @@
 package shapes.lines;
 
 import model.Vector;
-import model.rs.Attribute;
+import model.rs.Column;
 
 import java.awt.geom.Path2D;
 import java.util.HashMap;
@@ -16,16 +16,21 @@ public class SchemaLine extends Path2D.Double {
         yTaken.clear();
     }
 
-    public SchemaLine(Vector a, Vector b) {
+    public SchemaLine(Vector a, Vector b, Line.LineStyle style) {
+        if (style == Line.LineStyle.AXIS_ALIGNED) axisLine(a, b);
+        else straightLine(a, b);
+    }
+
+    public void straightLine(Vector a, Vector b) {
         int state = Math.abs(b.getY() - a.getY()) < 30 ? 0 : b.getY() > a.getY() ? 1 : -1;
         moveTo(a.getX(), a.getY());
         lineTo(a.getX(), a.getY() + (state >= 0 ? 30 : -30));
         lineTo(b.getX(), b.getY() - (state > 0 ? 30 : -30));
         lineTo(b.getX(), b.getY());
-        arrow(state <= 0, b.getX(), b.getY() - (state > 0 ? Attribute.HEIGHT / 2 : -Attribute.HEIGHT / 2));
+        arrow(state <= 0, b.getX(), b.getY() - (state > 0 ? Column.HEIGHT / 2 : -Column.HEIGHT / 2));
     }
 
-    public SchemaLine(Vector a, Vector b, boolean t) {
+    public void axisLine(Vector a, Vector b) {
         int state = Math.abs(b.getY() - a.getY()) < 30 ? 0 : b.getY() > a.getY() ? 1 : -1;
 
         int targetX = (int) b.getX();
@@ -40,7 +45,7 @@ public class SchemaLine extends Path2D.Double {
         lineTo(a.getX(), targetY);
         lineTo(targetX, targetY);
         lineTo(targetX, b.getY());
-        arrow(state <= 0, targetX, b.getY() - (state > 0 ? Attribute.HEIGHT / 2 : -Attribute.HEIGHT / 2));
+        arrow(state <= 0, targetX, b.getY() - (state > 0 ? Column.HEIGHT / 2 : -Column.HEIGHT / 2));
     }
 
     public void arrow(boolean up, double x, double y) {

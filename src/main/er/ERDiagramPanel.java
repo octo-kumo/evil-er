@@ -1,5 +1,6 @@
 package main.er;
 
+import main.EvilEr;
 import model.Vector;
 import model.er.Entity;
 

@@ -199,7 +199,7 @@ public class Entity extends Node {
     }
 
     public static Vector repulsion(Vector diff, double R, double p) {
-        diff = diff.multi(Entity.HEIGHT / Entity.WIDTH, 1);
+        diff = diff.multi(Entity.WIDTH / Entity.HEIGHT, 1);
         double len = diff.len();
         if (len > R) return Vector.ZERO;
         double f = -p / Math.pow(Math.log(ensureNonZero(len) / R + 1), 2);
