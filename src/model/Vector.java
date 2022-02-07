@@ -14,7 +14,7 @@ public class Vector extends Point2D {
     public static final ImmutableVector ZERO = new ImmutableVector();
 
     public static Vector average(List<? extends Vector> nodes) {
-        return nodes.stream()
+        return nodes.parallelStream()
                 .map(Vector.class::cast)
                 .reduce(Vector::add)
                 .orElse(Vector.ZERO).div(nodes.size());

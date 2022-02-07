@@ -142,7 +142,7 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
             }});
             add(total = new JCheckBox());
             ActionListener action = evt -> {
-                Entity entity = evilEr.diagramPanel.diagram.entities.stream()
+                Entity entity = evilEr.diagramPanel.diagram.entities.parallelStream()
                         .filter(e -> e.getName().equals(name.getText())).findAny().orElseGet(() -> {
                             Entity n = new Entity().setName(name.getText());
                             evilEr.diagramPanel.diagram.entities.add(n);
@@ -170,7 +170,7 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
         panel.setBorder(new TitledBorder("Attributes"));
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-        Object[][] data = parent.attributes.stream().map(a -> new Object[]{a.getName(), a.isDerived(), a.isKey(), "✕"}).toArray(Object[][]::new);
+        Object[][] data = parent.attributes.parallelStream().map(a -> new Object[]{a.getName(), a.isDerived(), a.isKey(), "✕"}).toArray(Object[][]::new);
 
         DefaultTableModel tableModel;
         panel.add(new JScrollPane(new JTable(tableModel = new DefaultTableModel(data, new String[]{"Name", "Derived", "Key", ""}) {

@@ -161,7 +161,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     }
 
     public void burnBridges(Entity entity) {
-        entities.stream().filter(e -> e instanceof Relationship).map(e -> (Relationship<?>) e).forEach(r -> r.remove(entity));
+        entities.parallelStream().filter(e -> e instanceof Relationship).map(e -> (Relationship<?>) e).forEach(r -> r.remove(entity));
     }
 
     public void setAddingType(Entity.Type type) {
@@ -192,48 +192,65 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (current == ActionType.Creating && adding_buf != null) {
-            if (adding_buf instanceof Attribute) {
-                Entity parent = ((Attribute) adding_buf).getParent();
-                if (parent == null) return;
-                parent.addAttribute((Attribute) adding_buf);
-            } else entities.add(adding_buf);
-            if (!(adding_buf instanceof Attribute)) {
-                adding_buf.setHighlighted(true);
-                setTarget(adding_buf);
-            }
-            if (connecting.get() && connectBase != null && adding_buf.getClass() == Entity.class)
-                connectBase.addNode(adding_buf, new Relationship.RelationshipSpec("", false));
+        if (SwingUtilities.isLeftMouseButton(e)) {
+            if (current == ActionType.Creating && adding_buf != null) {
+                if (adding_buf instanceof Attribute) {
+                    Entity parent = ((Attribute) adding_buf).getParent();
+                    if (parent == null) return;
+                    parent.addAttribute((Attribute) adding_buf);
+                } else entities.add(adding_buf);
+                if (!(adding_buf instanceof Attribute)) {
+                    adding_buf.setHighlighted(true);
+                    setTarget(adding_buf);
+                }
+                if (connecting.get() && connectBase != null && adding_buf.getClass() == Entity.class)
+                    connectBase.addNode(adding_buf, new Relationship.RelationshipSpec("", false));
 
-            diagramPanel.requestNameEdit(adding_buf);
-            setAddingType(!locked.get() ? Entity.Type.Select : addingType.get());
-        } else if (e.getButton() == MouseEvent.BUTTON1) {
-            if (connecting.get() && connectTarget.get() != null && connectBase != null) {
-                connectBase.addNode(connectTarget.get(), new Relationship.RelationshipSpec("", false));
+                diagramPanel.requestNameEdit(adding_buf);
+                setAddingType(!locked.get() ? Entity.Type.Select : addingType.get());
+            } else {
+                if (connecting.get() && connectTarget.get() != null && connectBase != null) {
+                    connectBase.addNode(connectTarget.get(), new Relationship.RelationshipSpec("", false));
+                    repaint();
+                    return;
+                }
+                dragStart.set(e.getX(), e.getY());
+
+                /* SELECT ELEMENT */
+                /* IF NOT SELECT MULTIPLE, CLEAR HIGHLIGHT */
+                if (target.get() != null && !e.isShiftDown()) {
+                    find(Entity::isHighlighted).forEach(entity -> entity.setHighlighted(false)); // clear previous selection
+                    repaint();
+                }
+
+                Optional<Entity> found = getIntersect(unproject(dragStart));
+                if (!found.isPresent()) {
+                    setTarget(null);
+                    targetStart.set(origin);
+                    current = ActionType.Panning;
+                    diagramPanel.requestNameEdit(null);
+                    return;
+                }
+
+                if (target.get() == found.get() || found.get().isHighlighted()) {
+                    found.get().setHighlighted(false);
+                    setTarget(null);
+                    current = ActionType.Panning;
+                    diagramPanel.requestNameEdit(null);
+                    return;
+                }
+
+                setTarget(found.get());
+                targetStart.set(target.get());
+                current = ActionType.Moving;
                 repaint();
-                return;
             }
+        } else if (SwingUtilities.isRightMouseButton(e)) {
             dragStart.set(e.getX(), e.getY());
-
-            /* SELECT ELEMENT */
-            /* IF NOT SELECT MULTIPLE, CLEAR HIGHLIGHT */
-            if (target.get() != null && !e.isShiftDown()) {
-                find(Entity::isHighlighted).forEach(entity -> entity.setHighlighted(false)); // clear previous selection
-                repaint();
-            }
-
-            Optional<Entity> found = getIntersect(unproject(dragStart));
-            if (!found.isPresent()) {
-                setTarget(null);
-                targetStart.set(origin);
-                current = ActionType.Panning;
-                diagramPanel.requestNameEdit(null);
-                return;
-            }
-            setTarget(found.get());
-            targetStart.set(target.get());
-            current = ActionType.Moving;
-            repaint();
+            setTarget(null);
+            targetStart.set(origin);
+            current = ActionType.Panning;
+            diagramPanel.requestNameEdit(null);
         }
     }
 
@@ -252,15 +269,16 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     @Override
     public void mouseDragged(MouseEvent e) {
         if (SwingUtilities.isLeftMouseButton(e)) {
-            if (current == ActionType.Moving) {
+            if (current == ActionType.Moving && !connecting.get()) {
                 if (target.get() == null) return;
                 target.get().set(targetStart.add(unproject(e.getX(), e.getY())).minus(unproject(dragStart)));
                 if (e.isControlDown()) target.get().div(gridSize).round().scale(gridSize);
                 repaint();
-            } else if (current == ActionType.Panning) {
-                origin.set(targetStart.add(new Vector(e.getX(), e.getY()).decre(dragStart).div(scale)));
-                repaint();
             }
+        }
+        if (current == ActionType.Panning && (SwingUtilities.isRightMouseButton(e) || SwingUtilities.isLeftMouseButton(e))) {
+            origin.set(targetStart.add(new Vector(e.getX(), e.getY()).decre(dragStart).div(scale)));
+            repaint();
         }
     }
 
@@ -288,22 +306,25 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     @Override
     public void mouseMoved(MouseEvent e) {
         Vector pos = unproject(e.getX(), e.getY());
-        if (adding_buf != null) {
-            if (adding_buf instanceof Specialization)
-                ((Specialization) adding_buf).setSuperclass(getIntersect(connectPos.set(pos))
-                        .orElse(null));
-            if (!(adding_buf instanceof Specialization && ((Specialization) adding_buf).getSuperclass() != null))
-                adding_buf.set(pos);
-            if (adding_buf instanceof Attribute) getIntersect(connectPos.set(pos))
-                    .ifPresent(entity -> ((Attribute) adding_buf)
-                            .setParent(entity).set(pos));
+        if (current == ActionType.Creating) {
+            if (adding_buf != null) {
+                if (adding_buf instanceof Specialization)
+                    ((Specialization) adding_buf).setSuperclass(getIntersect(connectPos.set(pos))
+                            .orElse(null));
+                if (!(adding_buf instanceof Specialization && ((Specialization) adding_buf).getSuperclass() != null))
+                    adding_buf.set(pos);
+                if (adding_buf instanceof Attribute) getIntersect(connectPos.set(pos))
+                        .ifPresent(entity -> ((Attribute) adding_buf)
+                                .setParent(entity).set(pos));
+                repaint();
+            }
         }
         if (connecting.get() && connectBase != null) {
             connectTarget.set(getIntersect(connectPos.set(pos))
                     .filter(entity -> !(entity instanceof Relationship) && !(entity instanceof Attribute))
                     .orElse(null));
+            repaint();
         }
-        repaint();
     }
 
     @Override

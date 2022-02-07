@@ -229,7 +229,7 @@ public class ERMenu extends JMenuBar {
     }
 
     private void center(ActionEvent evt) {
-        Vector com = evilEr.diagramPanel.diagram.entities.stream().map(e -> (Vector) e).reduce(Vector::add).orElse(Vector.ZERO).div(evilEr.diagramPanel.diagram.entities.size());
+        Vector com = evilEr.diagramPanel.diagram.entities.parallelStream().map(e -> (Vector) e).reduce(Vector::add).orElse(Vector.ZERO).div(evilEr.diagramPanel.diagram.entities.size());
         evilEr.diagramPanel.diagram.origin.set(com.negate()
                 .add(evilEr.diagramPanel.diagram.getWidth() / 2d / evilEr.diagramPanel.diagram.scale,
                         evilEr.diagramPanel.diagram.getHeight() / 2d / evilEr.diagramPanel.diagram.scale));
