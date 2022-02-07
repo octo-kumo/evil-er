@@ -19,6 +19,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -31,6 +33,7 @@ public class ERMenu extends JMenuBar {
     public ERMenu(EvilEr evilEr) {
         this.evilEr = evilEr;
         add(new JMenu("File") {{
+            setMnemonic('F');
             add(new JMenuItem(new AbstractAction("Open") {
                 public void actionPerformed(ActionEvent ae) {
                     if (JFileChooser.APPROVE_OPTION == main.ui.Chooser.jsonChooser.showOpenDialog(evilEr)) {
@@ -114,6 +117,7 @@ public class ERMenu extends JMenuBar {
             }));
         }});
         add(new JMenu("Edit") {{
+            setMnemonic('E');
             add(new JMenuItem("Delete") {{
                 addActionListener(e -> evilEr.diagramPanel.diagram.delete());
                 setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
@@ -155,6 +159,7 @@ public class ERMenu extends JMenuBar {
             }});
         }});
         add(new JMenu("Add") {{
+            setMnemonic('A');
             add(new JMenu("Type...") {{
                 ButtonGroup group = new ButtonGroup();
                 char[] mnemonics = new char[]{'v', 'e', 'r', 'a', 's'};
@@ -179,6 +184,7 @@ public class ERMenu extends JMenuBar {
             }});
         }});
         add(new JMenu("View") {{
+            setMnemonic('V');
             add(new JMenu("Line Style") {{
                 ButtonGroup group = new ButtonGroup();
                 Line.LineStyle[] values = Line.LineStyle.values();
@@ -206,12 +212,20 @@ public class ERMenu extends JMenuBar {
                 });
             }});
         }});
-    }
-
-    private static class Chooser extends JFileChooser {
-        public File getFinal() {
-            return getSelectedFile();
-        }
+        add(new JMenu("Help") {{
+            setMnemonic('H');
+            add(new JMenuItem("About") {{
+                addActionListener(e -> {
+                    if (JOptionPane.showConfirmDialog(null,
+                            "EVIL ER\nMade by octo-kumo (***REMOVED***)\nVisit repository?", "About", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
+                        try {
+                            Desktop.getDesktop().browse(new URI("https://github.com/octo-kumo/evil-er"));
+                        } catch (IOException | URISyntaxException ex) {
+                            ex.printStackTrace();
+                        }
+                });
+            }});
+        }});
     }
 
     private void center(ActionEvent evt) {

@@ -56,11 +56,19 @@ public class Table extends Vector implements Drawable {
         colCount = cols().count();
     }
 
+    private static final Font title = new Font(null, Font.BOLD, 12);
+    private static final Font normal = new Font(null, Font.PLAIN, 12);
+    private static final Font small = new Font(null, Font.PLAIN, 10);
+
     @Override
     public void draw(DiagramGraphics g) {
         AffineTransform transform = g.getTransform();
         g.translate(getX(), getY());
-        g.drawStringCenter(name, (float) (Column.WIDTH / 2), (float) (Column.HEIGHT / 2 + 5));
+
+        g.setFont(title);
+        g.drawStringCenter(name, (float) (Column.WIDTH / 2), (float) (Column.HEIGHT / 2 + 10));
+        g.setFont(normal);
+
         if (highlighted) g.draw(getShape());
         g.translate(0, Column.HEIGHT);
         for (Column e : sorted) {
@@ -86,13 +94,11 @@ public class Table extends Vector implements Drawable {
         }
     }
 
-    static final Font small = new Font(null, Font.PLAIN, 10);
-
     public void drawAsForeign(DiagramGraphics g, Boolean isKey, String b, Vector origin) {
         double diff = keyCount * .5 * Column.WIDTH;
         Vector center = origin.add(diff, 7);
         keys.forEach(e -> {
-            e.drawAsForeign(g, isKey,origin);
+            e.drawAsForeign(g, isKey, origin);
             origin.incre(Column.WIDTH, 0);
         });
         g.draw(new RangeLine(center.add(-diff, 0), center.add(diff, 0)));
