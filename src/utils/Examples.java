@@ -1,16 +1,10 @@
 package utils;
 
-import com.google.gson.stream.JsonReader;
-import main.rs.Converter;
 import model.er.Attribute;
 import model.er.Entity;
 import model.er.Relationship;
 import model.er.Specialization;
-import model.rs.Table;
-import model.serializers.Serializer;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.util.ArrayList;
 
 public class Examples {

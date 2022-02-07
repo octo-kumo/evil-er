@@ -31,7 +31,7 @@ public class DiagramGraphics extends Graphics2D {
     public DrawContext context = null;
 
     public static Stream<Entity> flatten(List<? extends Entity> entities) {
-        return Stream.concat(entities.stream(), entities.stream().flatMap(e -> flatten(e.attributes)));
+        return Stream.concat(entities.parallelStream(), entities.parallelStream().flatMap(e -> flatten(e.attributes)));
     }
 
     public void drawStringCenter(String text) {
