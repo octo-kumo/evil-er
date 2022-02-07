@@ -4,7 +4,6 @@ import main.renderer.DiagramGraphics;
 import model.Drawable;
 import model.Vector;
 import model.callbacks.DrawContext;
-import model.others.Examples;
 import model.others.Reactive;
 import model.rs.Table;
 import org.jetbrains.annotations.Nullable;

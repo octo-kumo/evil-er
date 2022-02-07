@@ -1,4 +1,4 @@
-package model.others;
+package utils;
 
 import com.google.gson.stream.JsonReader;
 import main.rs.Converter;
@@ -49,17 +49,7 @@ public class Examples {
         r.set(400, 100);
         Specialization s;
         entities.add(s = new Specialization(a));
-        s.addNode(c, new Relationship.RelationshipSpec(false));
-        s.addNode(d, new Relationship.RelationshipSpec(true));
-    }
-
-    public static void populateTables(ArrayList<Table> tables) {
-        try {
-            JsonReader reader = new JsonReader(new FileReader("C:\\Users\\zy\\OneDrive\\Documents\\diagram.dig"));
-            ArrayList<Entity> deserialized = Serializer.deserialize(reader);
-            Converter.convert(deserialized, tables);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+        s.addNode(c, new Relationship.RelationshipSpec());
+        s.addNode(d, new Relationship.RelationshipSpec());
     }
 }
