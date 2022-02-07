@@ -17,17 +17,19 @@ import java.util.Comparator;
 
 public class Version implements Comparable<Version> {
     public static final Gson gson = new Gson();
-    public static final Version CURRENT = new Version("0.3.1");
+    public static final Version CURRENT = new Version("v0.2.1");
 
     public static void asyncUpdate() {
         new Thread(() -> {
             try {
-                System.out.printf("Current version = %s%n", CURRENT);
+                System.out.println("Checking for updates...");
+                System.out.printf("\tCurrent version = %s%n", CURRENT);
                 Release[] releases = getReleases();
-                System.out.printf("Found %d releases%n", releases.length);
-                Arrays.stream(releases).max(Comparator.comparing(r -> new Version(r.tag_name))).ifPresent(latest -> notifyLatest(latest));
+                System.out.printf("\tFound %d releases!%n", releases.length);
+                Arrays.stream(releases).max(Comparator.comparing(r -> new Version(r.tag_name)))
+                        .ifPresent(Version::notifyLatest);
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.printf("\tChecking failed: %s::%s%n", e.getClass().getSimpleName(), e.getMessage());
             }
         }).start();
     }
@@ -37,7 +39,7 @@ public class Version implements Comparable<Version> {
         HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
         con.setRequestMethod("GET");
         int responseCode = con.getResponseCode();
-        System.out.println("GITHUB GET Response Code :: " + responseCode);
+        System.out.printf("\tGITHUB GET Response Code :: %d%n", responseCode);
         if (responseCode == HttpsURLConnection.HTTP_OK) {
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             return gson.fromJson(new JsonReader(in), Release[].class);
@@ -48,20 +50,21 @@ public class Version implements Comparable<Version> {
     private final String version;
 
     private static void notifyLatest(Release latest) {
-        System.out.printf("\tLatest version = %s%n", latest);
-        int compare = CURRENT.compareTo(new Version(latest.tag_name));
+        Version version = new Version(latest.tag_name);
+        System.out.printf("\tLatest version = %s%n", version);
+        int compare = CURRENT.compareTo(version);
         if (compare == 0) System.out.println("\tCurrent version is latest!");
         else if (compare < 0) {
             System.out.println("\tCurrent version is behind!");
-            if (JOptionPane.showConfirmDialog(null, "Download new version?", "Outdated Version!", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
-                if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-                    try {
-                        Desktop.getDesktop().browse(new URI(latest.html_url));
-                    } catch (IOException | URISyntaxException e) {
-                        e.printStackTrace();
-                    }
+            if (JOptionPane.showConfirmDialog(null,
+                    String.format("Download new version %s?", version),
+                    "Outdated Version!", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION
+                    && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
+                try {
+                    Desktop.getDesktop().browse(new URI(latest.html_url));
+                } catch (IOException | URISyntaxException e) {
+                    e.printStackTrace();
                 }
-            }
         } else System.out.println("\tCurrent version is in-dev!");
     }
 
