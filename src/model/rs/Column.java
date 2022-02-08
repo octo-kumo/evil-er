@@ -58,4 +58,14 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
         g.drawStringCenter(name + " (FK)", origin.add(WIDTH / 2, HEIGHT / 2));
         if (key) g.draw(g.lineUnderString(name + " (FK)", origin.add(WIDTH / 2, HEIGHT / 2 + 3)));
     }
+
+    @Override
+    public String toString() {
+        return "Column{" +
+                "index=" + index +
+                ", parent=" + parent +
+                ", name='" + name + '\'' +
+                ", key=" + key +
+                '}';
+    }
 }

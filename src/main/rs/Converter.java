@@ -60,11 +60,12 @@ public class Converter {
                 }
             });
 
-            if (combinedInTo == -1) table.set(600, Vector.average(((Relationship<?>) entity).nodes.stream()
-                    .map(tableMap::get).filter(Objects::nonNull)
-                    .collect(Collectors.toList())).getY());
-
-            tables.add(table);
+            if (combinedInTo == -1) {
+                table.set(600, Vector.average(((Relationship<?>) entity).nodes.stream()
+                        .map(tableMap::get).filter(Objects::nonNull)
+                        .collect(Collectors.toList())).getY());
+                tables.add(table);
+            }
             tableMap.put(entity, table);
         });
         entities.stream().filter(entity -> entity.getClass() == Specialization.class).forEach(entity -> {
