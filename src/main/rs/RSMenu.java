@@ -79,6 +79,20 @@ public class RSMenu extends JMenuBar {
                     evilRs.diagram.repaint();
                 });
             }});
+            add(new JCheckBoxMenuItem("Jump Intersects") {{
+                evilRs.diagram.jumpLines.addListener(this::setState);
+                addActionListener(e -> {
+                    evilRs.diagram.jumpLines.set(getState());
+                    evilRs.diagram.repaint();
+                });
+            }});
+            add(new JCheckBoxMenuItem("Avoid Overlap") {{
+                evilRs.diagram.avoidOverlap.addListener(this::setState);
+                addActionListener(e -> {
+                    evilRs.diagram.avoidOverlap.set(getState());
+                    evilRs.diagram.repaint();
+                });
+            }});
         }});
     }
 }

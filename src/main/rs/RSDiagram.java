@@ -45,6 +45,8 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
     public final Reactive<Boolean> locked = new Reactive<>(false);
     public final Reactive<Boolean> aabb = new Reactive<>(false);
     public final Reactive<Boolean> grid = new Reactive<>(false);
+    public final Reactive<Boolean> jumpLines = new Reactive<>(false);
+    public final Reactive<Boolean> avoidOverlap = new Reactive<>(false);
 
     public final Reactive<Boolean> showBrackets = new Reactive<>(false);
 
