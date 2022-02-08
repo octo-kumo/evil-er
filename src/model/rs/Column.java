@@ -50,7 +50,7 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
     }
 
     public void predrawAsForeign(@NotNull DiagramGraphics g, @NotNull Vector origin, Table parent) {
-        g.draw(new SchemaLine(origin.add(OFFSET), parent.positionOf(this).add(OFFSET), g.getContext().getLineStyle()));
+        g.draw(new SchemaLine(origin.add(OFFSET), parent.positionOf(this).add(OFFSET), g.getContext()));
     }
 
     public void drawAsForeign(@NotNull DiagramGraphics g, @NotNull Boolean key, @NotNull Vector origin) {

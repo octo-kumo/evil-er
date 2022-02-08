@@ -1,7 +1,9 @@
 package shapes.lines;
 
+import main.rs.RSDiagram;
 import model.Range;
 import model.Vector;
+import model.callbacks.DrawContext;
 import model.er.Attribute;
 import model.others.Pair;
 import model.others.Tuple;
@@ -20,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SchemaLine extends Path2D.Double {
     public static ArrayList<Tuple<Integer, Integer, Integer>> xTaken = new ArrayList<>();
     public static ArrayList<Tuple<Integer, Integer, Integer>> yTaken = new ArrayList<>();
-
+    public static ArrayList<Pair<Line2D, Point2D>> jumped = new ArrayList<>();
     public static ArrayList<Line2D.Double> toDodge = new ArrayList<>();
 
     public static int getTarget(ArrayList<Tuple<Integer, Integer, Integer>> axis, int srcI, int from, int to, double diff) {
@@ -37,44 +39,45 @@ public class SchemaLine extends Path2D.Double {
         toDodge.clear();
     }
 
-    public SchemaLine(Vector a, Vector b, Line.LineStyle style) {
-        if (style == Line.LineStyle.AXIS_ALIGNED) axisLine(a, b);
-        else if (style == Line.LineStyle.STRAIGHT) straightLine(a, b);
-        else axisCurvyLine(a, b);
+    public SchemaLine(Vector a, Vector b, DrawContext context) {
+        if (context.getLineStyle() == Line.LineStyle.AXIS_ALIGNED) axisLine(a, b, context);
+        else if (context.getLineStyle() == Line.LineStyle.STRAIGHT) straightLine(a, b, context);
+        else axisCurvyLine(a, b, context);
     }
 
-    public void straightLine(@NotNull Vector a, @NotNull Vector b) {
+    public void straightLine(@NotNull Vector a, @NotNull Vector b, DrawContext context) {
         boolean bUp = getBUp(a, b);
         moveTo(a.getX(), a.getY());
         lineTo(a.getX(), a.getY() + (getAUp(a, b) ? -30 : 30));
-        dodgingTo(b.getX(), b.getY() + (bUp ? -30 : 30));
+        dodgingTo(b.getX(), b.getY() + (bUp ? -30 : 30), context);
         lineTo(b.getX(), b.getY());
         arrow(bUp, b.getX(), b.getY() + (bUp ? -Column.HEIGHT / 2 : Column.HEIGHT / 2));
     }
 
-    public void axisLine(@NotNull Vector a, @NotNull Vector b) {
+    public void axisLine(@NotNull Vector a, @NotNull Vector b, DrawContext context) {
         boolean aUp = getAUp(a, b);
         boolean bUp = getBUp(a, b);
         int aY = (int) (a.getY() + (aUp ? -30 : 30));
         int bY = (int) (b.getY() + (bUp ? -30 : 30));
-        double targetX = getTarget(xTaken, (int) b.getX(), (int) a.getY(), (int) b.getY(), 10);
-        double targetY = getTarget(yTaken,
-                aUp && bUp ? Math.min(aY, bY) : aUp ? aY : bUp ? bY : Math.max(aY, bY),
-                (int) b.getX(), (int) a.getX(),
-                aUp || bUp ? -7 : 7);
+        int targetX = (int) b.getX();
+        int targetY = aUp && bUp ? Math.min(aY, bY) : aUp ? aY : bUp ? bY : Math.max(aY, bY);
+        if (((RSDiagram) context).avoidOverlap.get()) {
+            targetX = getTarget(xTaken, targetX, (int) a.getY(), (int) b.getY(), 10);
+            targetY = getTarget(yTaken, targetY, (int) b.getX(), (int) a.getX(), aUp || bUp ? -7 : 7);
+        }
 
         moveTo(a.getX(), a.getY());
-        dodgingTo(a.getX(), targetY);
-        dodgingTo(targetX, targetY);
-        dodgingTo(targetX, b.getY());
+        dodgingTo(a.getX(), targetY, context);
+        dodgingTo(targetX, targetY, context);
+        dodgingTo(targetX, b.getY(), context);
         arrow(bUp, targetX, b.getY() + (bUp ? -Column.HEIGHT / 2 : Column.HEIGHT / 2));
     }
 
     private static final double RADIUS = 5;
 
-    public void axisCurvyLine(@NotNull Vector a, @NotNull Vector b) {
+    public void axisCurvyLine(@NotNull Vector a, @NotNull Vector b, DrawContext context) {
         if (Math.abs(a.getX() - b.getX()) < RADIUS * 2) {
-            axisLine(a, b);
+            axisLine(a, b, context);
             return;
         }
 
@@ -82,37 +85,42 @@ public class SchemaLine extends Path2D.Double {
         boolean bUp = getBUp(a, b);
         int aY = (int) (a.getY() + (aUp ? -30 : 30));
         int bY = (int) (b.getY() + (bUp ? -30 : 30));
-        double targetX = getTarget(xTaken, (int) b.getX(), (int) a.getY(), (int) b.getY(), 10);
-        double targetY = getTarget(yTaken,
-                aUp && bUp ? Math.min(aY, bY) : aUp ? aY : bUp ? bY : Math.max(aY, bY),
-                (int) b.getX(), (int) a.getX(),
-                aUp || bUp ? -7 : 7);
+        int targetX = (int) b.getX();
+        int targetY = aUp && bUp ? Math.min(aY, bY) : aUp ? aY : bUp ? bY : Math.max(aY, bY);
+        if (((RSDiagram) context).avoidOverlap.get()) {
+            targetX = getTarget(xTaken, targetX, (int) a.getY(), (int) b.getY(), 10);
+            targetY = getTarget(yTaken, targetY, (int) b.getX(), (int) a.getX(), aUp || bUp ? -7 : 7);
+        }
 
         moveTo(a.getX(), a.getY());
 
-        dodgingTo(a.getX(), targetY + (aUp ? RADIUS : -RADIUS));
+        dodgingTo(a.getX(), targetY + (aUp ? RADIUS : -RADIUS), context);
         quadTo(a.getX(), targetY, a.getX() + (b.getX() > a.getX() ? RADIUS : -RADIUS), targetY);
 
-        dodgingTo(targetX + (b.getX() > a.getX() ? -RADIUS : RADIUS), targetY);
+        dodgingTo(targetX + (b.getX() > a.getX() ? -RADIUS : RADIUS), targetY, context);
         quadTo(targetX, targetY, targetX, targetY + (bUp ? RADIUS : -RADIUS));
 
-        dodgingTo(targetX, b.getY());
+        dodgingTo(targetX, b.getY(), context);
         arrow(bUp, targetX, b.getY() + (bUp ? -Column.HEIGHT / 2 : Column.HEIGHT / 2));
     }
 
     private boolean getAUp(Vector a, Vector b) {
-        if (Math.abs(b.getY() - a.getY()) < (Attribute.HEIGHT + 20)) return true;
+        if (Math.abs(b.getY() - a.getY()) < (Attribute.HEIGHT + 20)) return false;
         else return b.getY() < a.getY();
     }
 
     private boolean getBUp(Vector a, Vector b) {
-        if (Math.abs(b.getY() - a.getY()) < (Attribute.HEIGHT + 20)) return true;
+        if (Math.abs(b.getY() - a.getY()) < (Attribute.HEIGHT + 20)) return false;
         return b.getY() > a.getY();
     }
 
     private static final double JUMP_LINE_RADIUS = 3;
 
-    public void dodgingTo(@NotNull Vector vector) {
+    public void dodgingTo(@NotNull Vector vector, DrawContext context) {
+        if (!((RSDiagram) context).jumpLines.get()) {
+            lineTo(vector);
+            return;
+        }
         Vector currentPoint = new Vector(getCurrentPoint());
         Vector diff = vector.minus(currentPoint);
         double len = diff.len();
@@ -121,7 +129,11 @@ public class SchemaLine extends Path2D.Double {
         Line2D.Double line = new Line2D.Double(currentPoint, vector);
         toDodge.stream()
                 .filter(l -> noEndsMeet(l, line) && l.intersectsLine(line))
-                .map(l -> intersection(l, line))
+                .map(l -> {
+                    Vector point = intersection(l, line);
+                    if (jumped.stream().anyMatch(j -> Objects.equals(point, j.getB()) && j.getA() == l)) return null;
+                    return point;
+                })
                 .filter(Objects::nonNull)
                 .distinct()
                 .map(p -> new Pair<>(p, currentPoint.minus(p).len()))
@@ -129,6 +141,7 @@ public class SchemaLine extends Path2D.Double {
                 .forEach(pair -> {
                     double dist = pair.getB();
                     if (dist < JUMP_LINE_RADIUS || len - dist < JUMP_LINE_RADIUS) return;
+                    jumped.add(new Pair<>(line, pair.getA()));
 
                     Vector p = pair.getA();
                     lineTo(p.minus(dir));
@@ -153,8 +166,8 @@ public class SchemaLine extends Path2D.Double {
         );
     }
 
-    public void dodgingTo(double x, double y) {
-        dodgingTo(new Vector(x, y));
+    public void dodgingTo(double x, double y, DrawContext context) {
+        dodgingTo(new Vector(x, y), context);
     }
 
 
