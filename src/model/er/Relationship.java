@@ -67,7 +67,9 @@ public class Relationship<T extends Entity> extends Entity {
 
     @Override
     public Shape getShape(double width, double height) {
-        return new Diamond(-width / 2d, -height / 2d, width, height);
+        // Ensure at least 7 px per character
+        double newWidth = Math.max(width * 0.7, getName().length() * 7);
+        return new Diamond(-newWidth / 2d, -height / 2d, newWidth, height);
     }
 
     public void revalidate() {

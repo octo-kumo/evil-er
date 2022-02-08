@@ -110,7 +110,9 @@ public class Entity extends Node {
     }
 
     public Shape getShape(double width, double height) {
-        return new Rectangle2D.Double(-width / 2d, -height / 2d, width, height);
+        // Ensure at least 7 px per character
+        double newWidth = Math.max(width * 0.7, getName().length() * 7);
+        return new Rectangle2D.Double(-newWidth / 2d, -height / 2d, newWidth, height);
     }
 
     public Shape getShapeWorld() {
