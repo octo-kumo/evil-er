@@ -192,6 +192,19 @@ public class Vector extends Point2D {
     }
 
     public Vector rot90() {
-        return new Vector(getY(), -getX());
+        double newX = this.getY();
+        setY(-getX());
+        setX(newX);
+        return this;
+    }
+
+    public Vector rotate90() {
+        return clone().rot90();
+    }
+
+    public static double alwaysUp(double radians) {
+        double det = (radians / Math.PI) % 2;
+        if (det < 0) det += 2;
+        return det > 1 ? radians : radians + Math.PI;
     }
 }

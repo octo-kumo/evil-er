@@ -60,6 +60,7 @@ public class Specialization extends Relationship<Entity> {
             RelationshipSpec spec;
             specs.add(spec = new RelationshipSpec());
             lines.add(new RelationLine<>(this, superclass, spec));
+            revalidate();
         }
         setName("Family Tree: " + (getSuperclass() == null ? "null" : getSuperclass().getName()));
     }
