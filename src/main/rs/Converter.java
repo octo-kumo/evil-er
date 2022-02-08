@@ -52,13 +52,17 @@ public class Converter {
             entity.attributes.stream().filter(Attribute::isWeak).forEach(a -> multiAttributes.add(new Pair<>(a, table)));
 
             List<Entity> nodes = ((Relationship<?>) entity).nodes;
-            IntStream.range(0, nodes.size()).filter(i -> i != combinedInTo)
-                    .mapToObj(nodes::get)
-                    .map(e -> firstIdentifiableTable(tableMap, entities, e))
-                    .filter(Objects::nonNull).forEach(found -> {
-                        System.out.printf("\tAdded table, %s%n", found.name);
-                        table.add(found, combinedInTo == -1 ? found.name : entity.getName(), entity.isWeak());
-                    });
+            List<Relationship.RelationshipSpec> specs = ((Relationship<?>) entity).specs;
+            int bound = nodes.size();
+            IntStream.range(0, bound).filter(i -> i != combinedInTo).forEach(i -> {
+                Entity e = nodes.get(i);
+                Relationship.RelationshipSpec spec = specs.get(i);
+                Table found = firstIdentifiableTable(tableMap, entities, e);
+                if (found != null) {
+                    System.out.printf("\tAdded table, %s%n", found.name);
+                    table.add(found, combinedInTo == -1 ? spec.role.isEmpty() ? found.name : spec.role : entity.getName(), entity.isWeak());
+                }
+            });
 
             if (combinedInTo == -1) table.set(600, Vector.average(((Relationship<?>) entity).nodes.stream()
                     .map(tableMap::get).filter(Objects::nonNull)

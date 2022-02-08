@@ -170,7 +170,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         if (adding_buf != null) pos = adding_buf.clone();
         switch (type) {
             case Select:
-                current = ActionType.Panning;
+                if (current == ActionType.Creating) current = ActionType.Panning;
                 adding_buf = null;
                 return;
             case Entity:
@@ -198,19 +198,20 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
                     Entity parent = ((Attribute) adding_buf).getParent();
                     if (parent == null) return;
                     parent.addAttribute((Attribute) adding_buf);
-                } else entities.add(adding_buf);
-                if (!(adding_buf instanceof Attribute)) {
+                } else {
                     adding_buf.setHighlighted(true);
+                    entities.add(adding_buf);
                     setTarget(adding_buf);
                 }
+
                 if (connecting.get() && connectBase != null && adding_buf.getClass() == Entity.class)
                     connectBase.addNode(adding_buf, new Relationship.RelationshipSpec("", false));
-
                 diagramPanel.requestNameEdit(adding_buf);
                 setAddingType(!locked.get() ? Entity.Type.Select : addingType.get());
             } else {
                 if (connecting.get() && connectTarget.get() != null && connectBase != null) {
                     connectBase.addNode(connectTarget.get(), new Relationship.RelationshipSpec("", false));
+                    setTarget(null);
                     repaint();
                     return;
                 }
@@ -226,35 +227,35 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
                 Optional<Entity> found = getIntersect(unproject(dragStart));
                 if (!found.isPresent()) {
                     setTarget(null);
-                    targetStart.set(origin);
-                    current = ActionType.Panning;
                     diagramPanel.requestNameEdit(null);
                     return;
                 }
 
-                if (target.get() == found.get() || found.get().isHighlighted()) {
+                if (e.isShiftDown() && (target.get() == found.get() || found.get().isHighlighted())) {
                     found.get().setHighlighted(false);
                     setTarget(null);
-                    current = ActionType.Panning;
                     diagramPanel.requestNameEdit(null);
                     return;
                 }
 
                 setTarget(found.get());
-                targetStart.set(target.get());
-                current = ActionType.Moving;
                 repaint();
             }
         } else if (SwingUtilities.isRightMouseButton(e)) {
             dragStart.set(e.getX(), e.getY());
             setTarget(null);
-            targetStart.set(origin);
-            current = ActionType.Panning;
             diagramPanel.requestNameEdit(null);
         }
     }
 
     public void setTarget(@Nullable Entity entity) {
+        if (entity == null) {
+            targetStart.set(origin);
+            current = ActionType.Panning;
+        } else {
+            targetStart.set(entity);
+            current = ActionType.Moving;
+        }
         target.set(entity);
         if (entity != null) entity.setHighlighted(true);
         if (connecting.get() && entity instanceof Relationship) connectBase = (Relationship<Entity>) entity;

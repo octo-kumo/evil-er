@@ -96,6 +96,7 @@ public class Serializer {
                 r.lines = IntStream.range(0, r.specs.size()).mapToObj(i ->
                         new RelationLine<>(r, r.nodes.get(i), r.specs.get(i))
                 ).collect(Collectors.toList());
+                r.revalidate();
             }
         }
     }

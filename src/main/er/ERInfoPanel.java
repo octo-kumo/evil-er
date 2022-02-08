@@ -88,12 +88,12 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
         Object[][] data = IntStream.range(0, relationship.nodes.size()).mapToObj(i -> {
             Entity t = relationship.nodes.get(i);
             Relationship.RelationshipSpec spec = relationship.specs.get(i);
-            return new Object[]{t.getName(), spec.amm, spec.total, "✕"};
+            return new Object[]{t.getName(), spec.amm, spec.total, spec.role, "✕"};
         }).toArray(Object[][]::new);
 
         DefaultTableModel tableModel;
         /* Table */
-        panel.add(new JScrollPane(new JTable(tableModel = new DefaultTableModel(data, new String[]{"Name", "Amount", "Total", ""}) {
+        panel.add(new JScrollPane(new JTable(tableModel = new DefaultTableModel(data, new String[]{"Name", "Amount", "Total", "Role", ""}) {
             public void setValueAt(Object value, int row, int column) {
                 super.setValueAt(value, row, column);
                 switch (column) {
@@ -105,6 +105,9 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
                         break;
                     case 2:
                         relationship.specs.get(row).total = (boolean) value;
+                        break;
+                    case 3:
+                        relationship.specs.get(row).role = (String) value;
                         break;
                 }
                 evilEr.diagramPanel.diagram.repaint();
@@ -126,7 +129,7 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
                             evilEr.diagramPanel.diagram.repaint();
                         }
                     }
-                }, 3);
+                }, 4);
             }
         }, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER));
         /* Add new entity or link to entity */
