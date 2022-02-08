@@ -4,6 +4,7 @@ import model.Range;
 import model.Vector;
 import model.er.Attribute;
 import model.others.Pair;
+import model.others.Tuple;
 import model.rs.Column;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,19 +18,16 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SchemaLine extends Path2D.Double {
-    public static ArrayList<Pair<Integer, Range>> xTaken = new ArrayList<>();
-    public static ArrayList<Pair<Integer, Range>> yTaken = new ArrayList<>();
+    public static ArrayList<Tuple<Integer, Integer, Integer>> xTaken = new ArrayList<>();
+    public static ArrayList<Tuple<Integer, Integer, Integer>> yTaken = new ArrayList<>();
 
     public static ArrayList<Line2D.Double> toDodge = new ArrayList<>();
 
-    public static int getTarget(ArrayList<Pair<Integer, Range>> axis, int srcI, Range range, int diff) {
+    public static int getTarget(ArrayList<Tuple<Integer, Integer, Integer>> axis, int srcI, int from, int to, double diff) {
         final AtomicInteger src = new AtomicInteger(srcI);
-        while (axis.stream().anyMatch(e -> e.getA() == src.get() && e.getB().intersects(range))) {
-            src.getAndAdd(diff);
-//            if (diff > 0) diff = -diff;
-//            else diff = -diff + 5;
-        }
-        axis.add(new Pair<>(src.get(), range));
+        while (axis.parallelStream().anyMatch(e -> e.getA() == src.get() && Range.intersects(e.getB(), e.getC(), from, to)))
+            src.set(srcI += diff);
+        axis.add(new Tuple<>(src.get(), from, to));
         return src.get();
     }
 
@@ -46,27 +44,24 @@ public class SchemaLine extends Path2D.Double {
     }
 
     public void straightLine(@NotNull Vector a, @NotNull Vector b) {
-        int state = getState(a, b);
-        boolean aUp = getAUp(state, a, b);
-        boolean bUp = getBUp(state, a, b);
+        boolean bUp = getBUp(a, b);
         moveTo(a.getX(), a.getY());
-        lineTo(a.getX(), a.getY() + (aUp ? -30 : 30));
+        lineTo(a.getX(), a.getY() + (getAUp(a, b) ? -30 : 30));
         dodgingTo(b.getX(), b.getY() + (bUp ? -30 : 30));
         lineTo(b.getX(), b.getY());
         arrow(bUp, b.getX(), b.getY() + (bUp ? -Column.HEIGHT / 2 : Column.HEIGHT / 2));
     }
 
     public void axisLine(@NotNull Vector a, @NotNull Vector b) {
-        int state = getState(a, b);
-        boolean aUp = getAUp(state, a, b);
-        boolean bUp = getBUp(state, a, b);
+        boolean aUp = getAUp(a, b);
+        boolean bUp = getBUp(a, b);
         int aY = (int) (a.getY() + (aUp ? -30 : 30));
         int bY = (int) (b.getY() + (bUp ? -30 : 30));
-        int targetX = getTarget(xTaken, (int) b.getX(), new Range(a.getY(), b.getY()), 10);
-        int targetY = getTarget(yTaken,
+        double targetX = getTarget(xTaken, (int) b.getX(), (int) a.getY(), (int) b.getY(), 10);
+        double targetY = getTarget(yTaken,
                 aUp && bUp ? Math.min(aY, bY) : aUp ? aY : bUp ? bY : Math.max(aY, bY),
-                new Range(b.getX(), a.getX()),
-                aUp || bUp ? -5 : 5);
+                (int) b.getX(), (int) a.getX(),
+                aUp || bUp ? -7 : 7);
 
         moveTo(a.getX(), a.getY());
         dodgingTo(a.getX(), targetY);
@@ -82,17 +77,16 @@ public class SchemaLine extends Path2D.Double {
             axisLine(a, b);
             return;
         }
-        int state = getState(a, b);
 
-        boolean aUp = getAUp(state, a, b);
-        boolean bUp = getBUp(state, a, b);
+        boolean aUp = getAUp(a, b);
+        boolean bUp = getBUp(a, b);
         int aY = (int) (a.getY() + (aUp ? -30 : 30));
         int bY = (int) (b.getY() + (bUp ? -30 : 30));
-        int targetX = getTarget(xTaken, (int) b.getX(), new Range(a.getY(), b.getY()), 10);
-        int targetY = getTarget(yTaken,
+        double targetX = getTarget(xTaken, (int) b.getX(), (int) a.getY(), (int) b.getY(), 10);
+        double targetY = getTarget(yTaken,
                 aUp && bUp ? Math.min(aY, bY) : aUp ? aY : bUp ? bY : Math.max(aY, bY),
-                new Range(b.getX(), a.getX()),
-                aUp || bUp ? -5 : 5);
+                (int) b.getX(), (int) a.getX(),
+                aUp || bUp ? -7 : 7);
 
         moveTo(a.getX(), a.getY());
 
@@ -106,54 +100,45 @@ public class SchemaLine extends Path2D.Double {
         arrow(bUp, targetX, b.getY() + (bUp ? -Column.HEIGHT / 2 : Column.HEIGHT / 2));
     }
 
-    /**
-     * @param a point a
-     * @param b point b
-     * @return - 1 if b below a (should a down, b up)
-     * - -1 if a below b (should a up, b down)
-     * - 0 if they should have same state
-     */
-    private int getState(Vector a, Vector b) {
-        return Math.abs(b.getY() - a.getY()) < (Attribute.HEIGHT + 20) ? 0 :
-                b.getY() > a.getY() ? 1 : -1;
+    private boolean getAUp(Vector a, Vector b) {
+        if (Math.abs(b.getY() - a.getY()) < (Attribute.HEIGHT + 20)) return true;
+        else return b.getY() < a.getY();
     }
 
-    private boolean getAUp(int state, Vector a, Vector b) {
-        if (state < 0) return true;
-        else if (state > 0) return false;
-        else return true;
+    private boolean getBUp(Vector a, Vector b) {
+        if (Math.abs(b.getY() - a.getY()) < (Attribute.HEIGHT + 20)) return true;
+        return b.getY() > a.getY();
     }
 
-    private boolean getBUp(int state, Vector a, Vector b) {
-        if (state < 0) return false;
-        else if (state > 0) return true;
-        else return true;
-    }
+    private static final double JUMP_LINE_RADIUS = 3;
 
     public void dodgingTo(@NotNull Vector vector) {
         Vector currentPoint = new Vector(getCurrentPoint());
         Vector diff = vector.minus(currentPoint);
-        Vector dir = diff.norm().multi(5);
+        double len = diff.len();
+        Vector dir = diff.norm().multi(JUMP_LINE_RADIUS);
         Vector r90 = dir.rotate90();
         Line2D.Double line = new Line2D.Double(currentPoint, vector);
         toDodge.stream()
-                .filter(l -> noEndsMeet(l, line))
-                .filter(l -> l.intersectsLine(line))
+                .filter(l -> noEndsMeet(l, line) && l.intersectsLine(line))
                 .map(l -> intersection(l, line))
                 .filter(Objects::nonNull)
                 .distinct()
                 .map(p -> new Pair<>(p, currentPoint.minus(p).len()))
                 .sorted(Comparator.comparingDouble(Pair::getB))
                 .forEach(pair -> {
+                    double dist = pair.getB();
+                    if (dist < JUMP_LINE_RADIUS || len - dist < JUMP_LINE_RADIUS) return;
+
                     Vector p = pair.getA();
-//                    lineTo(p.minus(dir));
-//                    curveTo(p.minus(dir).add(r90),
-//                            p.add(dir).add(r90),
-//                            p.add(dir));
                     lineTo(p.minus(dir));
-                    lineTo(p.add(dir).add(r90));
-                    moveTo(p.minus(dir).minus(r90));
-                    lineTo(p.add(dir));
+                    curveTo(p.minus(dir).add(r90),
+                            p.add(dir).add(r90),
+                            p.add(dir));
+//                    lineTo(p.minus(dir));
+//                    lineTo(p.add(dir).add(r90));
+//                    moveTo(p.minus(dir).minus(r90));
+//                    lineTo(p.add(dir));
                 });
         lineTo(vector.getX(), vector.getY());
         toDodge.add(line);
@@ -198,14 +183,19 @@ public class SchemaLine extends Path2D.Double {
     }
 
     public static @Nullable Vector intersection(@NotNull Line2D a, @NotNull Line2D b) {
-        double x1 = a.getX1(), y1 = a.getY1(), x2 = a.getX2(), y2 = a.getY2(), x3 = b.getX1(), y3 = b.getY1(),
-                x4 = b.getX2(), y4 = b.getY2();
-        double d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
-        if (d == 0) return null;
-
-        double xi = ((x3 - x4) * (x1 * y2 - y1 * x2) - (x1 - x2) * (x3 * y4 - y3 * x4)) / d;
-        double yi = ((y3 - y4) * (x1 * y2 - y1 * x2) - (y1 - y2) * (x3 * y4 - y3 * x4)) / d;
-
-        return new Vector(xi, yi);
+        double x0 = a.getX1(), y0 = a.getY1(),
+                x1 = a.getX2(), y1 = a.getY2(),
+                x2 = b.getX1(), y2 = b.getY1(),
+                x3 = b.getX2(), y3 = b.getY2();
+        double sx1 = x1 - x0,
+                sy1 = y1 - y0,
+                sx2 = x3 - x2,
+                sy2 = y3 - y2;
+        double v = -sx2 * sy1 + sx1 * sy2;
+        if (v == 0) return null;
+        double s = (-sy1 * (x0 - x2) + sx1 * (y0 - y2)) / v;
+        double t = (sx2 * (y0 - y2) - sy2 * (x0 - x2)) / v;
+        if (s > 0 && s < 1 && t > 0 && t < 1) return new Vector(x0 + (t * sx1), y0 + (t * sy1));
+        return null;
     }
 }

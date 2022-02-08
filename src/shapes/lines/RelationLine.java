@@ -63,7 +63,8 @@ public class RelationLine<T extends Entity> extends Line<Relationship<T>, T> {
         }
         if (!spec.amm.isEmpty()) {
             double dist = 10;
-            double angle = Vector.alwaysUp(d.angle() + Math.PI / 2) + (spec.uniqueIndex % 2 == 0 ? 0 : Math.PI);
+            double angle = Vector.alwaysUp(d.angle() + Math.PI / 2) +
+                    (spec.uniqueIndex % 2 == (d.getX() >= 0 ? 1 : 0) ? 0 : Math.PI);
             g.drawStringCenter(spec.amm, c.add(Math.cos(angle) * dist, Math.sin(angle) * dist));
         }
     }
