@@ -37,7 +37,7 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
     }
 
     @Override
-    public void draw(DiagramGraphics g) {
+    public void draw(@NotNull DiagramGraphics g) {
         g.draw(new Rectangle2D.Double(0, 0, WIDTH, HEIGHT), Color.WHITE, Color.BLACK);
         g.drawStringCenter(name, (float) (WIDTH / 2), (float) (HEIGHT / 2));
         if (key) g.draw(g.lineUnderString(name, (float) (WIDTH / 2), (float) (HEIGHT / 2 + 3)));
@@ -49,11 +49,11 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
         return Boolean.compare(other.key, this.key);
     }
 
-    public void drawLine(DiagramGraphics g, Vector origin) {
-        g.draw(new SchemaLine(origin.add(OFFSET), this.add(OFFSET), g.getContext().getLineStyle()));
+    public void predrawAsForeign(@NotNull DiagramGraphics g, @NotNull Vector origin, Table parent) {
+        g.draw(new SchemaLine(origin.add(OFFSET), parent.positionOf(this).add(OFFSET), g.getContext().getLineStyle()));
     }
 
-    public void drawAsForeign(DiagramGraphics g, Boolean key, Vector origin) {
+    public void drawAsForeign(@NotNull DiagramGraphics g, @NotNull Boolean key, @NotNull Vector origin) {
         g.draw(new Rectangle2D.Double(origin.getX(), origin.getY(), WIDTH, HEIGHT), Color.WHITE, Color.BLACK);
         g.drawStringCenter(name + " (FK)", origin.add(WIDTH / 2, HEIGHT / 2));
         if (key) g.draw(g.lineUnderString(name + " (FK)", origin.add(WIDTH / 2, HEIGHT / 2 + 3)));

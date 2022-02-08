@@ -18,6 +18,7 @@ import static main.ui.Prompts.report;
 public class RSMenu extends JMenuBar {
     public RSMenu(EvilRs evilRs) {
         add(new JMenu("File") {{
+            setMnemonic('F');
             add(new JMenuItem(new AbstractAction("Open ER") {
                 public void actionPerformed(ActionEvent ae) {
                     if (JFileChooser.APPROVE_OPTION == main.ui.Chooser.jsonChooser.showOpenDialog(evilRs)) {
@@ -44,6 +45,7 @@ public class RSMenu extends JMenuBar {
             }));
         }});
         add(new JMenu("View") {{
+            setMnemonic('V');
             add(new JMenu("Line Style") {{
                 ButtonGroup group = new ButtonGroup();
                 Line.LineStyle[] values = Line.LineStyle.values();
@@ -55,6 +57,27 @@ public class RSMenu extends JMenuBar {
                     buttons[i].addActionListener(evt -> evilRs.diagram.lineStyle.set(type));
                 }
                 evilRs.diagram.lineStyle.addListener(s -> group.setSelected(buttons[Arrays.binarySearch(values, s)].getModel(), true));
+            }});
+            add(new JCheckBoxMenuItem("Grid") {{
+                evilRs.diagram.grid.addListener(this::setState);
+                addActionListener(e -> {
+                    evilRs.diagram.grid.set(getState());
+                    evilRs.diagram.repaint();
+                });
+            }});
+            add(new JCheckBoxMenuItem("AABB") {{
+                evilRs.diagram.aabb.addListener(this::setState);
+                addActionListener(e -> {
+                    evilRs.diagram.aabb.set(getState());
+                    evilRs.diagram.repaint();
+                });
+            }});
+            add(new JCheckBoxMenuItem("Brackets") {{
+                evilRs.diagram.showBrackets.addListener(this::setState);
+                addActionListener(e -> {
+                    evilRs.diagram.showBrackets.set(getState());
+                    evilRs.diagram.repaint();
+                });
             }});
         }});
     }

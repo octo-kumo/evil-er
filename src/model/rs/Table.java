@@ -1,9 +1,11 @@
 package model.rs;
 
 import main.renderer.DiagramGraphics;
+import main.rs.RSDiagram;
 import model.Drawable;
 import model.Vector;
 import model.others.Tuple;
+import org.jetbrains.annotations.NotNull;
 import shapes.lines.RangeLine;
 
 import java.awt.*;
@@ -25,6 +27,7 @@ public class Table extends Vector implements Drawable {
     public long colCount = 0;
 
     private List<Column> keys;
+    private List<Column> cols;
 
     public Table(String name) {
         this.name = name;
@@ -33,7 +36,7 @@ public class Table extends Vector implements Drawable {
         this.foreign = new ArrayList<>();
     }
 
-    public void add(Column column) {
+    public void add(@NotNull Column column) {
         column.parent = this;
         this.attributeMap.put(column.name, column);
         revalidate();
@@ -53,7 +56,7 @@ public class Table extends Vector implements Drawable {
         this.sorted = attributeMap.values().stream().sorted(Comparator.naturalOrder()).collect(Collectors.toList());
         for (int i = 0; i < this.sorted.size(); i++) this.sorted.get(i).index = i;
         keyCount = getKeys().size();
-        colCount = cols().count();
+        colCount = getCols().size();
     }
 
     private static final Font title = new Font(null, Font.BOLD, 12);
@@ -61,7 +64,7 @@ public class Table extends Vector implements Drawable {
     private static final Font small = new Font(null, Font.PLAIN, 10);
 
     @Override
-    public void draw(DiagramGraphics g) {
+    public void draw(@NotNull DiagramGraphics g) {
         AffineTransform transform = g.getTransform();
         g.translate(getX(), getY());
 
@@ -89,30 +92,44 @@ public class Table extends Vector implements Drawable {
     public void predraw(DiagramGraphics g) {
         Vector offset = this.add(sorted.size() * Column.WIDTH, Column.HEIGHT);
         for (Tuple<Boolean, String, Table> other : foreign) {
-            other.getC().predrawAsForeign(g, offset.clone());
+            other.getC().predrawAsForeign(g, offset.clone(), other.getC());
             offset.incre(other.getC().keyCount * Column.WIDTH, 0);
         }
     }
 
-    public void drawAsForeign(DiagramGraphics g, Boolean isKey, String b, Vector origin) {
+    /**
+     * Draw this table's keys onto position specified
+     *
+     * @param g      graphics
+     * @param isKey  if everything is key
+     * @param b      role this table plays
+     * @param origin to draw
+     */
+    public void drawAsForeign(@NotNull DiagramGraphics g, Boolean isKey, String b, @NotNull Vector origin) {
         double diff = keyCount * .5 * Column.WIDTH;
         Vector center = origin.add(diff, 7);
         keys.forEach(e -> {
             e.drawAsForeign(g, isKey, origin);
             origin.incre(Column.WIDTH, 0);
         });
-        g.draw(new RangeLine(center.add(-diff, 0), center.add(diff, 0)));
-        Font font = g.getFont();
-        g.setFont(small);
-        g.drawStringCenter(b, center, Color.WHITE);
-        g.setFont(font);
+        if (((RSDiagram) g.getContext()).showBrackets.get()) {
+            g.draw(new RangeLine(center.add(-diff, 0), center.add(diff, 0)));
+            Font font = g.getFont();
+            g.setFont(small);
+            g.drawStringCenter(b, center, Color.WHITE);
+            g.setFont(font);
+        }
     }
 
-    public void predrawAsForeign(DiagramGraphics g, Vector origin) {
+    public void predrawAsForeign(DiagramGraphics g, Vector origin, Table parent) {
         keys.forEach(e -> {
-            e.drawLine(g, origin);
+            e.predrawAsForeign(g, origin, parent);
             origin.incre(Column.WIDTH, 0);
         });
+    }
+
+    public Stream<Column> selfKeys() {
+        return sorted.stream().filter(e -> e.key);
     }
 
     /**
@@ -121,7 +138,7 @@ public class Table extends Vector implements Drawable {
      * @return minimal set of keys
      */
     public List<Column> getKeys() {
-        return keys = Stream.concat(sorted.stream().filter(e -> e.key),
+        return keys = Stream.concat(selfKeys(),
                 foreign.stream().filter(Tuple::getA).flatMap(e -> e.getC().getKeys().stream())).collect(Collectors.toList());
     }
 
@@ -130,8 +147,12 @@ public class Table extends Vector implements Drawable {
      *
      * @return all columns
      */
-    public Stream<Column> cols() {
-        return Stream.concat(sorted.stream(), foreign.stream().flatMap(e -> e.getC().getKeys().stream()));
+    public List<Column> getCols() {
+        return cols = Stream.concat(sorted.stream(), foreign.stream().flatMap(e -> e.getC().getKeys().stream())).collect(Collectors.toList());
+    }
+
+    public Vector positionOf(Column column) {
+        return this.add(cols.indexOf(column) * Column.WIDTH, Column.HEIGHT);
     }
 
     public Rectangle2D getShapeWorld() {
