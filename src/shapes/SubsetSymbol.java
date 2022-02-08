@@ -22,12 +22,6 @@ public class SubsetSymbol extends Path2D.Double {
                 c = pos.add(direction.negate()).add(direction.negate().rotate90()),
                 d = pos.add(direction.negate().rotate90()).add(direction);
         moveTo(b.getX(), b.getY());
-        if (style == Line.LineStyle.CURVE)
-            curveTo(a.getX(), a.getY(), d.getX(), d.getY(), c.getX(), c.getY());
-        else {
-            lineTo(a.getX(), a.getY());
-            lineTo(d.getX(), d.getY());
-            lineTo(c.getX(), c.getY());
-        }
+        curveTo(a.getX(), a.getY(), d.getX(), d.getY(), c.getX(), c.getY());
     }
 }
