@@ -53,7 +53,7 @@ public class Table extends Vector implements Drawable {
     }
 
     public void revalidate() {
-        this.sorted = attributeMap.values().stream().sorted(Comparator.naturalOrder()).collect(Collectors.toList());
+        this.sorted = attributeMap.values().stream().sorted().collect(Collectors.toList());
         for (int i = 0; i < this.sorted.size(); i++) this.sorted.get(i).index = i;
         keyCount = getKeys().size();
         colCount = getCols().size();
@@ -102,30 +102,30 @@ public class Table extends Vector implements Drawable {
      *
      * @param g      graphics
      * @param isKey  if everything is key
-     * @param b      role this table plays
+     * @param role   role this table plays
      * @param origin to draw
      */
-    public void drawAsForeign(@NotNull DiagramGraphics g, Boolean isKey, String b, @NotNull Vector origin) {
+    public void drawAsForeign(@NotNull DiagramGraphics g, Boolean isKey, String role, @NotNull Vector origin) {
         double diff = keyCount * .5 * Column.WIDTH;
         Vector center = origin.add(diff, 7);
-        keys.forEach(e -> {
-            e.drawAsForeign(g, isKey, origin);
+        for (Column key : keys) {
+            key.drawAsForeign(g, isKey, origin);
             origin.incre(Column.WIDTH, 0);
-        });
+        }
         if (((RSDiagram) g.getContext()).showBrackets.get()) {
             g.draw(new RangeLine(center.add(-diff, 0), center.add(diff, 0)));
             Font font = g.getFont();
             g.setFont(small);
-            g.drawStringCenter(b, center, Color.WHITE);
+            g.drawStringCenter(role, center, Color.WHITE);
             g.setFont(font);
         }
     }
 
     public void predrawAsForeign(DiagramGraphics g, Vector origin, Table parent) {
-        keys.forEach(e -> {
-            e.predrawAsForeign(g, origin, parent);
+        for (Column key : keys) {
+            key.predrawAsForeign(g, origin, parent);
             origin.incre(Column.WIDTH, 0);
-        });
+        }
     }
 
     public Stream<Column> selfKeys() {

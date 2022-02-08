@@ -192,18 +192,18 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
     @Override
     public void mousePressed(MouseEvent e) {
+        dragStart.set(e.getX(), e.getY());
         if (SwingUtilities.isLeftMouseButton(e)) {
             if (current == ActionType.Creating && adding_buf != null) {
                 if (adding_buf instanceof Attribute) {
                     Entity parent = ((Attribute) adding_buf).getParent();
                     if (parent == null) return;
+                    Vector pos = adding_buf.clone();
                     parent.addAttribute((Attribute) adding_buf);
-                } else {
-                    adding_buf.setHighlighted(true);
-                    entities.add(adding_buf);
-                    setTarget(adding_buf);
-                }
-
+                    adding_buf.set(pos);
+                } else entities.add(adding_buf);
+                adding_buf.setHighlighted(true);
+                setTarget(adding_buf);
                 if (connecting.get() && connectBase != null && adding_buf.getClass() == Entity.class)
                     connectBase.addNode(adding_buf, new Relationship.RelationshipSpec("", false));
                 diagramPanel.requestNameEdit(adding_buf);
@@ -215,7 +215,6 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
                     repaint();
                     return;
                 }
-                dragStart.set(e.getX(), e.getY());
 
                 /* SELECT ELEMENT */
                 /* IF NOT SELECT MULTIPLE, CLEAR HIGHLIGHT */
@@ -242,7 +241,6 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
                 repaint();
             }
         } else if (SwingUtilities.isRightMouseButton(e)) {
-            dragStart.set(e.getX(), e.getY());
             setTarget(null);
             diagramPanel.requestNameEdit(null);
         }

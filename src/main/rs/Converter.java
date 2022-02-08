@@ -38,15 +38,10 @@ public class Converter {
         });
         entities.stream().filter(entity -> entity.getClass() == Relationship.class).forEach(entity -> {
             System.out.printf("Relationship, %s, %s%n", entity.getName(), ((Relationship<?>) entity).nodes.stream().map(Entity::getName).collect(Collectors.toList()));
-            Table nTable = new Table(entity.getName());
-            int combinedInTo = findEntityToMerge((Relationship<?>) entity);
-            if (combinedInTo != -1) {
-                Entity combineToEntity = ((Relationship<?>) entity).nodes.get(combinedInTo);
-                System.out.printf("\tCombining into (%d): %s%n", combinedInTo, combineToEntity.getName());
-                nTable = tableMap.get(combineToEntity);
-            }
 
-            Table table = nTable;
+            int combinedInTo = findEntityToMerge((Relationship<?>) entity);
+            Table table = combinedInTo == -1 ? new Table(entity.getName()) : tableMap.get(((Relationship<?>) entity).nodes.get(combinedInTo));
+            if (combinedInTo != -1) System.out.printf("\tCombining into: %s%n", table.name);
 
             flatten(entity.attributes).forEach(e -> table.add(new Column(e.getName(), e.isKey())));
             entity.attributes.stream().filter(Attribute::isWeak).forEach(a -> multiAttributes.add(new Pair<>(a, table)));
