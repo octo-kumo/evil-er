@@ -25,10 +25,14 @@ public class SchemaLine extends Path2D.Double {
     public static ArrayList<Pair<Line2D, Point2D>> jumped = new ArrayList<>();
     public static ArrayList<Line2D.Double> toDodge = new ArrayList<>();
 
-    public static int getTarget(ArrayList<Tuple<Integer, Integer, Integer>> axis, int srcI, int from, int to, double diff) {
+    public static int getTarget(ArrayList<Tuple<Integer, Integer, Integer>> axis, int srcI, int from, int to, int diff, boolean flip) {
         final AtomicInteger src = new AtomicInteger(srcI);
-        while (axis.parallelStream().anyMatch(e -> e.getA() == src.get() && Range.intersects(e.getB(), e.getC(), from, to)))
-            src.set(srcI += diff);
+        final int gap = diff;
+        while (axis.parallelStream().anyMatch(e -> e.a == src.get() && Range.intersects(e.b, e.c, from, to))) {
+            src.set(srcI + diff);
+            if (flip) diff = diff > 0 ? -diff : -diff + gap;
+            else diff += gap;
+        }
         axis.add(new Tuple<>(src.get(), from, to));
         return src.get();
     }
@@ -62,8 +66,8 @@ public class SchemaLine extends Path2D.Double {
         int targetX = (int) b.getX();
         int targetY = aUp && bUp ? Math.min(aY, bY) : aUp ? aY : bUp ? bY : Math.max(aY, bY);
         if (((RSDiagram) context).avoidOverlap.get()) {
-            targetX = getTarget(xTaken, targetX, (int) a.getY(), (int) b.getY(), 10);
-            targetY = getTarget(yTaken, targetY, (int) b.getX(), (int) a.getX(), aUp || bUp ? -7 : 7);
+            targetX = getTarget(xTaken, targetX, (int) a.getY(), (int) b.getY(), 10, true);
+            targetY = getTarget(yTaken, targetY, (int) b.getX(), (int) a.getX(), aUp || bUp ? -7 : 7, false);
         }
 
         moveTo(a.getX(), a.getY());
@@ -88,8 +92,8 @@ public class SchemaLine extends Path2D.Double {
         int targetX = (int) b.getX();
         int targetY = aUp && bUp ? Math.min(aY, bY) : aUp ? aY : bUp ? bY : Math.max(aY, bY);
         if (((RSDiagram) context).avoidOverlap.get()) {
-            targetX = getTarget(xTaken, targetX, (int) a.getY(), (int) b.getY(), 10);
-            targetY = getTarget(yTaken, targetY, (int) b.getX(), (int) a.getX(), aUp || bUp ? -7 : 7);
+            targetX = getTarget(xTaken, targetX, (int) a.getY(), (int) b.getY(), 10, true);
+            targetY = getTarget(yTaken, targetY, (int) b.getX(), (int) a.getX(), aUp || bUp ? -7 : 7, false);
         }
 
         moveTo(a.getX(), a.getY());
@@ -127,31 +131,26 @@ public class SchemaLine extends Path2D.Double {
         Vector dir = diff.norm().multi(JUMP_LINE_RADIUS);
         Vector r90 = dir.rotate90();
         Line2D.Double line = new Line2D.Double(currentPoint, vector);
-        toDodge.stream()
+        toDodge.parallelStream()
                 .filter(l -> noEndsMeet(l, line) && l.intersectsLine(line))
                 .map(l -> {
                     Vector point = intersection(l, line);
-                    if (jumped.stream().anyMatch(j -> Objects.equals(point, j.getB()) && j.getA() == l)) return null;
+                    for (Pair<Line2D, Point2D> j : jumped) if (Objects.equals(point, j.b) && j.a == l) return null;
                     return point;
                 })
                 .filter(Objects::nonNull)
                 .distinct()
                 .map(p -> new Pair<>(p, currentPoint.minus(p).len()))
-                .sorted(Comparator.comparingDouble(Pair::getB))
-                .forEach(pair -> {
-                    double dist = pair.getB();
-                    if (dist < JUMP_LINE_RADIUS || len - dist < JUMP_LINE_RADIUS) return;
-                    jumped.add(new Pair<>(line, pair.getA()));
+                .filter(p -> !(p.b < JUMP_LINE_RADIUS || len - p.b < JUMP_LINE_RADIUS))
+                .sorted(Comparator.comparing(a -> a.b))
+                .forEachOrdered(pair -> {
+                    jumped.add(new Pair<>(line, pair.a));
 
-                    Vector p = pair.getA();
+                    Vector p = pair.a;
                     lineTo(p.minus(dir));
                     curveTo(p.minus(dir).add(r90),
                             p.add(dir).add(r90),
                             p.add(dir));
-//                    lineTo(p.minus(dir));
-//                    lineTo(p.add(dir).add(r90));
-//                    moveTo(p.minus(dir).minus(r90));
-//                    lineTo(p.add(dir));
                 });
         lineTo(vector.getX(), vector.getY());
         toDodge.add(line);

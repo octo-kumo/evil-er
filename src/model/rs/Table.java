@@ -82,8 +82,8 @@ public class Table extends Vector implements Drawable {
 
         Vector offset = this.add(sorted.size() * Column.WIDTH, Column.HEIGHT);
         for (Tuple<Boolean, String, Table> other : foreign) {
-            other.getC().drawAsForeign(g, other.getA(), other.getB(), offset.clone());
-            offset.incre(other.getC().keyCount * Column.WIDTH, 0);
+            other.c.drawAsForeign(g, other.a, other.b, offset.clone());
+            offset.incre(other.c.keyCount * Column.WIDTH, 0);
         }
         if (highlighted) g.draw(getShapeWorld(), new Color(0, 0, 0, 30), Color.BLACK);
     }
@@ -92,8 +92,8 @@ public class Table extends Vector implements Drawable {
     public void predraw(DiagramGraphics g) {
         Vector offset = this.add(sorted.size() * Column.WIDTH, Column.HEIGHT);
         for (Tuple<Boolean, String, Table> other : foreign) {
-            other.getC().predrawAsForeign(g, offset.clone(), other.getC());
-            offset.incre(other.getC().keyCount * Column.WIDTH, 0);
+            other.c.predrawAsForeign(g, offset.clone(), other.c);
+            offset.incre(other.c.keyCount * Column.WIDTH, 0);
         }
     }
 
@@ -139,7 +139,7 @@ public class Table extends Vector implements Drawable {
      */
     public List<Column> getKeys() {
         return keys = Stream.concat(selfKeys(),
-                foreign.stream().filter(Tuple::getA).flatMap(e -> e.getC().getKeys().stream())).collect(Collectors.toList());
+                foreign.stream().filter(f -> f.a).flatMap(e -> e.c.getKeys().stream())).collect(Collectors.toList());
     }
 
     /**
@@ -148,7 +148,7 @@ public class Table extends Vector implements Drawable {
      * @return all columns
      */
     public List<Column> getCols() {
-        return cols = Stream.concat(sorted.stream(), foreign.stream().flatMap(e -> e.getC().getKeys().stream())).collect(Collectors.toList());
+        return cols = Stream.concat(sorted.stream(), foreign.stream().flatMap(e -> e.c.getKeys().stream())).collect(Collectors.toList());
     }
 
     public Vector positionOf(Column column) {
