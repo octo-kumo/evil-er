@@ -81,15 +81,15 @@ public class Converter {
         });
         tables.forEach(Table::revalidate);
         multiAttributes.forEach(p -> {
-            Table table = new Table(p.getB().name + "::" + EnglishNoun.pluralOf(p.getA().getName()));
-            if (p.getA().attributes.size() > 0) // wtf composite multivalued attribute, ignoring recursive ones
-                flatten(p.getA().attributes).forEach(e -> table.add(new Column(e.getName(), true)));
+            Table table = new Table(p.b.name + "::" + EnglishNoun.pluralOf(p.a.getName()));
+            if (p.a.attributes.size() > 0) // wtf composite multivalued attribute, ignoring recursive ones
+                flatten(p.a.attributes).forEach(e -> table.add(new Column(e.getName(), true)));
             else
-                table.add(new Column(EnglishNoun.singularOf(p.getA().getName()), true));
-            table.add(p.getB(), "attribute of", true);
-            table.set(p.getB().add(p.getB().getShape().getWidth() + Column.WIDTH, 0));
+                table.add(new Column(EnglishNoun.singularOf(p.a.getName()), true));
+            table.add(p.b, "attribute of", true);
+            table.set(p.b.add(p.b.getShape().getWidth() + Column.WIDTH, 0));
             tables.add(table);
-            tableMap.put(p.getA(), table);
+            tableMap.put(p.a, table);
         });
         tables.forEach(Table::revalidate);
     }
