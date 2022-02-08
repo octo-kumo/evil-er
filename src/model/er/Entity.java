@@ -97,7 +97,9 @@ public class Entity extends Node {
 
     public void drawShape(DiagramGraphics g) {
         drawShape(g, getShape());
-        if (isWeak()) drawShape(g, getShape(INNER_WIDTH, INNER_HEIGHT));
+        // Ensure at least 7 px per character
+        double newWidth = Math.max(WIDTH, getName().length() * 7);
+        if (isWeak()) drawShape(g, getShape(newWidth - 6, INNER_HEIGHT));
     }
 
     public void drawShape(DiagramGraphics g, Shape shape) {
@@ -106,13 +108,13 @@ public class Entity extends Node {
     }
 
     public Shape getShape() {
-        return getShape(WIDTH, HEIGHT);
+        // Ensure at least 7 px per character
+        double newWidth = Math.max(WIDTH, getName().length() * 7);
+        return getShape(newWidth, HEIGHT);
     }
 
     public Shape getShape(double width, double height) {
-        // Ensure at least 7 px per character
-        double newWidth = Math.max(width * 0.7, getName().length() * 7);
-        return new Rectangle2D.Double(-newWidth / 2d, -height / 2d, newWidth, height);
+        return new Rectangle2D.Double(-width / 2d, -height / 2d, width, height);
     }
 
     public Shape getShapeWorld() {
