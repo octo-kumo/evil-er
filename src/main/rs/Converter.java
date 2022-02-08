@@ -60,7 +60,8 @@ public class Converter {
                 Table found = firstIdentifiableTable(tableMap, entities, e);
                 if (found != null) {
                     System.out.printf("\tAdded table, %s%n", found.name);
-                    table.add(found, combinedInTo == -1 ? spec.role.isEmpty() ? found.name : spec.role : entity.getName(), entity.isWeak());
+                    table.add(found, combinedInTo == -1 ? spec.role.isEmpty() ? found.name : spec.role : entity.getName(),
+                            combinedInTo == -1 || entity.isWeak());
                 }
             });
 
@@ -79,11 +80,8 @@ public class Converter {
             Table parent = tableMap.get(sp);
             if (parent == null) return;
             parent.add(new Column("type", false));
-            ((Specialization) entity).getSubclasses().forEach(e -> {
-                if (tableMap.get(e) != null) {
-                    tableMap.get(e).add(parent, "inherits", true);
-                }
-            });
+
+            ((Specialization) entity).getSubclasses().stream().map(tableMap::get).filter(Objects::nonNull).forEach(child -> child.add(parent, "inherits", true));
         });
         tables.forEach(Table::revalidate);
         multiAttributes.forEach(p -> {

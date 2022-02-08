@@ -25,7 +25,7 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
 
     public final ArrayList<Table> tables;
 
-    public Reactive<Line.LineStyle> lineStyle = new Reactive<>(Line.LineStyle.STRAIGHT);
+    public Reactive<Line.LineStyle> lineStyle = new Reactive<>(Line.LineStyle.CURVE);
     boolean exporting = false;
 
     enum ActionType {Moving, Panning, Creating}
@@ -43,11 +43,10 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
     public final Reactive<Table> target = new Reactive<>();
     public final Reactive<Boolean> connecting = new Reactive<>(false);
     public final Reactive<Boolean> locked = new Reactive<>(false);
-    public final Reactive<Boolean> aabb = new Reactive<>(true);
+    public final Reactive<Boolean> aabb = new Reactive<>(false);
     public final Reactive<Boolean> grid = new Reactive<>(false);
-    public final Reactive<Table> connectTarget = new Reactive<>();
 
-    private final Vector connectPos = new Vector();
+    public final Reactive<Boolean> showBrackets = new Reactive<>(false);
 
     public RSDiagram() {
         addMouseListener(this);

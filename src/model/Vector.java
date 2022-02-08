@@ -1,6 +1,7 @@
 package model;
 
 import com.google.gson.annotations.Expose;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.geom.Point2D;
@@ -13,7 +14,7 @@ public class Vector extends Point2D {
     protected double y;
     public static final ImmutableVector ZERO = new ImmutableVector();
 
-    public static Vector average(List<? extends Vector> nodes) {
+    public static Vector average(@NotNull List<? extends Vector> nodes) {
         return nodes.parallelStream()
                 .map(Vector.class::cast)
                 .reduce(Vector::add)
@@ -49,11 +50,11 @@ public class Vector extends Point2D {
         this(0, 0);
     }
 
-    public Vector(Vector vector) {
-        this(vector.x, vector.y);
+    public Vector(@NotNull Point2D other) {
+        this(other.getX(), other.getY());
     }
 
-    public Vector set(@Nullable Vector other) {
+    public Vector set(@Nullable Point2D other) {
         if (other == null) return this;
         return set(other.getX(), other.getY());
     }
@@ -64,7 +65,7 @@ public class Vector extends Point2D {
         return this;
     }
 
-    public Vector add(Vector other) {
+    public Vector add(@NotNull Point2D other) {
         return add(other.getX(), other.getY());
     }
 
@@ -72,7 +73,7 @@ public class Vector extends Point2D {
         return clone().incre(x, y);
     }
 
-    public Vector minus(Vector other) {
+    public Vector minus(@NotNull Point2D other) {
         return minus(other.getX(), other.getY());
     }
 
@@ -80,7 +81,7 @@ public class Vector extends Point2D {
         return clone().decre(x, y);
     }
 
-    public Vector incre(Vector other) {
+    public Vector incre(@NotNull Point2D other) {
         return incre(other.getX(), other.getY());
     }
 
@@ -90,7 +91,7 @@ public class Vector extends Point2D {
         return this;
     }
 
-    public Vector decre(Vector other) {
+    public Vector decre(@NotNull Point2D other) {
         return decre(other.getX(), other.getY());
     }
 
@@ -157,7 +158,7 @@ public class Vector extends Point2D {
         return this;
     }
 
-    public double dot(Vector other) {
+    public double dot(@NotNull Point2D other) {
         return getX() * other.getX() + getY() * other.getY();
     }
 
@@ -184,6 +185,25 @@ public class Vector extends Point2D {
     @Override
     public Vector clone() {
         return new Vector(getX(), getY());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Vector vector = (Vector) o;
+        return vector.minus(this).len() < 1;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        long temp;
+        temp = java.lang.Double.doubleToLongBits(getX());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = java.lang.Double.doubleToLongBits(getY());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        return result;
     }
 
     @Override
