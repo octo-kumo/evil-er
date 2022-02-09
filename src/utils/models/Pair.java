@@ -1,4 +1,4 @@
-package model.others;
+package utils.models;
 
 public class Pair<A, B> {
     public A a;

@@ -48,7 +48,6 @@ public class Entity extends Node {
         Select, Entity, Relationship, Attribute, Specialization
     }
 
-    public static Color HIGHLIGHTED = new Color(230, 230, 230);
     public static final double WIDTH = 100;
     public static final double HEIGHT = 40;
     public static final double INNER_WIDTH = WIDTH - 6;
@@ -105,7 +104,7 @@ public class Entity extends Node {
 
     public void drawShape(DiagramGraphics g, Shape shape) {
         Color toUse = g.getColor();
-        g.draw(shape, isHighlighted() ? HIGHLIGHTED : Color.WHITE, toUse);
+        g.draw(shape, isHighlighted() ? g.context.highlight() : g.context.fill(), toUse);
     }
 
     public Shape getShape() {

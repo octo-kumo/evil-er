@@ -1,18 +1,22 @@
 package main;
 
+import com.github.weisj.darklaf.LafManager;
 import main.er.ERControlPanel;
 import main.er.ERDiagramPanel;
 import main.er.ERInfoPanel;
 import main.er.ERMenu;
+import utils.Prompts;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
-
-import static main.ui.Prompts.report;
+import java.util.Objects;
 
 public class EvilEr extends JPanel {
-    public static Map<?, ?> DESKTOP_HINTS;
+    public static Map<?, ?> RENDER_HINTS;
     public final ERControlPanel controlPanel;
     public final ERDiagramPanel diagramPanel;
     public final ERInfoPanel infoPanel;
@@ -22,7 +26,7 @@ public class EvilEr extends JPanel {
         this.frame = frame;
         setLayout(new BorderLayout());
 
-        diagramPanel = new ERDiagramPanel(this);
+        diagramPanel = new ERDiagramPanel();
         add(diagramPanel, BorderLayout.CENTER);
 
         controlPanel = new ERControlPanel(this);
@@ -35,23 +39,34 @@ public class EvilEr extends JPanel {
     }
 
     public static void main(String... args) {
-        try {
-            DESKTOP_HINTS = (Map<?, ?>) Toolkit.getDefaultToolkit().getDesktopProperty("awt.font.desktophints");
-            System.setProperty("apple.laf.useScreenMenuBar", "true");
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
-            report(e);
-            e.printStackTrace();
-        }
+        RENDER_HINTS = (Map<?, ?>) Toolkit.getDefaultToolkit().getDesktopProperty("awt.font.desktophints");
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
+        LafManager.install(LafManager.themeForPreferredStyle(LafManager.getPreferredThemeStyle()));
+        ERMenu.loadThemeFromPreference();
         JFrame frame = new JFrame("Evil ER :: " + Version.CURRENT);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         EvilEr evilEr;
         frame.setContentPane(evilEr = new EvilEr(frame));
         frame.setJMenuBar(new ERMenu(evilEr));
+
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
 
         Version.asyncUpdate();
+        SwingUtilities.invokeLater(() -> {
+            try {
+                frame.setIconImages(Arrays.asList(
+                        ImageIO.read(Objects.requireNonNull(EvilEr.class.getResourceAsStream("/icon/iconx16.png"))),
+                        ImageIO.read(Objects.requireNonNull(EvilEr.class.getResourceAsStream("/icon/iconx32.png"))),
+                        ImageIO.read(Objects.requireNonNull(EvilEr.class.getResourceAsStream("/icon/iconx64.png"))),
+                        ImageIO.read(Objects.requireNonNull(EvilEr.class.getResourceAsStream("/icon/iconx128.png"))),
+                        ImageIO.read(Objects.requireNonNull(EvilEr.class.getResourceAsStream("/icon/iconx256.png")))
+                ));
+            } catch (IOException e) {
+                Prompts.report(e);
+                e.printStackTrace();
+            }
+        });
     }
 }

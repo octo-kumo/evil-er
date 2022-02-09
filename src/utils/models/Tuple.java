@@ -1,4 +1,4 @@
-package model.others;
+package utils.models;
 
 public class Tuple<A, B, C> {
     public A a;

@@ -39,8 +39,8 @@ public class Attribute extends Entity {
 
     public void drawShape(DiagramGraphics g, Shape shape) {
         Color toUse = g.getColor();
-        if (isDerived()) g.dashed(shape, isHighlighted() ? HIGHLIGHTED : Color.WHITE, toUse);
-        else g.draw(shape, isHighlighted() ? HIGHLIGHTED : Color.WHITE, toUse);
+        if (isDerived()) g.dashed(shape, isHighlighted() ? g.context.highlight() : g.context.fill(), toUse);
+        else g.draw(shape, isHighlighted() ? g.context.highlight() : g.context.fill(), toUse);
     }
 
     @Override

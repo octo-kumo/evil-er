@@ -4,7 +4,7 @@ import main.renderer.DiagramGraphics;
 import main.rs.RSDiagram;
 import model.Drawable;
 import model.Vector;
-import model.others.Tuple;
+import utils.models.Tuple;
 import org.jetbrains.annotations.NotNull;
 import shapes.lines.RangeLine;
 
@@ -85,7 +85,7 @@ public class Table extends Vector implements Drawable {
             other.c.drawAsForeign(g, other.a, other.b, offset.clone());
             offset.incre(other.c.keyCount * Column.WIDTH, 0);
         }
-        if (highlighted) g.draw(getShapeWorld(), new Color(0, 0, 0, 30), Color.BLACK);
+        if (highlighted) g.draw(getShapeWorld(), new Color(0, 0, 0, 30), g.context.foreground());
     }
 
     @Override
@@ -116,7 +116,7 @@ public class Table extends Vector implements Drawable {
             g.draw(new RangeLine(center.add(-diff, 0), center.add(diff, 0)));
             Font font = g.getFont();
             g.setFont(small);
-            g.drawStringCenter(role, center, Color.WHITE);
+            g.drawStringCenter(role, center, g.context.background());
             g.setFont(font);
         }
     }

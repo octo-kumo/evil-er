@@ -3,8 +3,8 @@ package main.rs;
 import main.renderer.DiagramGraphics;
 import model.Drawable;
 import model.Vector;
-import model.callbacks.DrawContext;
-import model.others.Reactive;
+import utils.callbacks.DrawContext;
+import utils.models.Reactive;
 import model.rs.Table;
 import org.jetbrains.annotations.Nullable;
 import shapes.lines.Line;
@@ -70,16 +70,14 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
     @Override
     protected void paintComponent(Graphics g1d) {
         super.paintComponent(g1d);
-        DiagramGraphics g = new DiagramGraphics((Graphics2D) g1d);
-        g.setColor(Color.WHITE);
-        g.fillRect(0, 0, getWidth(), getHeight());
+        DiagramGraphics g = new DiagramGraphics((Graphics2D) g1d, this);
         AffineTransform transform = g.getTransform();
         g.scale(scale, scale);
         g.translate(origin.getX(), origin.getY());
 
         if (grid.get()) {
             Vector lt = origin.negate();
-            g.setColor(Color.LIGHT_GRAY);
+            g.setColor(disabled());
             Vector sz = new Vector(getWidth(), getHeight()).div(scale);
             double maxX = lt.getX() + sz.getX();
             double maxY = lt.getY() + sz.getY();
@@ -97,14 +95,13 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
         SchemaLine.resetLines();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        g.setColor(Color.BLACK);
-        g.setContext(this);
+        g.setColor(foreground());
 
         tables.forEach(d -> d.predraw(g));
         tables.forEach(d -> d.draw(g));
 
         if (exporting) return;
-        g.setColor(Color.GRAY);
+        g.setColor(disabled());
         if (aabb.get()) g.draw(getAABB());
     }
 
@@ -119,12 +116,13 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
         aabb.setRect(aabb.getX() * exportScale, aabb.getY() * exportScale, aabb.getWidth() * exportScale, aabb.getHeight() * exportScale);
         BufferedImage img = new BufferedImage((int) aabb.getWidth(), (int) aabb.getHeight(), BufferedImage.TYPE_INT_RGB);
         Graphics2D g = img.createGraphics();
-        g.setColor(Color.WHITE);
+        g.setColor(background());
         g.fillRect(0, 0, (int) aabb.getWidth(), (int) aabb.getHeight());
         g.translate(-aabb.getX(), -aabb.getY());
         g.scale(exportScale, exportScale);
         exporting = true;
-        draw(new DiagramGraphics(g));
+        g.setFont(getFont());
+        draw(new DiagramGraphics(g, this));
         exporting = false;
         g.dispose();
         return img;

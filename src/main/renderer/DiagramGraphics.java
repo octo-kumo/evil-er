@@ -1,7 +1,8 @@
 package main.renderer;
 
 import model.Vector;
-import model.callbacks.DrawContext;
+import org.jetbrains.annotations.NotNull;
+import utils.callbacks.DrawContext;
 import model.er.Entity;
 
 import java.awt.*;
@@ -23,11 +24,14 @@ public class DiagramGraphics extends Graphics2D {
     private static final Stroke dashed = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{2}, 0);
     private final Graphics2D g;
 
-    public DiagramGraphics(Graphics2D g) {
+    @NotNull
+    public final DrawContext context;
+
+    public DiagramGraphics(Graphics2D g, @NotNull DrawContext context) {
         this.g = g;
+        this.context = context;
     }
 
-    public DrawContext context = null;
 
     public static Stream<Entity> flatten(List<? extends Entity> entities) {
         return Stream.concat(entities.parallelStream(), entities.parallelStream().flatMap(e -> flatten(e.attributes)));
@@ -101,12 +105,8 @@ public class DiagramGraphics extends Graphics2D {
         setStroke(back);
     }
 
-    public DrawContext getContext() {
+    public @NotNull DrawContext getContext() {
         return context;
-    }
-
-    public void setContext(DrawContext context) {
-        this.context = context;
     }
 
     @Override
@@ -251,7 +251,7 @@ public class DiagramGraphics extends Graphics2D {
 
     @Override
     public DiagramGraphics create() {
-        return new DiagramGraphics((Graphics2D) g.create());
+        return new DiagramGraphics((Graphics2D) g.create(), getContext());
     }
 
     @Override
