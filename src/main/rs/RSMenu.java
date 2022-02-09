@@ -4,6 +4,7 @@ import com.google.gson.stream.JsonReader;
 import model.er.Entity;
 import model.serializers.Serializer;
 import shapes.lines.Line;
+import utils.Chooser;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -13,7 +14,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static main.ui.Prompts.report;
+import static utils.Prompts.report;
 
 public class RSMenu extends JMenuBar {
     public RSMenu(EvilRs evilRs) {
@@ -21,8 +22,8 @@ public class RSMenu extends JMenuBar {
             setMnemonic('F');
             add(new JMenuItem(new AbstractAction("Open ER") {
                 public void actionPerformed(ActionEvent ae) {
-                    if (JFileChooser.APPROVE_OPTION == main.ui.Chooser.jsonChooser.showOpenDialog(evilRs)) {
-                        try (JsonReader reader = new JsonReader(new FileReader(main.ui.Chooser.jsonChooser.getFinal()))) {
+                    if (JFileChooser.APPROVE_OPTION == Chooser.jsonChooser.showOpenDialog(evilRs)) {
+                        try (JsonReader reader = new JsonReader(new FileReader(Chooser.jsonChooser.getFinal()))) {
                             ArrayList<Entity> deserialized = Serializer.deserialize(reader);
                             evilRs.diagram.tables.clear();
                             Converter.convert(deserialized, evilRs.diagram.tables);
@@ -35,8 +36,8 @@ public class RSMenu extends JMenuBar {
             }));
             add(new JMenuItem(new AbstractAction("Export...") {
                 public void actionPerformed(ActionEvent ae) {
-                    if (JFileChooser.APPROVE_OPTION == main.ui.Chooser.imageChooser.showSaveDialog(evilRs)) try {
-                        ImageIO.write(evilRs.diagram.export(), "PNG", main.ui.Chooser.imageChooser.getFinal());
+                    if (JFileChooser.APPROVE_OPTION == Chooser.imageChooser.showSaveDialog(evilRs)) try {
+                        ImageIO.write(evilRs.diagram.export(), "PNG", Chooser.imageChooser.getFinal());
                     } catch (IOException e) {
                         report(e);
                         e.printStackTrace();

@@ -1,9 +1,8 @@
-package main.ui.components;
-
-import java.awt.*;
+package main.components;
 
 import javax.swing.*;
 import javax.swing.text.Document;
+import java.awt.*;
 
 public class PlaceholderTextField extends JTextField {
 

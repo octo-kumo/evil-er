@@ -3,7 +3,7 @@ package main.rs;
 import javax.swing.*;
 import java.awt.*;
 
-import static main.ui.Prompts.report;
+import static utils.Prompts.report;
 
 public class EvilRs extends JPanel {
 

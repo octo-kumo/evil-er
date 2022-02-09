@@ -1,19 +1,19 @@
 package main.er;
 
 import main.EvilEr;
+import main.components.KeyManager;
 import main.renderer.DiagramGraphics;
-import main.ui.components.KeyManager;
 import model.Drawable;
 import model.Vector;
 import model.er.Attribute;
 import model.er.Entity;
 import model.er.Relationship;
 import model.er.Specialization;
-import model.callbacks.DrawContext;
+import org.jetbrains.annotations.Nullable;
 import shapes.lines.Line;
 import utils.Examples;
-import model.others.Reactive;
-import org.jetbrains.annotations.Nullable;
+import utils.callbacks.DrawContext;
+import utils.models.Reactive;
 
 import javax.swing.*;
 import java.awt.*;
@@ -59,6 +59,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     public final Reactive<Boolean> locked = new Reactive<>(false);
     public final Reactive<Boolean> aabb = new Reactive<>(false);
     public final Reactive<Boolean> grid = new Reactive<>(false);
+    public final Reactive<Boolean> darkMode = new Reactive<>(false);
     public final Reactive<Entity> connectTarget = new Reactive<>();
 
     private Relationship<Entity> connectBase;
@@ -73,8 +74,8 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         keyManager = new KeyManager(this);
 
         entities = new ArrayList<>();
-        Examples.populate(entities);
         addListeners();
+        SwingUtilities.invokeLater(() -> Examples.populate(entities));
     }
 
     private void addListeners() {
@@ -89,8 +90,8 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     protected void paintComponent(Graphics g1d) {
         super.paintComponent(g1d);
         UNIVERSAL_METRICS = getGraphics().getFontMetrics(getFont());
-        DiagramGraphics g = new DiagramGraphics((Graphics2D) g1d);
-        g.setColor(Color.WHITE);
+        DiagramGraphics g = new DiagramGraphics((Graphics2D) g1d, this);
+        g.setColor(background());
         g.fillRect(0, 0, getWidth(), getHeight());
         AffineTransform transform = g.getTransform();
         g.scale(scale, scale);
@@ -98,7 +99,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
         if (grid.get()) {
             Vector lt = origin.negate();
-            g.setColor(Color.LIGHT_GRAY);
+            g.setColor(g.context.highlight());
             Vector sz = new Vector(getWidth(), getHeight()).div(scale);
             double maxX = lt.getX() + sz.getX();
             double maxY = lt.getY() + sz.getY();
@@ -113,16 +114,15 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     }
 
     public void draw(DiagramGraphics g) {
-        g.setRenderingHints(EvilEr.DESKTOP_HINTS);
+        g.setRenderingHints(EvilEr.RENDER_HINTS);
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setColor(Color.BLACK);
-        g.setContext(this);
+        g.setColor(g.context.foreground());
 
         entities.forEach(d -> d.predraw(g));
         entities.forEach(d -> d.draw(g));
 
         if (exporting) return;
-        g.setColor(Color.GRAY);
+        g.setColor(g.context.highlight());
         if (adding_buf != null) drawPendingAddition(g);
         if (connecting.get() && connectBase != null) drawPendingConnection(g);
         if (aabb.get()) g.draw(getAABB());
@@ -139,13 +139,13 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         aabb.setRect(aabb.getX() * exportScale, aabb.getY() * exportScale, aabb.getWidth() * exportScale, aabb.getHeight() * exportScale);
         BufferedImage img = new BufferedImage((int) aabb.getWidth(), (int) aabb.getHeight(), BufferedImage.TYPE_INT_RGB);
         Graphics2D g = img.createGraphics();
-        g.setColor(Color.WHITE);
+        g.setColor(background());
         g.fillRect(0, 0, (int) aabb.getWidth(), (int) aabb.getHeight());
         g.translate(-aabb.getX(), -aabb.getY());
         g.scale(exportScale, exportScale);
         exporting = true;
         g.setFont(getFont());
-        draw(new DiagramGraphics(g));
+        draw(new DiagramGraphics(g, this));
         exporting = false;
         g.dispose();
         return img;
@@ -244,7 +244,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
                 setTarget(found.get());
                 repaint();
             }
-        } else if (SwingUtilities.isRightMouseButton(e)) {
+        } else if (SwingUtilities.isRightMouseButton(e) && current != ActionType.Creating) {
             setTarget(null);
             diagramPanel.requestNameEdit(null);
         }
@@ -390,5 +390,30 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
     public Vector project(double x, double y) {
         return project(new Vector(x, y));
+    }
+
+    public static Color HIGHLIGHT = new Color(0xff0000); // dummy color
+    public static final Color FILL_DARK = new Color(0x222222);
+    public static final Color BACKGROUND_DARK = new Color(0x121212);
+    public static final Color FOREGROUND_DARK = new Color(0xefefef);
+
+    @Override
+    public Color foreground() {
+        return darkMode.get() ? FOREGROUND_DARK : Color.BLACK;
+    }
+
+    @Override
+    public Color background() {
+        return darkMode.get() ? BACKGROUND_DARK : Color.WHITE;
+    }
+
+    @Override
+    public Color fill() {
+        return darkMode.get() ? FILL_DARK : Color.WHITE;
+    }
+
+    @Override
+    public Color highlight() {
+        return HIGHLIGHT;
     }
 }

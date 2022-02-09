@@ -7,6 +7,9 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.geom.Point2D;
 import java.util.List;
 
+/**
+ * A 2D Vector
+ */
 public class Vector extends Point2D {
     @Expose
     protected double x;
@@ -29,17 +32,17 @@ public class Vector extends Point2D {
         return y;
     }
 
-    @Override
-    public void setLocation(double x, double y) {
-        set(x, y);
-    }
-
     public void setX(double x) {
         this.x = x;
     }
 
     public void setY(double y) {
         this.y = y;
+    }
+
+    @Override
+    public void setLocation(double x, double y) {
+        set(x, y);
     }
 
     public Vector(double x, double y) {
@@ -212,10 +215,7 @@ public class Vector extends Point2D {
     }
 
     public Vector rot90() {
-        double newX = this.getY();
-        setY(-getX());
-        setX(newX);
-        return this;
+        return set(getY(), -getX());
     }
 
     public Vector rotate90() {

@@ -1,6 +1,4 @@
-package main.ui;
-
-import main.er.ERMenu;
+package utils;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;

@@ -1,4 +1,4 @@
-package model.others;
+package utils.models;
 
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;

@@ -28,17 +28,16 @@ public class RelationLine<T extends Entity> extends Line<Relationship<T>, T> {
         Vector a = getStart();
         Vector b = getEnd();
         FancyLine line = new FancyLine(a, b, g.getContext().getLineStyle());
-        Color toUse = g.getColor();
         if (spec.total) {
             Stroke stroke = g.getStroke();
             g.setStroke(base);
             g.draw(line);
             g.setStroke(center);
-            g.setColor(Color.WHITE);
+            g.setColor(g.context.fill());
             g.draw(line);
             g.setStroke(stroke);
+            g.setColor(g.context.foreground());
         } else g.draw(line);
-        g.setColor(toUse);
         if (a instanceof Specialization && b != ((Specialization) a).getSuperclass()) {
             Vector diff = b.minus(a);
             double dis = g.getContext().getLineStyle() == LineStyle.STRAIGHT ? 0.6 : 0.5;
@@ -58,7 +57,7 @@ public class RelationLine<T extends Entity> extends Line<Relationship<T>, T> {
             Vector mid = b.add(a).div(2);
             double angle = Vector.alwaysUp(d.angle() - Math.PI / 2) + Math.PI / 2;
             g.rotate(angle, mid.getX(), mid.getY());
-            g.drawStringCenter(spec.role, mid, Color.WHITE);
+            g.drawStringCenter(spec.role, mid, g.context.fill());
             g.rotate(-angle, mid.getX(), mid.getY());
         }
         if (!spec.amm.isEmpty()) {

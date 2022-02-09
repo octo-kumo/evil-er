@@ -7,7 +7,6 @@ import model.Vector;
 import org.jetbrains.annotations.NotNull;
 import shapes.lines.SchemaLine;
 
-import java.awt.*;
 import java.awt.geom.Rectangle2D;
 
 public class Column extends Vector implements Drawable, Comparable<Column> {
@@ -38,7 +37,7 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
 
     @Override
     public void draw(@NotNull DiagramGraphics g) {
-        g.draw(new Rectangle2D.Double(0, 0, WIDTH, HEIGHT), Color.WHITE, Color.BLACK);
+        g.draw(new Rectangle2D.Double(0, 0, WIDTH, HEIGHT), g.context.fill(), g.context.foreground());
         g.drawStringCenter(name, (float) (WIDTH / 2), (float) (HEIGHT / 2));
         if (key) g.draw(g.lineUnderString(name, (float) (WIDTH / 2), (float) (HEIGHT / 2 + 3)));
     }
@@ -54,7 +53,7 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
     }
 
     public void drawAsForeign(@NotNull DiagramGraphics g, @NotNull Boolean key, @NotNull Vector origin) {
-        g.draw(new Rectangle2D.Double(origin.getX(), origin.getY(), WIDTH, HEIGHT), Color.WHITE, Color.BLACK);
+        g.draw(new Rectangle2D.Double(origin.getX(), origin.getY(), WIDTH, HEIGHT), g.context.fill(), g.context.foreground());
         g.drawStringCenter(name + " (FK)", origin.add(WIDTH / 2, HEIGHT / 2));
         if (key) g.draw(g.lineUnderString(name + " (FK)", origin.add(WIDTH / 2, HEIGHT / 2 + 3)));
     }

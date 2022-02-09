@@ -1,17 +1,23 @@
 package main.er;
 
+import com.github.weisj.darklaf.LafManager;
+import com.github.weisj.darklaf.settings.ThemeSettings;
+import com.github.weisj.darklaf.theme.Theme;
+import com.github.weisj.darklaf.theme.info.AccentColorRule;
+import com.github.weisj.darklaf.theme.info.FontSizeRule;
 import com.google.gson.stream.JsonReader;
 import main.EvilEr;
 import main.rs.Converter;
 import main.rs.EvilRs;
 import main.rs.RSMenu;
-import main.ui.Prompts;
 import model.Vector;
 import model.er.Entity;
-import model.others.TransferableImage;
 import model.serializers.Serializer;
 import shapes.lines.Line;
+import utils.Chooser;
 import utils.JFontChooser;
+import utils.Prompts;
+import utils.models.TransferableImage;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -27,13 +33,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
-import static main.ui.Prompts.report;
+import static utils.Prompts.report;
 
 public class ERMenu extends JMenuBar {
 
+    public static final Preferences THEME = Preferences.userRoot().node("theme");
+    public static final Preferences DRAWING_FONT = Preferences.userRoot().node("drawingFont");
     private final EvilEr evilEr;
     private final JFontChooser fontChooser;
 
@@ -46,8 +55,8 @@ public class ERMenu extends JMenuBar {
             setMnemonic('F');
             add(new JMenuItem(new AbstractAction("Open") {
                 public void actionPerformed(ActionEvent ae) {
-                    if (JFileChooser.APPROVE_OPTION == main.ui.Chooser.jsonChooser.showOpenDialog(evilEr)) {
-                        try (JsonReader reader = new JsonReader(new FileReader(main.ui.Chooser.jsonChooser.getFinal()))) {
+                    if (JFileChooser.APPROVE_OPTION == Chooser.jsonChooser.showOpenDialog(evilEr)) {
+                        try (JsonReader reader = new JsonReader(new FileReader(Chooser.jsonChooser.getFinal()))) {
                             ArrayList<Entity> deserialized = Serializer.deserialize(reader);
                             evilEr.diagramPanel.diagram.entities.clear();
                             evilEr.diagramPanel.diagram.entities.addAll(deserialized);
@@ -78,8 +87,8 @@ public class ERMenu extends JMenuBar {
             }});
             add(new JMenuItem(new AbstractAction("Save as...") {
                 public void actionPerformed(ActionEvent ae) {
-                    if (JFileChooser.APPROVE_OPTION == main.ui.Chooser.jsonChooser.showSaveDialog(evilEr)) {
-                        try (Writer writer = new FileWriter(main.ui.Chooser.jsonChooser.getFinal())) {
+                    if (JFileChooser.APPROVE_OPTION == Chooser.jsonChooser.showSaveDialog(evilEr)) {
+                        try (Writer writer = new FileWriter(Chooser.jsonChooser.getFinal())) {
                             Serializer.serialize(evilEr.diagramPanel.diagram.entities, writer);
                         } catch (IOException e) {
                             report(e);
@@ -117,8 +126,8 @@ public class ERMenu extends JMenuBar {
             add(new JSeparator());
             add(new JMenuItem(new AbstractAction("Export...") {
                 public void actionPerformed(ActionEvent ae) {
-                    if (JFileChooser.APPROVE_OPTION == main.ui.Chooser.imageChooser.showSaveDialog(evilEr)) try {
-                        ImageIO.write(evilEr.diagramPanel.diagram.export(), "PNG", main.ui.Chooser.imageChooser.getFinal());
+                    if (JFileChooser.APPROVE_OPTION == Chooser.imageChooser.showSaveDialog(evilEr)) try {
+                        ImageIO.write(evilEr.diagramPanel.diagram.export(), "PNG", Chooser.imageChooser.getFinal());
                     } catch (IOException e) {
                         report(e);
                         e.printStackTrace();
@@ -216,6 +225,9 @@ public class ERMenu extends JMenuBar {
             add(new JMenuItem("Font...") {{
                 addActionListener(e -> openFontChooser());
             }});
+            add(new JMenuItem("Theme...") {{
+                addActionListener(e -> ThemeSettings.showSettingsDialog(this));
+            }});
         }});
         add(new JMenu("Help") {{
             setMnemonic('H');
@@ -234,10 +246,9 @@ public class ERMenu extends JMenuBar {
     }
 
     private void resetFontSelector() {
-        Preferences drawingFont = Preferences.userRoot().node("drawingFont");
-        String name = drawingFont.get("fontName", "Arial");
-        int size = drawingFont.getInt("fontSize", 12);
-        int style = drawingFont.getInt("fontStyle", Font.PLAIN);
+        String name = DRAWING_FONT.get("fontName", "Arial");
+        int size = DRAWING_FONT.getInt("fontSize", 14);
+        int style = DRAWING_FONT.getInt("fontStyle", Font.PLAIN);
 
         fontChooser.setSelectedFontFamily(name);
         fontChooser.setSelectedFontSize(size);
@@ -246,10 +257,9 @@ public class ERMenu extends JMenuBar {
     }
 
     private void persistFontSelector() {
-        Preferences drawingFont = Preferences.userRoot().node("drawingFont");
-        drawingFont.put("fontName", fontChooser.getSelectedFontFamily());
-        drawingFont.getInt("fontSize", fontChooser.getSelectedFontSize());
-        drawingFont.getInt("fontStyle", fontChooser.getSelectedFontStyle());
+        DRAWING_FONT.put("fontName", fontChooser.getSelectedFontFamily());
+        DRAWING_FONT.getInt("fontSize", fontChooser.getSelectedFontSize());
+        DRAWING_FONT.getInt("fontStyle", fontChooser.getSelectedFontStyle());
         evilEr.diagramPanel.diagram.setFont(fontChooser.getSelectedFont());
     }
 
@@ -280,8 +290,7 @@ public class ERMenu extends JMenuBar {
                     add(new JButton("Reset") {{
                         addActionListener(e -> {
                             try {
-                                Preferences drawingFont = Preferences.userRoot().node("drawingFont");
-                                drawingFont.clear();
+                                DRAWING_FONT.clear();
                                 resetFontSelector();
                             } catch (BackingStoreException ex) {
                                 Prompts.report(ex);
@@ -299,5 +308,59 @@ public class ERMenu extends JMenuBar {
             fontChooserFrame.pack();
         }
         fontChooserFrame.setVisible(true);
+    }
+
+    public static void saveThemeToPreference() {
+        try {
+            ThemeSettings instance = ThemeSettings.getInstance();
+            System.out.printf("Saving theme to preferences :: %s%n", instance.getTheme().getName());
+            THEME.putBoolean("isThemeFollowsSystem", instance.isThemeFollowsSystem());
+            THEME.putBoolean("isFontSizeFollowsSystem", instance.isFontSizeFollowsSystem());
+            THEME.putBoolean("isAccentColorFollowsSystem", instance.isAccentColorFollowsSystem());
+            THEME.putBoolean("isSelectionColorFollowsSystem", instance.isSelectionColorFollowsSystem());
+            THEME.putBoolean("isSystemPreferencesEnabled", instance.isSystemPreferencesEnabled());
+
+            Color accentColor = instance.getAccentColorRule().getAccentColor();
+            Color selectionColor = instance.getAccentColorRule().getSelectionColor();
+            if (accentColor != null) THEME.putInt("accentColor", accentColor.getRGB());
+            if (selectionColor != null) THEME.putInt("selectionColor", selectionColor.getRGB());
+            ERDiagram.HIGHLIGHT = Theme.isDark(instance.getTheme()) ?
+                    (accentColor == null ? selectionColor == null ? Color.GRAY : selectionColor : accentColor) :
+                    (selectionColor == null ? accentColor == null ? Color.LIGHT_GRAY : accentColor : selectionColor);
+            THEME.putInt("fontSize", instance.getFontSizeRule().getPercentage());
+
+            THEME.put("theme", instance.getTheme().getName());
+            THEME.flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Prompts.report(e);
+        }
+    }
+
+    public static void loadThemeFromPreference() {
+        try {
+            System.out.println("Loading theme from preferences");
+            ThemeSettings instance = ThemeSettings.getInstance();
+
+            instance.setThemeFollowsSystem(THEME.getBoolean("isThemeFollowsSystem", true));
+            instance.setFontSizeFollowsSystem(THEME.getBoolean("isFontSizeFollowsSystem", true));
+            instance.setAccentColorFollowsSystem(THEME.getBoolean("isAccentColorFollowsSystem", true));
+            instance.setSelectionColorFollowsSystem(THEME.getBoolean("isSelectionColorFollowsSystem", true));
+            instance.setSystemPreferencesEnabled(THEME.getBoolean("isSystemPreferencesEnabled", true));
+
+            instance.setAccentColorRule(AccentColorRule.fromColor(
+                    new Color(THEME.getInt("accentColor", 0xFF0063B1)),
+                    new Color(THEME.getInt("selectionColor", 0xFF7FAFD4))
+            ));
+            instance.setFontSizeRule(FontSizeRule.relativeAdjustment(THEME.getInt("fontSize", 100)));
+            String theme = THEME.get("theme", null);
+            instance.setTheme(Arrays.stream(LafManager.getRegisteredThemes()).filter(r -> Objects.equals(r.getName(), theme))
+                    .findAny().orElse(LafManager.themeForPreferredStyle(LafManager.getPreferredThemeStyle())));
+            instance.apply();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Prompts.report(e);
+        }
+        saveThemeToPreference();
     }
 }

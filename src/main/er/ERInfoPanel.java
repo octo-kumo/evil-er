@@ -1,15 +1,15 @@
 package main.er;
 
 import main.EvilEr;
-import main.ui.components.ButtonColumn;
-import main.ui.components.PlaceholderTextField;
+import main.components.ButtonColumn;
+import main.components.PlaceholderTextField;
 import model.er.Attribute;
 import model.er.Entity;
 import model.er.Relationship;
 import model.er.Specialization;
-import model.callbacks.ChangeListener;
-import model.callbacks.Consumer;
-import model.callbacks.Getter;
+import utils.callbacks.ChangeListener;
+import utils.callbacks.Consumer;
+import utils.callbacks.Getter;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;

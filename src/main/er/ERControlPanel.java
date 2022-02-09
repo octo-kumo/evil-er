@@ -3,7 +3,7 @@ package main.er;
 import main.EvilEr;
 import model.er.Entity;
 import shapes.lines.Line;
-import model.others.TransferableImage;
+import utils.models.TransferableImage;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -14,7 +14,7 @@ import java.awt.datatransfer.*;
 import java.io.File;
 import java.io.IOException;
 
-import static main.ui.Prompts.report;
+import static utils.Prompts.report;
 
 public class ERControlPanel extends JPanel implements ClipboardOwner {
 

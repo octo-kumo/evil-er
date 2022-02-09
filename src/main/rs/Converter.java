@@ -5,7 +5,7 @@ import model.er.Attribute;
 import model.er.Entity;
 import model.er.Relationship;
 import model.er.Specialization;
-import model.others.Pair;
+import utils.models.Pair;
 import model.rs.Column;
 import model.rs.Table;
 import org.jetbrains.annotations.Nullable;
