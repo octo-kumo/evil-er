@@ -144,6 +144,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         g.translate(-aabb.getX(), -aabb.getY());
         g.scale(exportScale, exportScale);
         exporting = true;
+        g.setFont(getFont());
         draw(new DiagramGraphics(g));
         exporting = false;
         g.dispose();
