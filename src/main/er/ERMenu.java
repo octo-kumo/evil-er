@@ -160,24 +160,16 @@ public class ERMenu extends JMenuBar {
         }});
         add(new JMenu("Add") {{
             setMnemonic('A');
-            add(new JMenu("Type...") {{
-                ButtonGroup group = new ButtonGroup();
-                char[] mnemonics = new char[]{'v', 'e', 'r', 'a', 's'};
-                Entity.Type[] values = Entity.Type.values();
-                ButtonModel[] models = new ButtonModel[values.length];
-                evilEr.diagramPanel.diagram.addingType.addListener(t ->
-                        group.setSelected(models[Arrays.asList(values).indexOf(t)], true));
-                for (int i = 0; i < values.length; i++) {
-                    Entity.Type type = values[i];
-                    JRadioButtonMenuItem button;
-                    add(button = new JRadioButtonMenuItem(type.toString()));
-
-                    group.add(button);
-                    button.setMnemonic(mnemonics[i]);
-                    button.addActionListener(evt -> evilEr.diagramPanel.diagram.setAddingType(type));
-                    models[i] = button.getModel();
-                }
-            }});
+            char[] mnemonics = new char[]{'v', 'e', 'r', 'a', 's'};
+            Entity.Type[] values = Entity.Type.values();
+            for (int i = 1; i < values.length; i++) {
+                Entity.Type type = values[i];
+                final char mnemonic = mnemonics[i];
+                add(new JMenuItem(type.name()) {{
+                    addActionListener(e -> evilEr.diagramPanel.diagram.setAddingType(type));
+                    setAccelerator(KeyStroke.getKeyStroke(KeyEvent.getExtendedKeyCodeForChar(mnemonic), 0));
+                }});
+            }
             add(new JCheckBoxMenuItem("Locked") {{
                 evilEr.diagramPanel.diagram.locked.addListener(this::setState);
                 addActionListener(e -> evilEr.diagramPanel.diagram.locked.set(getState()));
