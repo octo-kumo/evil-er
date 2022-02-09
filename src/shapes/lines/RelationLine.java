@@ -8,6 +8,7 @@ import model.er.Specialization;
 import shapes.SubsetSymbol;
 
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 
 public class RelationLine<T extends Entity> extends Line<Relationship<T>, T> {
     public Relationship.RelationshipSpec spec;
@@ -56,9 +57,10 @@ public class RelationLine<T extends Entity> extends Line<Relationship<T>, T> {
         if (!spec.role.isEmpty()) {
             Vector mid = b.add(a).div(2);
             double angle = Vector.alwaysUp(d.angle() - Math.PI / 2) + Math.PI / 2;
+            AffineTransform transform = g.getTransform();
             g.rotate(angle, mid.getX(), mid.getY());
             g.drawStringCenter(spec.role, mid, g.context.fill());
-            g.rotate(-angle, mid.getX(), mid.getY());
+            g.setTransform(transform);
         }
         if (!spec.amm.isEmpty()) {
             double dist = 10;
