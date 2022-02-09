@@ -8,6 +8,8 @@ import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 
+import static main.er.ERDiagram.UNIVERSAL_METRICS;
+
 public class Attribute extends Entity {
     private Entity parent;
     @Expose
@@ -51,15 +53,16 @@ public class Attribute extends Entity {
     public void paint(DiagramGraphics g) {
         super.paint(g);
         if (isKey()) {
-            if (parent.isWeak()) g.dashed(g.lineUnderString(getName(), 0, 3));
-            else drawShape(g, g.lineUnderString(getName(), 0, 3));
+            Line2D shape = g.lineUnderString(getName(), 0, 3);
+            if (parent.isWeak()) g.dashed(shape);
+            else drawShape(g, shape);
         }
     }
 
     @Override
     public Shape getShape(double width, double height) {
         // Ensure at least 7 px per character
-        double newWidth = Math.max(width * 0.7, getName().length() * 7);
+        double newWidth = Math.max(width * 0.7, UNIVERSAL_METRICS.stringWidth(getName()) * 1.05f);
         return new Ellipse2D.Double(-newWidth / 2d, -height * 0.7 / 2d, newWidth, height * 0.7);
     }
 

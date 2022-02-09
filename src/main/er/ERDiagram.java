@@ -1,5 +1,6 @@
 package main.er;
 
+import main.EvilEr;
 import main.renderer.DiagramGraphics;
 import main.ui.components.KeyManager;
 import model.Drawable;
@@ -32,6 +33,7 @@ import static main.renderer.DiagramGraphics.flatten;
 
 public class ERDiagram extends JComponent implements MouseListener, MouseMotionListener, DrawContext, Drawable, MouseWheelListener {
 
+    public static FontMetrics UNIVERSAL_METRICS;
     public boolean acceptingKeys = true;
     public final KeyManager keyManager;
     public final ArrayList<Entity> entities;
@@ -86,6 +88,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     @Override
     protected void paintComponent(Graphics g1d) {
         super.paintComponent(g1d);
+        UNIVERSAL_METRICS = getGraphics().getFontMetrics(getFont());
         DiagramGraphics g = new DiagramGraphics((Graphics2D) g1d);
         g.setColor(Color.WHITE);
         g.fillRect(0, 0, getWidth(), getHeight());
@@ -110,8 +113,8 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     }
 
     public void draw(DiagramGraphics g) {
+        g.setRenderingHints(EvilEr.DESKTOP_HINTS);
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g.setColor(Color.BLACK);
         g.setContext(this);
 

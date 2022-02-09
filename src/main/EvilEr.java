@@ -7,10 +7,12 @@ import main.er.ERMenu;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Map;
 
 import static main.ui.Prompts.report;
 
 public class EvilEr extends JPanel {
+    public static Map<?, ?> DESKTOP_HINTS;
     public final ERControlPanel controlPanel;
     public final ERDiagramPanel diagramPanel;
     public final ERInfoPanel infoPanel;
@@ -34,6 +36,7 @@ public class EvilEr extends JPanel {
 
     public static void main(String... args) {
         try {
+            DESKTOP_HINTS = (Map<?, ?>) Toolkit.getDefaultToolkit().getDesktopProperty("awt.font.desktophints");
             System.setProperty("apple.laf.useScreenMenuBar", "true");
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {

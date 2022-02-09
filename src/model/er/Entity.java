@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static main.er.ERDiagram.UNIVERSAL_METRICS;
 import static main.renderer.DiagramGraphics.flatten;
 
 public class Entity extends Node {
@@ -98,7 +99,7 @@ public class Entity extends Node {
     public void drawShape(DiagramGraphics g) {
         drawShape(g, getShape());
         // Ensure at least 7 px per character
-        double newWidth = Math.max(WIDTH, getName().length() * 7);
+        double newWidth = Math.max(WIDTH, UNIVERSAL_METRICS.stringWidth(getName()) * 1.05f);
         if (isWeak()) drawShape(g, getShape(newWidth - 6, INNER_HEIGHT));
     }
 
@@ -109,7 +110,7 @@ public class Entity extends Node {
 
     public Shape getShape() {
         // Ensure at least 7 px per character
-        double newWidth = Math.max(WIDTH, getName().length() * 7);
+        double newWidth = Math.max(WIDTH, UNIVERSAL_METRICS.stringWidth(getName()) * 1.05f);
         return getShape(newWidth, HEIGHT);
     }
 
