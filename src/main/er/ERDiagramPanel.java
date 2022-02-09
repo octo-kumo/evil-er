@@ -39,7 +39,7 @@ public class ERDiagramPanel extends JPanel implements ComponentListener {
         } else {
             input.setVisible(true);
             input.setText(entity.getName());
-            input.setFont(new Font(null, Font.PLAIN, (int) (12 * diagram.scale)));
+            input.setFont(diagram.getFont().deriveFont((float) (diagram.getFont().getSize() * diagram.scale)));
             entity.setName("");
             Vector pos = diagram.project(entity.minus(Entity.WIDTH / 2, Entity.HEIGHT / 4));
             input.setBounds((int) pos.getX(), (int) pos.getY(), (int) (Entity.WIDTH * diagram.scale), (int) (Entity.HEIGHT * diagram.scale / 2));

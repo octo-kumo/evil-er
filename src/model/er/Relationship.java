@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import static main.er.ERDiagram.UNIVERSAL_METRICS;
+
 public class Relationship<T extends Entity> extends Entity {
     public List<Entity> nodes;
     @Expose
@@ -63,7 +65,7 @@ public class Relationship<T extends Entity> extends Entity {
     public void drawShape(DiagramGraphics g) {
         drawShape(g, getShape());
         // Ensure at least 7 px per character
-        double newWidth = Math.max(WIDTH, getName().length() * 7);
+        double newWidth = Math.max(WIDTH, UNIVERSAL_METRICS.stringWidth(getName()) * 1.05f);
         if (isWeak()) drawShape(g, getShape(newWidth - 15, INNER_HEIGHT));
     }
 

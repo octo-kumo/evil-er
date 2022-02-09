@@ -15,30 +15,10 @@ public class Specialization extends Relationship<Entity> {
     public Specialization(Entity superclass) {
         super();
         setSuperclass(superclass);
-        x = 0;
-        y = 50;
     }
 
     public Entity getSuperclass() {
         return nodes != null && nodes.size() > 0 ? nodes.get(0) : null;
-    }
-
-    public double getX() {
-        return x + (getSuperclass() == null ? 0 : getSuperclass().getX());
-    }
-
-    public double getY() {
-        return y + (getSuperclass() == null ? 0 : getSuperclass().getY());
-    }
-
-    public void setX(double x) {
-        if (getSuperclass() == null) this.x = x;
-        else getSuperclass().setX(x - this.x);
-    }
-
-    public void setY(double y) {
-        if (getSuperclass() == null) this.y = y;
-        else getSuperclass().setY(y - this.y);
     }
 
     public void setSuperclass(Entity superclass) {
@@ -48,9 +28,8 @@ public class Specialization extends Relationship<Entity> {
             lines.clear();
             return;
         }
+        set(superclass.add(0, 50));
 
-        x = 0;
-        y = 50;
         if (nodes.size() > 0) {
             nodes.set(0, superclass);
             lines.set(0, new RelationLine<>(this, superclass,
@@ -84,7 +63,6 @@ public class Specialization extends Relationship<Entity> {
     }
 
     public void drawShape(DiagramGraphics g) {
-        if (getSuperclass() != null) g.translate(getSuperclass().getX(), getSuperclass().getY());
         super.drawShape(g);
     }
 

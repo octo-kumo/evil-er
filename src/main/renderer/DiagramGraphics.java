@@ -1,15 +1,14 @@
 package main.renderer;
 
 import model.Vector;
-import model.er.Entity;
 import model.callbacks.DrawContext;
+import model.er.Entity;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
 import java.awt.image.ImageObserver;
@@ -66,14 +65,14 @@ public class DiagramGraphics extends Graphics2D {
         drawString(text, cx, cy);
     }
 
-    public Shape lineUnderString(String text, double cx, double cy) {
+    public Line2D lineUnderString(String text, double cx, double cy) {
         FontMetrics metrics = getFontMetrics(getFont());
         double width = metrics.stringWidth(text);
         cy += -metrics.getHeight() / 2f + metrics.getAscent();
         return new Line2D.Double(cx - width / 2, cy, cx + width / 2, cy);
     }
 
-    public Shape lineUnderString(String text, Vector vector) {
+    public Line2D lineUnderString(String text, Vector vector) {
         return lineUnderString(text, vector.getX(), vector.getY());
     }
 

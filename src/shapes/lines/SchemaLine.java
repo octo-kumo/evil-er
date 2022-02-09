@@ -118,7 +118,7 @@ public class SchemaLine extends Path2D.Double {
         return b.getY() > a.getY();
     }
 
-    private static final double JUMP_LINE_RADIUS = 3;
+    private static final double JUMP_LINE_RADIUS = 5;
 
     public void dodgingTo(@NotNull Vector vector, DrawContext context) {
         if (!((RSDiagram) context).jumpLines.get()) {
@@ -132,11 +132,9 @@ public class SchemaLine extends Path2D.Double {
         Vector r90 = dir.rotate90();
         Line2D.Double line = new Line2D.Double(currentPoint, vector);
         toDodge.parallelStream()
-                .filter(l -> noEndsMeet(l, line) && l.intersectsLine(line))
                 .map(l -> {
                     Vector point = intersection(l, line);
-                    for (Pair<Line2D, Point2D> j : jumped) if (Objects.equals(point, j.b) && j.a == l) return null;
-                    return point;
+                    return jumped.parallelStream().anyMatch(j -> Objects.equals(point, j.b) && j.a == l) ? null : point;
                 })
                 .filter(Objects::nonNull)
                 .distinct()
