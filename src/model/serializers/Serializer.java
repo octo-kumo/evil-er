@@ -89,12 +89,12 @@ public class Serializer {
         for (Entity o : entities) {
             Entity.updateParents(o);
             if (o instanceof Relationship) { // inflate relationships
-                Relationship<Entity> r = (Relationship<Entity>) o;
+                Relationship r = (Relationship) o;
                 r.nodes = Arrays.stream(r._nodes).map(n ->
                         entities.stream().filter(e -> n.equals(e.getName())).findAny().orElse(null)
                 ).collect(Collectors.toList());
                 r.lines = IntStream.range(0, r.specs.size()).mapToObj(i ->
-                        new RelationLine<>(r, r.nodes.get(i), r.specs.get(i))
+                        new RelationLine(r, r.nodes.get(i), r.specs.get(i))
                 ).collect(Collectors.toList());
                 r.revalidate();
             }

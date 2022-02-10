@@ -3,6 +3,7 @@ package utils.models;
 import utils.callbacks.ChangeListener;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class Reactive<T> {
     private final ArrayList<ChangeListener<T>> listeners;
@@ -33,5 +34,13 @@ public class Reactive<T> {
 
     public void removeListener(ChangeListener<T> listener) {
         listeners.remove(listener);
+    }
+
+    public boolean nonNull() {
+        return get() != null;
+    }
+
+    public boolean equal(T other) {
+        return Objects.equals(other, get());
     }
 }

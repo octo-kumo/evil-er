@@ -36,14 +36,14 @@ public class Examples {
         d.addAttribute((Attribute) new Attribute().setName("year").set(-50, 100));
         d.addAttribute((Attribute) new Attribute().setName("reasons").setWeak(true).set(50, 100));
 
-        Relationship<Entity> r = new Relationship<>("related to");
+        Relationship r = new Relationship("related to");
         r.setWeak(true);
         r.addNode(a, new Relationship.RelationshipSpec("1", false));
         r.addNode(b, new Relationship.RelationshipSpec("N", true));
         r.set(400, 100);
         entities.add(r);
 
-        r = new Relationship<>("knows");
+        r = new Relationship("knows");
         r.addNode(a, new Relationship.RelationshipSpec("1", false, "knows"));
         r.addNode(a, new Relationship.RelationshipSpec("N", false, "known_by"));
         r.set(680, 150);

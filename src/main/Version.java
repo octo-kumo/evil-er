@@ -23,9 +23,7 @@ public class Version implements Comparable<Version> {
         new Thread(() -> {
             try {
                 System.out.println("Checking for updates...");
-                System.out.printf("\tCurrent version = %s%n", CURRENT);
                 Release[] releases = getReleases();
-                System.out.printf("\tFound %d releases!%n", releases.length);
                 Arrays.stream(releases).max(Comparator.comparing(r -> new Version(r.tag_name)))
                         .ifPresent(Version::notifyLatest);
             } catch (IOException e) {
@@ -39,7 +37,6 @@ public class Version implements Comparable<Version> {
         HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
         con.setRequestMethod("GET");
         int responseCode = con.getResponseCode();
-        System.out.printf("\tGITHUB GET Response Code :: %d%n", responseCode);
         if (responseCode == HttpsURLConnection.HTTP_OK) {
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             return gson.fromJson(new JsonReader(in), Release[].class);
@@ -53,9 +50,9 @@ public class Version implements Comparable<Version> {
         Version version = new Version(latest.tag_name);
         System.out.printf("\tLatest version = %s%n", version);
         int compare = CURRENT.compareTo(version);
-        if (compare == 0) System.out.println("\tCurrent version is latest!");
+        if (compare == 0) System.out.printf("\tCurrent version %s is latest!%n", CURRENT);
         else if (compare < 0) {
-            System.out.println("\tCurrent version is behind!");
+            System.out.printf("\tCurrent version %s is behind!%n", CURRENT);
             if (JOptionPane.showConfirmDialog(null,
                     String.format("Download new version %s?", version),
                     "Outdated Version!", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION
@@ -65,7 +62,7 @@ public class Version implements Comparable<Version> {
                 } catch (IOException | URISyntaxException e) {
                     e.printStackTrace();
                 }
-        } else System.out.println("\tCurrent version is in-dev!");
+        } else System.out.printf("\tCurrent version %s is in-dev!%n", CURRENT);
     }
 
     public final String get() {

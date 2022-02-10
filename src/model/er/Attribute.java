@@ -39,8 +39,8 @@ public class Attribute extends Entity {
 
     public void drawShape(DiagramGraphics g, Shape shape) {
         Color toUse = g.getColor();
-        if (isDerived()) g.dashed(shape, isHighlighted() ? g.context.highlight() : g.context.fill(), toUse);
-        else g.draw(shape, isHighlighted() ? g.context.highlight() : g.context.fill(), toUse);
+        if (isDerived()) g.dashed(shape, g.context.fill(), toUse);
+        else g.draw(shape, g.context.fill(), toUse);
     }
 
     @Override
@@ -91,5 +91,19 @@ public class Attribute extends Entity {
     public Attribute setParent(Entity parent) {
         this.parent = parent;
         return this;
+    }
+
+    @Override
+    public Attribute clone() {
+        Attribute clone = new Attribute();
+        clone.setName(getName());
+        clone.setWeak(isWeak());
+        attributes.forEach(a -> clone.addAttribute(a.clone()));
+        clone.set(this);
+
+        clone.setKey(isKey());
+        clone.setDerived(isDerived());
+        clone.setParent(getParent());
+        return clone;
     }
 }

@@ -23,10 +23,8 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static main.renderer.DiagramGraphics.flatten;
@@ -35,36 +33,38 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
     public static FontMetrics UNIVERSAL_METRICS;
     public boolean acceptingKeys = true;
+
+    public final ERDiagramPanel diagramPanel;
     public final KeyManager keyManager;
     public final ArrayList<Entity> entities;
 
     public Reactive<Line.LineStyle> lineStyle = new Reactive<>(Line.LineStyle.STRAIGHT);
-    boolean exporting = false;
 
-    enum ActionType {Moving, Panning, Creating}
+    enum ActionType {ADDING, CONNECTING, SELECTING}
 
     /**
      * PARAMS
      */
-    private Entity adding_buf;
-    private ActionType current = ActionType.Panning;
-    private final Vector dragStart = new Vector(), targetStart = new Vector();
+    private boolean exporting = false;
+    private final ArrayList<Entity> clipboard = new ArrayList<>(); // will be added to board on click, including new entity
+    private final ArrayList<Entity> selection = new ArrayList<>(); // selection
+    private final Vector mouseStart = new Vector(), mouseWorld = new Vector();
+
     public final Vector origin = new Vector();
+    public final Vector panStart = new Vector();
     public double scale = 1;
     public double exportScale = 4;
 
     public final Reactive<Entity> target = new Reactive<>();
-    public final Reactive<Entity.Type> addingType = new Reactive<>(Entity.Type.Select);
-    public final Reactive<Boolean> connecting = new Reactive<>(false);
     public final Reactive<Boolean> locked = new Reactive<>(false);
     public final Reactive<Boolean> aabb = new Reactive<>(false);
     public final Reactive<Boolean> grid = new Reactive<>(false);
     public final Reactive<Boolean> darkMode = new Reactive<>(false);
-    public final Reactive<Entity> connectTarget = new Reactive<>();
 
-    private Relationship<Entity> connectBase;
-    private final Vector connectPos = new Vector();
-    private final ERDiagramPanel diagramPanel;
+    private Relationship connectBase;
+    public final Reactive<Vector> connectTarget = new Reactive<>(new Vector());
+    public final Reactive<Entity.Type> addingType = new Reactive<>();
+    public final Reactive<ActionType> action = new Reactive<>(ActionType.SELECTING);
 
     public ERDiagram(ERDiagramPanel diagramPanel) {
         this.diagramPanel = diagramPanel;
@@ -80,9 +80,8 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
     private void addListeners() {
         lineStyle.addListener(s -> repaint());
-        connecting.addListener(s -> connectBase = s ? connectBase : null);
         locked.addListener(s -> {
-            if (!s) setAddingType(Entity.Type.Select);
+            if (!s) setAddingType(null);
         });
     }
 
@@ -97,17 +96,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         g.scale(scale, scale);
         g.translate(origin.getX(), origin.getY());
 
-        if (grid.get()) {
-            Vector lt = origin.negate();
-            g.setColor(g.context.highlight());
-            Vector sz = new Vector(getWidth(), getHeight()).div(scale);
-            double maxX = lt.getX() + sz.getX();
-            double maxY = lt.getY() + sz.getY();
-            for (int x = (int) (Math.ceil(lt.getX() / 10) * 10); x < maxX; x += 10)
-                g.drawLine(x, (int) lt.getY(), x, (int) maxY);
-            for (int y = (int) (Math.ceil(lt.getY() / 10) * 10); y < maxY; y += 10)
-                g.drawLine((int) lt.getX(), y, (int) maxX, y);
-        }
+        if (grid.get()) drawGrid(g);
         draw(g);
         g.setTransform(transform);
         g.drawStringCenter("@yun", getWidth() - 25, getHeight() - 15);
@@ -116,23 +105,26 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     public void draw(DiagramGraphics g) {
         g.setRenderingHints(EvilEr.RENDER_HINTS);
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-                RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g.setColor(g.context.foreground());
 
         entities.forEach(d -> d.predraw(g));
         entities.forEach(d -> d.draw(g));
 
         if (exporting) return;
+
         g.setColor(g.context.highlight());
-        if (adding_buf != null) drawPendingAddition(g);
-        if (connecting.get() && connectBase != null) drawPendingConnection(g);
+        selection.forEach(d -> g.draw(d.getShapeWorld()));
+        if (target.nonNull()) g.dashed(target.get().getShapeWorld().getBounds2D());
+
+        if (action.equal(ActionType.ADDING)) drawClipboard(g);
+        if (action.equal(ActionType.CONNECTING)) drawPendingConnection(g);
         if (aabb.get()) g.draw(getAABB());
     }
 
     public BufferedImage export() {
         setTarget(null);
-        find(Entity::isHighlighted).forEach(entity -> entity.setHighlighted(false));
+        selection.clear();
 
         Rectangle2D aabb = getAABB();
         int padding = 20;
@@ -154,9 +146,9 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     }
 
     public void delete() {
-        List<Entity> targets = find(Entity::isHighlighted).collect(Collectors.toList());
-        targets.forEach(this::delete);
-        targets.forEach(this::burnBridges);
+        selection.forEach(this::delete);
+        selection.forEach(this::burnBridges);
+        selection.clear();
         repaint();
     }
 
@@ -167,102 +159,92 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     }
 
     public void burnBridges(Entity entity) {
-        entities.parallelStream().filter(e -> e instanceof Relationship).map(e -> (Relationship<?>) e).forEach(r -> r.remove(entity));
+        entities.parallelStream().filter(e -> e instanceof Relationship).forEach(r -> ((Relationship) r).remove(entity));
     }
 
     public void setAddingType(Entity.Type type) {
+        if (action.equal(ActionType.SELECTING) && selection.isEmpty()) action.set(ActionType.ADDING);
+        else return;
+
         addingType.set(type);
-        Vector pos = null;
-        if (adding_buf != null) pos = adding_buf.clone();
-        switch (type) {
-            case Select:
-                if (current == ActionType.Creating) current = ActionType.Panning;
-                adding_buf = null;
-                return;
-            case Entity:
-                adding_buf = new Entity().setName("Unnamed");
-                break;
-            case Relationship:
-                adding_buf = new Relationship<>().setName("Unnamed");
-                break;
-            case Attribute:
-                adding_buf = new Attribute().setParent(target.get()).setName("Unnamed");
-                break;
-            case Specialization:
-                adding_buf = new Specialization(target.get());
-                break;
+        clipboard.clear();
+
+        if (type == null) {
+            action.set(ActionType.SELECTING);
+            return;
         }
-        current = ActionType.Creating;
-        adding_buf.set(pos);
+        Entity entity = null;
+        if (type == Entity.Type.Entity) clipboard.add(entity = new Entity().setName("Unnamed"));
+        else if (type == Entity.Type.Relationship) clipboard.add(entity = new Relationship().setName("Unnamed"));
+        else if (type == Entity.Type.Attribute) clipboard.add(entity = new Attribute().setName("Unnamed"));
+        else if (type == Entity.Type.Specialization) clipboard.add(entity = new Specialization(target.get()));
+        if (entity != null) entity.set(0, 0);
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
-        dragStart.set(e.getX(), e.getY());
-        if (SwingUtilities.isLeftMouseButton(e)) {
-            if (current == ActionType.Creating && adding_buf != null) {
-                if (adding_buf instanceof Attribute) {
-                    Entity parent = ((Attribute) adding_buf).getParent();
-                    if (parent == null) return;
-                    Vector pos = adding_buf.clone();
-                    parent.addAttribute((Attribute) adding_buf);
-                    adding_buf.set(pos);
-                } else entities.add(adding_buf);
-                adding_buf.setHighlighted(true);
-                setTarget(adding_buf);
-                if (connecting.get() && connectBase != null && adding_buf.getClass() == Entity.class)
-                    connectBase.addNode(adding_buf, new Relationship.RelationshipSpec("", false));
-                diagramPanel.requestNameEdit(adding_buf);
-                setAddingType(!locked.get() ? Entity.Type.Select : addingType.get());
-            } else {
-                if (connecting.get() && connectTarget.get() != null && connectBase != null) {
-                    connectBase.addNode(connectTarget.get(), new Relationship.RelationshipSpec("", false));
-                    setTarget(null);
-                    repaint();
-                    return;
+        mouseStart.set(e.getX(), e.getY());
+        mouseWorld.set(unproject(mouseStart));
+        if (SwingUtilities.isLeftMouseButton(e)) switch (action.get()) {
+            case ADDING:
+                clipboard.forEach(clipboardItem -> {
+                    clipboardItem = clipboardItem.clone();
+                    if (clipboardItem instanceof Attribute) {
+                        Entity parent = ((Attribute) clipboardItem).getParent();
+                        if (parent == null) return;
+                        Vector pos = clipboardItem.copy();
+                        parent.addAttribute((Attribute) clipboardItem);
+                        clipboardItem.set(pos);
+                    } else {
+                        entities.add(clipboardItem);
+                        clipboardItem.incre(mouseWorld); // translate to mouse position, from clipboard world
+                    }
+                });
+                if (!locked.get()) {
+                    setAddingType(null);
+                    clipboard.clear();
+                    action.set(ActionType.SELECTING);
                 }
-
-                /* SELECT ELEMENT */
-                /* IF NOT SELECT MULTIPLE, CLEAR HIGHLIGHT */
-                if (target.get() != null && !e.isShiftDown()) {
-                    find(Entity::isHighlighted).forEach(entity -> entity.setHighlighted(false)); // clear previous selection
-                    repaint();
-                }
-
-                Optional<Entity> found = getIntersect(unproject(dragStart));
-                if (!found.isPresent()) {
-                    setTarget(null);
-                    diagramPanel.requestNameEdit(null);
-                    return;
-                }
-
-                if (e.isShiftDown() && (target.get() == found.get() || found.get().isHighlighted())) {
-                    found.get().setHighlighted(false);
-                    setTarget(null);
-                    diagramPanel.requestNameEdit(null);
-                    return;
-                }
-
-                setTarget(found.get());
                 repaint();
-            }
-        } else if (SwingUtilities.isRightMouseButton(e) && current != ActionType.Creating) {
-            setTarget(null);
-            diagramPanel.requestNameEdit(null);
+                break;
+            case CONNECTING:
+                if (connectBase != null && connectTarget.get().getClass() == Entity.class) {
+                    connectBase.addNode((Entity) connectTarget.get(), new Relationship.RelationshipSpec("", false));
+                } else {
+                    getIntersect(mouseWorld).ifPresent(entity -> {
+                        if (entity instanceof Relationship) connectBase = (Relationship) entity;
+                    });
+                }
+                repaint();
+                break;
+            case SELECTING:
+                if (!e.isShiftDown()) selection.clear();
+
+                getIntersect(mouseWorld).ifPresent(entity -> {
+                    if (selection.contains(entity)) {
+                        selection.remove(entity);
+                        setTarget(null);
+                    } else setTarget(entity);
+                });
+                repaint();
+                break;
+        }
+        else if (SwingUtilities.isRightMouseButton(e)) {
+            panStart.set(origin);
+            if (action.equal(ActionType.CONNECTING)) action.set(ActionType.SELECTING);
+        } else if (SwingUtilities.isMiddleMouseButton(e)) {
+            action.set(ActionType.SELECTING);
+            selection.clear();
+            clipboard.clear();
         }
     }
 
     public void setTarget(@Nullable Entity entity) {
-        if (entity == null) {
-            targetStart.set(origin);
-            current = ActionType.Panning;
-        } else {
-            targetStart.set(entity);
-            current = ActionType.Moving;
-        }
         target.set(entity);
-        if (entity != null) entity.setHighlighted(true);
-        if (connecting.get() && entity instanceof Relationship) connectBase = (Relationship<Entity>) entity;
+
+        if (entity != null) selection.add(entity);
+        else action.set(ActionType.SELECTING);
+        if (action.equal(ActionType.CONNECTING) && entity instanceof Relationship) connectBase = (Relationship) entity;
     }
 
     @Override
@@ -273,29 +255,30 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
     @Override
     public void mouseDragged(MouseEvent e) {
+        Vector mouse = new Vector(e.getX(), e.getY());
+        Vector newMouse = unproject(mouse);
         if (SwingUtilities.isLeftMouseButton(e)) {
-            if (current == ActionType.Moving && !connecting.get()) {
-                if (target.get() == null) return;
-                target.get().set(targetStart.add(unproject(e.getX(), e.getY())).minus(unproject(dragStart)));
-                if (e.isControlDown()) target.get().div(gridSize).round().scale(gridSize);
+            if (action.equal(ActionType.SELECTING)) {
+                Vector diff = newMouse.minus(mouseWorld);
+                selection.forEach(entity -> {
+                    if (entity instanceof Attribute && selection.contains(((Attribute) entity).getParent())) return;
+                    entity.incre(diff);
+                    if (e.isControlDown()) entity.div(gridSize).round().scale(gridSize);
+                });
                 repaint();
             }
-        }
-        if (current == ActionType.Panning && (SwingUtilities.isRightMouseButton(e) || SwingUtilities.isLeftMouseButton(e))) {
-            origin.set(targetStart.add(new Vector(e.getX(), e.getY()).decre(dragStart).div(scale)));
+        } else if (SwingUtilities.isRightMouseButton(e)) {
+            origin.set(panStart.add(mouse.minus(mouseStart).div(scale)));
             repaint();
         }
+        mouseWorld.set(newMouse);
     }
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON1 && current != ActionType.Creating) {
+        if (SwingUtilities.isLeftMouseButton(e) && !action.equal(ActionType.ADDING)) {
             Optional<Entity> found = getIntersect(unproject(e.getX(), e.getY()));
-            if (e.getClickCount() == 2 && found.isPresent()) diagramPanel.requestNameEdit(found.get());
-            repaint();
-        }
-        if (e.getButton() == MouseEvent.BUTTON3) {
-            if (connecting.get()) connecting.set(false);
+            if (found.isPresent() && e.getClickCount() == 2) diagramPanel.requestNameEdit(found.get());
             repaint();
         }
     }
@@ -310,32 +293,24 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        Vector pos = unproject(e.getX(), e.getY());
-        if (current == ActionType.Creating) {
-            if (adding_buf != null) {
-                if (adding_buf instanceof Specialization)
-                    ((Specialization) adding_buf).setSuperclass(getIntersect(connectPos.set(pos))
-                            .orElse(null));
-                if (!(adding_buf instanceof Specialization && ((Specialization) adding_buf).getSuperclass() != null))
-                    adding_buf.set(pos);
-                if (adding_buf instanceof Attribute) getIntersect(connectPos.set(pos))
-                        .ifPresent(entity -> ((Attribute) adding_buf)
-                                .setParent(entity).set(pos));
-                repaint();
-            }
+        mouseWorld.set(unproject(e.getX(), e.getY()));
+        if (action.equal(ActionType.CONNECTING) && connectBase != null) {
+            Optional<Entity> found = getIntersect(mouseWorld).filter(entity -> !(entity instanceof Relationship) && !(entity instanceof Attribute));
+            connectTarget.set(found.isPresent() ? found.get() : mouseWorld);
+        } else if (action.equal(ActionType.ADDING) && clipboard.size() > 0) {
+            getIntersect(mouseWorld).ifPresent(entity -> clipboard.stream().filter(a -> a instanceof Attribute && ((Attribute) a).getParent() == null).forEach(a -> ((Attribute) a).setParent(entity)));
         }
-        if (connecting.get() && connectBase != null) {
-            connectTarget.set(getIntersect(connectPos.set(pos))
-                    .filter(entity -> !(entity instanceof Relationship) && !(entity instanceof Attribute))
-                    .orElse(null));
-            repaint();
-        }
+        repaint();
     }
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        if (current != ActionType.Creating) {
+        if (!action.equal(ActionType.ADDING)) {
+            Vector mouse = new Vector(e.getX(), e.getY());
+            Vector a = mouse.divide(scale);
             scale *= Math.pow(0.95, e.getPreciseWheelRotation());
+            Vector b = mouse.divide(scale);
+            origin.incre(b.minus(a));
             repaint();
         }
     }
@@ -349,28 +324,33 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     }
 
     private void drawPendingConnection(DiagramGraphics g) {
-        if (connectTarget.get() != null)
-            g.dashed(new Line2D.Double(connectBase, connectTarget.get()));
-        else
-            g.dashed(new Line2D.Double(connectBase, connectPos));
+        if (connectBase == null) return;
+        g.dashed(new Line2D.Double(connectBase, connectTarget.get()));
     }
 
-    private void drawPendingAddition(DiagramGraphics g) {
+    private void drawClipboard(DiagramGraphics g) {
         AffineTransform transform = g.getTransform();
-        if (adding_buf instanceof Attribute) {
-            Entity parent = ((Attribute) adding_buf).getParent();
-            if (parent != null) {
-                g.draw(new Line2D.Double(parent, adding_buf));
-                g.translate(parent.getX(), parent.getY());
-            }
-        }
-        adding_buf.draw(g);
+        g.translate(mouseWorld);
+        clipboard.forEach(clipboardItem -> clipboardItem.predraw(g));
+        clipboard.forEach(clipboardItem -> clipboardItem.draw(g));
         g.setTransform(transform);
     }
 
+    private void drawGrid(DiagramGraphics g) {
+        Vector lt = origin.negate();
+        g.setColor(g.context.highlight());
+        Vector sz = new Vector(getWidth(), getHeight()).div(scale);
+        double maxX = lt.getX() + sz.getX();
+        double maxY = lt.getY() + sz.getY();
+        double size = 100;
+        for (int x = (int) (Math.ceil(lt.getX() / size) * size); x < maxX; x += size)
+            g.drawLine(x, (int) lt.getY(), x, (int) maxY);
+        for (int y = (int) (Math.ceil(lt.getY() / size) * size); y < maxY; y += size)
+            g.drawLine((int) lt.getX(), y, (int) maxX, y);
+    }
+
     public Rectangle2D getAABB() {
-        return flatten(entities).map(e -> e.getShapeWorld().getBounds2D())
-                .reduce(Rectangle2D::createUnion).orElse(new Rectangle2D.Double());
+        return flatten(entities).map(e -> e.getShapeWorld().getBounds2D()).reduce(Rectangle2D::createUnion).orElse(new Rectangle2D.Double());
     }
 
     @Override

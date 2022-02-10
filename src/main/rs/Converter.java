@@ -37,17 +37,17 @@ public class Converter {
             tableMap.put(entity, table);
         });
         entities.stream().filter(entity -> entity.getClass() == Relationship.class).forEach(entity -> {
-            System.out.printf("Relationship, %s, %s%n", entity.getName(), ((Relationship<?>) entity).nodes.stream().map(Entity::getName).collect(Collectors.toList()));
+            System.out.printf("Relationship, %s, %s%n", entity.getName(), ((Relationship) entity).nodes.stream().map(Entity::getName).collect(Collectors.toList()));
 
-            int combinedInTo = findEntityToMerge((Relationship<?>) entity);
-            Table table = combinedInTo == -1 ? new Table(entity.getName()) : tableMap.get(((Relationship<?>) entity).nodes.get(combinedInTo));
+            int combinedInTo = findEntityToMerge((Relationship) entity);
+            Table table = combinedInTo == -1 ? new Table(entity.getName()) : tableMap.get(((Relationship) entity).nodes.get(combinedInTo));
             if (combinedInTo != -1) System.out.printf("\tCombining into: %s%n", table.name);
 
             flatten(entity.attributes).forEach(e -> table.add(new Column(e.getName(), e.isKey())));
             entity.attributes.stream().filter(Attribute::isWeak).forEach(a -> multiAttributes.add(new Pair<>(a, table)));
 
-            List<Entity> nodes = ((Relationship<?>) entity).nodes;
-            List<Relationship.RelationshipSpec> specs = ((Relationship<?>) entity).specs;
+            List<Entity> nodes = ((Relationship) entity).nodes;
+            List<Relationship.RelationshipSpec> specs = ((Relationship) entity).specs;
             int bound = nodes.size();
             IntStream.range(0, bound).filter(i -> i != combinedInTo).forEach(i -> {
                 Entity e = nodes.get(i);
@@ -61,7 +61,7 @@ public class Converter {
             });
 
             if (combinedInTo == -1) {
-                table.set(600, Vector.average(((Relationship<?>) entity).nodes.stream()
+                table.set(600, Vector.average(((Relationship) entity).nodes.stream()
                         .map(tableMap::get).filter(Objects::nonNull)
                         .collect(Collectors.toList())).getY());
                 tables.add(table);
@@ -99,7 +99,7 @@ public class Converter {
                 .map(e -> ((Specialization) e).getSuperclass()).findAny().orElse(null);
     }
 
-    public static int findEntityToMerge(Relationship<?> relationship) {
+    public static int findEntityToMerge(Relationship relationship) {
         List<Relationship.RelationshipSpec> specs = relationship.specs;
         IntStream multiple = IntStream.range(0, relationship.nodes.size())
                 .filter(i -> !specs.get(i).amm.isEmpty() && !Objects.equals(specs.get(i).amm, "1") && specs.get(i).total);

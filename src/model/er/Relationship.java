@@ -12,11 +12,11 @@ import java.util.List;
 
 import static main.er.ERDiagram.UNIVERSAL_METRICS;
 
-public class Relationship<T extends Entity> extends Entity {
+public class Relationship extends Entity {
     public List<Entity> nodes;
     @Expose
     public List<RelationshipSpec> specs;
-    public List<RelationLine<T>> lines;
+    public List<RelationLine> lines;
 
     /**
      * Used in deserialization when only the name is supplied
@@ -34,10 +34,10 @@ public class Relationship<T extends Entity> extends Entity {
         setName(name);
     }
 
-    public void addNode(T node, RelationshipSpec spec) {
+    public void addNode(Entity node, RelationshipSpec spec) {
         nodes.add(node);
         specs.add(spec);
-        lines.add(new RelationLine<>(this, node, spec));
+        lines.add(new RelationLine(this, node, spec));
         revalidate();
     }
 
@@ -87,6 +87,17 @@ public class Relationship<T extends Entity> extends Entity {
             specs.get(i).dupeCount = map.getOrDefault(nodes.get(i), 0);
     }
 
+    public Relationship clone() {
+        Relationship clone = new Relationship();
+        clone.setName(getName());
+        clone.setWeak(isWeak());
+        attributes.forEach(a -> clone.addAttribute(a.clone()));
+        clone.set(this);
+
+        for (int i = 0; i < specs.size(); i++) clone.addNode(nodes.get(i), specs.get(i).clone());
+        return clone;
+    }
+
     public static class RelationshipSpec {
         @Expose
         public String amm;
@@ -115,6 +126,11 @@ public class Relationship<T extends Entity> extends Entity {
             this.amm = amm;
             this.total = total;
             this.role = role;
+        }
+
+        @Override
+        public RelationshipSpec clone() {
+            return new RelationshipSpec(amm, total, role);
         }
     }
 }

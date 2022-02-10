@@ -72,15 +72,15 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
         return panel;
     }
 
-    public JPanel relationWindow(Relationship<Entity> relationship) {
+    public JPanel relationWindow(Relationship relationship) {
         JPanel panel = new JPanel();
         panel.setBorder(new TitledBorder("Relation"));
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         if (relationship instanceof Specialization)
-            panel.add(new JCheckBox("Disjoint", ((Specialization) relationship).isDisjointSpecialization()) {{
+            panel.add(new JCheckBox("Disjoint", ((Specialization) relationship).isDisjoint()) {{
                 setAlignmentX(Component.LEFT_ALIGNMENT);
                 addActionListener(e -> {
-                    ((Specialization) relationship).setDisjointSpecialization(isSelected());
+                    ((Specialization) relationship).setDisjoint(isSelected());
                     evilEr.diagramPanel.diagram.repaint();
                 });
             }});
@@ -251,8 +251,7 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
         }
         entityControls.add(entityWindow(newEntity));
         if (newEntity instanceof Attribute) entityControls.add(attributeWindow((Attribute) newEntity));
-        if (newEntity instanceof Relationship)
-            entityControls.add(relationWindow((Relationship<Entity>) newEntity));
+        if (newEntity instanceof Relationship) entityControls.add(relationWindow((Relationship) newEntity));
         entityControls.add(attributesWindow(newEntity));
         entityControls.repaint();
     }
