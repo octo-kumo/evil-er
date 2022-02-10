@@ -1,4 +1,4 @@
-package main.components;
+package utils.components;
 
 import javax.swing.*;
 import javax.swing.text.Document;
@@ -9,7 +9,7 @@ public class PlaceholderTextField extends JTextField {
     private String placeholder;
 
     public PlaceholderTextField() {
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
+        this(null, null, 0);
     }
 
     public PlaceholderTextField(
@@ -17,22 +17,15 @@ public class PlaceholderTextField extends JTextField {
             final String pText,
             final int pColumns) {
         super(pDoc, pText, pColumns);
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, getPreferredSize().height));
     }
 
     public PlaceholderTextField(final int pColumns) {
-        super(pColumns);
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
+        this(null, null, pColumns);
     }
 
     public PlaceholderTextField(final String pText) {
-        super(pText);
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
-    }
-
-    public PlaceholderTextField(final String pText, final int pColumns) {
-        super(pText, pColumns);
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
+        this(null, pText, 0);
     }
 
     public String getPlaceholder() {

@@ -1,7 +1,7 @@
 package main.er;
 
 import main.EvilEr;
-import main.components.KeyManager;
+import utils.components.KeyManager;
 import main.renderer.DiagramGraphics;
 import model.Drawable;
 import model.Vector;
@@ -62,12 +62,14 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     public final Reactive<Boolean> darkMode = new Reactive<>(false);
 
     private Relationship connectBase;
+    private Entity clipboardTarget;
     public final Reactive<Vector> connectTarget = new Reactive<>(new Vector());
     public final Reactive<Entity.Type> addingType = new Reactive<>();
     public final Reactive<ActionType> action = new Reactive<>(ActionType.SELECTING);
 
     public ERDiagram(ERDiagramPanel diagramPanel) {
         this.diagramPanel = diagramPanel;
+        setFocusable(true);
         addMouseListener(this);
         addMouseMotionListener(this);
         addMouseWheelListener(this);
@@ -76,6 +78,15 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         entities = new ArrayList<>();
         addListeners();
         SwingUtilities.invokeLater(() -> Examples.populate(entities));
+
+        registerKeyboardAction(ae -> paste(),
+                KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_IN_FOCUSED_WINDOW);
+
+        registerKeyboardAction(ae -> copy(),
+                KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_IN_FOCUSED_WINDOW);
+
+//        registerKeyboardAction(ae -> handleCut(tc, listener),
+//                KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_FOCUSED);
     }
 
     private void addListeners() {
@@ -158,6 +169,30 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         else entities.remove(entity);
     }
 
+    public void copy() {
+        clipboard.clear();
+        selection.stream().filter(e -> !(e instanceof Attribute) || !selection.contains(((Attribute) e).getParent())).map(Entity::clone).forEach(e -> {
+            if (e instanceof Attribute) {
+                double x = e.getX(), y = e.getY();
+                ((Attribute) e).setParent(null);
+                e.set(x, y);
+            }
+            e.decre(mouseWorld);
+            clipboard.add(e);
+            System.out.println(e);
+        });
+        action.set(ActionType.ADDING);
+    }
+
+    public void paste() {
+        clipboard.stream().map(Entity::clone).forEach(this::processEntitiesBeforeAddition);
+        if (!locked.get()) {
+            setAddingType(null);
+            clipboard.clear();
+            action.set(ActionType.SELECTING);
+        }
+    }
+
     public void burnBridges(Entity entity) {
         entities.parallelStream().filter(e -> e instanceof Relationship).forEach(r -> ((Relationship) r).remove(entity));
     }
@@ -177,7 +212,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         if (type == Entity.Type.Entity) clipboard.add(entity = new Entity().setName("Unnamed"));
         else if (type == Entity.Type.Relationship) clipboard.add(entity = new Relationship().setName("Unnamed"));
         else if (type == Entity.Type.Attribute) clipboard.add(entity = new Attribute().setName("Unnamed"));
-        else if (type == Entity.Type.Specialization) clipboard.add(entity = new Specialization(target.get()));
+        else if (type == Entity.Type.Specialization) clipboard.add(entity = new Specialization());
         if (entity != null) entity.set(0, 0);
     }
 
@@ -187,24 +222,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         mouseWorld.set(unproject(mouseStart));
         if (SwingUtilities.isLeftMouseButton(e)) switch (action.get()) {
             case ADDING:
-                clipboard.forEach(clipboardItem -> {
-                    clipboardItem = clipboardItem.clone();
-                    if (clipboardItem instanceof Attribute) {
-                        Entity parent = ((Attribute) clipboardItem).getParent();
-                        if (parent == null) return;
-                        Vector pos = clipboardItem.copy();
-                        parent.addAttribute((Attribute) clipboardItem);
-                        clipboardItem.set(pos);
-                    } else {
-                        entities.add(clipboardItem);
-                        clipboardItem.incre(mouseWorld); // translate to mouse position, from clipboard world
-                    }
-                });
-                if (!locked.get()) {
-                    setAddingType(null);
-                    clipboard.clear();
-                    action.set(ActionType.SELECTING);
-                }
+                paste();
                 repaint();
                 break;
             case CONNECTING:
@@ -219,7 +237,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
                 break;
             case SELECTING:
                 if (!e.isShiftDown()) selection.clear();
-
+                setTarget(null);
                 getIntersect(mouseWorld).ifPresent(entity -> {
                     if (selection.contains(entity)) {
                         selection.remove(entity);
@@ -243,7 +261,10 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         target.set(entity);
 
         if (entity != null) selection.add(entity);
-        else action.set(ActionType.SELECTING);
+        else {
+            action.set(ActionType.SELECTING);
+            diagramPanel.requestNameEdit(null);
+        }
         if (action.equal(ActionType.CONNECTING) && entity instanceof Relationship) connectBase = (Relationship) entity;
     }
 
@@ -298,7 +319,9 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
             Optional<Entity> found = getIntersect(mouseWorld).filter(entity -> !(entity instanceof Relationship) && !(entity instanceof Attribute));
             connectTarget.set(found.isPresent() ? found.get() : mouseWorld);
         } else if (action.equal(ActionType.ADDING) && clipboard.size() > 0) {
-            getIntersect(mouseWorld).ifPresent(entity -> clipboard.stream().filter(a -> a instanceof Attribute && ((Attribute) a).getParent() == null).forEach(a -> ((Attribute) a).setParent(entity)));
+            getIntersect(mouseWorld).ifPresent(entity -> {
+                clipboardTarget = entity;
+            });
         }
         repaint();
     }
@@ -313,6 +336,21 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
             origin.incre(b.minus(a));
             repaint();
         }
+    }
+
+    private void processEntitiesBeforeAddition(Entity clipboardItem) {
+        Vector pos = clipboardItem.add(mouseWorld); // translate to mouse position, from clipboard world
+        if (clipboardItem instanceof Attribute) {
+            if (((Attribute) clipboardItem).getParent() == null && clipboardTarget != null)
+                clipboardTarget.addAttribute((Attribute) clipboardItem);
+        } else {
+            if (clipboardItem instanceof Specialization
+                    && ((Specialization) clipboardItem).getSuperclass() == null
+                    && clipboardTarget != null)
+                ((Specialization) clipboardItem).setSuperclass(clipboardTarget);
+            entities.add(clipboardItem);
+        }
+        clipboardItem.set(pos);
     }
 
     public Optional<Entity> getIntersect(Vector vector) {
@@ -331,7 +369,11 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     private void drawClipboard(DiagramGraphics g) {
         AffineTransform transform = g.getTransform();
         g.translate(mouseWorld);
-        clipboard.forEach(clipboardItem -> clipboardItem.predraw(g));
+        clipboard.forEach(clipboardItem -> {
+            if (clipboardItem instanceof Specialization && ((Specialization) clipboardItem).getSuperclass() == null && clipboardTarget != null || clipboardItem instanceof Attribute && ((Attribute) clipboardItem).getParent() == null && clipboardTarget != null) {
+                g.draw(new Line2D.Double(clipboardItem, clipboardTarget.minus(mouseWorld)));
+            } else clipboardItem.predraw(g);
+        });
         clipboard.forEach(clipboardItem -> clipboardItem.draw(g));
         g.setTransform(transform);
     }

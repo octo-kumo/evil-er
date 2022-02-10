@@ -1,4 +1,4 @@
-package main.components;
+package utils.components;
 
 import main.er.ERDiagram;
 
