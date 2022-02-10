@@ -80,13 +80,6 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         entities = new ArrayList<>();
         addListeners();
         SwingUtilities.invokeLater(() -> Examples.populate(entities));
-
-        registerKeyboardAction(ae -> paste(),
-                KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_FOCUSED);
-        registerKeyboardAction(ae -> copy(),
-                KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_FOCUSED);
-        registerKeyboardAction(ae -> cut(),
-                KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_FOCUSED);
     }
 
     private void addListeners() {

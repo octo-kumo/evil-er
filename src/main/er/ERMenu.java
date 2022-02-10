@@ -103,9 +103,7 @@ public class ERMenu extends JMenuBar {
                     TransferableImage transferable = new TransferableImage(diagram.export());
                     Toolkit.getDefaultToolkit().getSystemClipboard().setContents(transferable, null);
                 }
-            }) {{
-                setAccelerator(KeyStroke.getKeyStroke('C', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-            }});
+            }));
             add(new JMenuItem(new AbstractAction("To schema") {
                 @Override
                 public void actionPerformed(ActionEvent e) {
