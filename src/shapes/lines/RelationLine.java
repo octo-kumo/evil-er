@@ -58,8 +58,9 @@ public class RelationLine<T extends Entity> extends Line<Relationship<T>, T> {
             Vector mid = b.add(a).div(2);
             double angle = Vector.alwaysUp(d.angle() - Math.PI / 2) + Math.PI / 2;
             AffineTransform transform = g.getTransform();
-            g.rotate(angle, mid.getX(), mid.getY());
-            g.drawStringCenter(spec.role, mid, g.context.fill());
+            g.translate(mid);
+            g.rotate(angle);
+            g.drawStringCenter(spec.role, g.context.background());
             g.setTransform(transform);
         }
         if (!spec.amm.isEmpty()) {

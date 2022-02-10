@@ -181,7 +181,7 @@ public class ERMenu extends JMenuBar {
             setMnemonic('A');
             char[] mnemonics = new char[]{'v', 'e', 'r', 'a', 's'};
             Entity.Type[] values = Entity.Type.values();
-            for (int i = 1; i < values.length; i++) {
+            for (int i = 0; i < values.length; i++) {
                 Entity.Type type = values[i];
                 final char mnemonic = mnemonics[i];
                 add(new JMenuItem(type.name()) {{
