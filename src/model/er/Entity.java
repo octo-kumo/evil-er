@@ -138,8 +138,6 @@ public class Entity extends Node {
             }
             IntStream.range(0, len).forEach(b -> {
                 Entity B = objects.get(b);
-                if (shouldSkip(A, B) || shouldSkip(B, A)) return;
-
                 Vector diff = B.minus(A);
                 double p;
                 if ((p = shouldAttract(objects, A, B)) != 0 || (p = shouldAttract(objects, A, B)) != 0) {
@@ -147,11 +145,11 @@ public class Entity extends Node {
                     forces[a].incre(force);
                     forces[b].incre(force.neg());
                 } else if (A instanceof Relationship && B instanceof Relationship) {
-                    Vector force = repulsion(diff, pad * 2, 0.1);
+                    Vector force = repulsion(diff, pad * 2, 1);
                     forces[a].incre(force);
                     forces[b].incre(force.neg());
                 } else {
-                    Vector force = repulsion(diff, pad, 0.001);
+                    Vector force = repulsion(diff, pad, 1);
                     forces[a].incre(force);
                     forces[b].incre(force.neg());
                 }
@@ -168,12 +166,7 @@ public class Entity extends Node {
         return total;
     }
 
-    public static boolean shouldSkip(Entity a, Entity b) {
-        return a instanceof Specialization && ((Specialization) a).getSuperclass() == b;
-    }
-
     public static double shouldAttract(List<Entity> entities, Entity a, Entity b) {
-
         if (a.getClass() == Entity.class && b.getClass() == Entity.class) {
             boolean related = entities.stream().anyMatch(e -> e.getClass() == Relationship.class &&
                     ((Relationship<?>) e).nodes.contains(a) && ((Relationship<?>) e).nodes.contains(b));
@@ -181,15 +174,15 @@ public class Entity extends Node {
             boolean shareSubclass = entities.stream().anyMatch(e -> e.getClass() == Specialization.class &&
                     ((Relationship<?>) e).nodes.indexOf(a) > 0 && ((Relationship<?>) e).nodes.indexOf(b) > 0);
 
-            return shareSubclass ? 0.8 : related ? 1.5 : 3; // all entities attract
+            return shareSubclass ? 1 : related ? 1.5 : 4; // all entities attract
         }
         if (b instanceof Attribute)
             return ((Attribute) b).getParent() == a || // only attract to parent or if same parent
                     (a instanceof Attribute && ((Attribute) a).getParent() == ((Attribute) b).getParent()) ? 0.5 : 0;
-        if (a.getClass() == Entity.class && b instanceof Specialization)
-            return ((Specialization) b).nodes.indexOf(a) > 0 ? 0.6 : 0; // not super class and also in the set
+        if (a.getClass() == Entity.class && b instanceof Specialization && ((Specialization) b).getSuperclass() == a)
+            return 0.8;
         if (a.getClass() == Entity.class && b instanceof Relationship)
-            return ((Relationship<?>) b).nodes.contains(a) ? 1 : 0; // not specialization, hence just check if in
+            return ((Relationship<?>) b).nodes.contains(a) ? 1 : 0;
 
         return 0;
     }

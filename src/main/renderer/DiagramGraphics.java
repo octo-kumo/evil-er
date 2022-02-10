@@ -10,6 +10,7 @@ import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
 import java.awt.image.ImageObserver;
@@ -37,8 +38,8 @@ public class DiagramGraphics extends Graphics2D {
         return Stream.concat(entities.parallelStream(), entities.parallelStream().flatMap(e -> flatten(e.attributes)));
     }
 
-    public void drawStringCenter(String text) {
-        drawStringCenter(text, 0, 0);
+    public void drawStringCenter(String text, Color color) {
+        drawStringCenter(text, 0, 0, color);
     }
 
     public void drawStringCenter(String string, Vector vector) {
@@ -457,5 +458,9 @@ public class DiagramGraphics extends Graphics2D {
     @Override
     public FontRenderContext getFontRenderContext() {
         return g.getFontRenderContext();
+    }
+
+    public void translate(Point2D point) {
+        translate(point.getX(), point.getY());
     }
 }

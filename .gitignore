@@ -22,6 +22,4 @@ out
 hs_err_pid*
 replay_pid*
 
-session.json
-keystore.jks
-to_exe.bat
+jar/

@@ -116,6 +116,8 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     public void draw(DiagramGraphics g) {
         g.setRenderingHints(EvilEr.RENDER_HINTS);
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g.setColor(g.context.foreground());
 
         entities.forEach(d -> d.predraw(g));
