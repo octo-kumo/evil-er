@@ -29,7 +29,7 @@ import java.util.stream.Stream;
 
 import static main.renderer.DiagramGraphics.flatten;
 
-public class ERDiagram extends JComponent implements MouseListener, MouseMotionListener, DrawContext, Drawable, MouseWheelListener {
+public class ERDiagram extends JComponent implements MouseListener, MouseMotionListener, DrawContext, Drawable, MouseWheelListener, FocusListener {
 
     public static FontMetrics UNIVERSAL_METRICS;
     public boolean acceptingKeys = true;
@@ -69,10 +69,12 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
     public ERDiagram(ERDiagramPanel diagramPanel) {
         this.diagramPanel = diagramPanel;
+        setEnabled(true);
         setFocusable(true);
         addMouseListener(this);
         addMouseMotionListener(this);
         addMouseWheelListener(this);
+        addFocusListener(this);
         keyManager = new KeyManager(this);
 
         entities = new ArrayList<>();
@@ -80,13 +82,11 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         SwingUtilities.invokeLater(() -> Examples.populate(entities));
 
         registerKeyboardAction(ae -> paste(),
-                KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_IN_FOCUSED_WINDOW);
-
+                KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_FOCUSED);
         registerKeyboardAction(ae -> copy(),
-                KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_IN_FOCUSED_WINDOW);
-
-//        registerKeyboardAction(ae -> handleCut(tc, listener),
-//                KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_FOCUSED);
+                KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_FOCUSED);
+        registerKeyboardAction(ae -> cut(),
+                KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_FOCUSED);
     }
 
     private void addListeners() {
@@ -111,6 +111,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         draw(g);
         g.setTransform(transform);
         g.drawStringCenter("@yun", getWidth() - 25, getHeight() - 15);
+        if (hasFocus()) g.draw(getBounds());
     }
 
     public void draw(DiagramGraphics g) {
@@ -169,9 +170,11 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         else entities.remove(entity);
     }
 
-    public void copy() {
+    public void copy(boolean cut) {
         clipboard.clear();
-        selection.stream().filter(e -> !(e instanceof Attribute) || !selection.contains(((Attribute) e).getParent())).map(Entity::clone).forEach(e -> {
+        Stream<Entity> entityStream = selection.stream().filter(e -> !(e instanceof Attribute) || !selection.contains(((Attribute) e).getParent()));
+        if (!cut) entityStream = entityStream.map(Entity::clone);
+        entityStream.forEach(e -> {
             if (e instanceof Attribute) {
                 double x = e.getX(), y = e.getY();
                 ((Attribute) e).setParent(null);
@@ -179,12 +182,27 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
             }
             e.decre(mouseWorld);
             clipboard.add(e);
-            System.out.println(e);
+            if (cut) {
+                delete(e);
+                burnBridges(e);
+            }
         });
         action.set(ActionType.ADDING);
+        repaint();
+    }
+
+    public void copy() {
+        System.out.println(":: copy");
+        copy(false);
+    }
+
+    public void cut() {
+        System.out.println(":: cut");
+        copy(true);
     }
 
     public void paste() {
+        System.out.println(":: paste");
         clipboard.stream().map(Entity::clone).forEach(this::processEntitiesBeforeAddition);
         if (!locked.get()) {
             setAddingType(null);
@@ -218,6 +236,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
     @Override
     public void mousePressed(MouseEvent e) {
+        requestFocusInWindow();
         mouseStart.set(e.getX(), e.getY());
         mouseWorld.set(unproject(mouseStart));
         if (SwingUtilities.isLeftMouseButton(e)) switch (action.get()) {
@@ -439,5 +458,15 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     @Override
     public Color highlight() {
         return HIGHLIGHT;
+    }
+
+    @Override
+    public void focusGained(FocusEvent e) {
+        repaint();
+    }
+
+    @Override
+    public void focusLost(FocusEvent e) {
+        repaint();
     }
 }
