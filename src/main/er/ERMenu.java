@@ -51,6 +51,7 @@ public class ERMenu extends JMenuBar {
         this.fontChooser = new JFontChooser();
         resetFontSelector();
 
+        ERDiagram diagram = evilEr.diagramPanel.diagram;
         add(new JMenu("File") {{
             setMnemonic('F');
             add(new JMenuItem(new AbstractAction("Open") {
@@ -58,9 +59,9 @@ public class ERMenu extends JMenuBar {
                     if (JFileChooser.APPROVE_OPTION == Chooser.jsonChooser.showOpenDialog(evilEr)) {
                         try (JsonReader reader = new JsonReader(new FileReader(Chooser.jsonChooser.getFinal()))) {
                             ArrayList<Entity> deserialized = Serializer.deserialize(reader);
-                            evilEr.diagramPanel.diagram.entities.clear();
-                            evilEr.diagramPanel.diagram.entities.addAll(deserialized);
-                            evilEr.diagramPanel.diagram.repaint();
+                            diagram.entities.clear();
+                            diagram.entities.addAll(deserialized);
+                            diagram.repaint();
                         } catch (IOException e) {
                             report(e);
                             e.printStackTrace();
@@ -70,7 +71,7 @@ public class ERMenu extends JMenuBar {
             }));
             add(new JMenuItem(new AbstractAction("Save") {
                 public void actionPerformed(ActionEvent ae) {
-                    String json = Serializer.serialize(evilEr.diagramPanel.diagram.entities);
+                    String json = Serializer.serialize(diagram.entities);
                     try (FileWriter fw = new FileWriter("session.json")) {
                         fw.write(json);
                     } catch (IOException e) {
@@ -78,9 +79,9 @@ public class ERMenu extends JMenuBar {
                         e.printStackTrace();
                     }
                     ArrayList<Entity> deserialized = Serializer.deserialize(json);
-                    evilEr.diagramPanel.diagram.entities.clear();
-                    evilEr.diagramPanel.diagram.entities.addAll(deserialized);
-                    evilEr.diagramPanel.diagram.repaint();
+                    diagram.entities.clear();
+                    diagram.entities.addAll(deserialized);
+                    diagram.repaint();
                 }
             }) {{
                 setAccelerator(KeyStroke.getKeyStroke('S', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
@@ -89,7 +90,7 @@ public class ERMenu extends JMenuBar {
                 public void actionPerformed(ActionEvent ae) {
                     if (JFileChooser.APPROVE_OPTION == Chooser.jsonChooser.showSaveDialog(evilEr)) {
                         try (Writer writer = new FileWriter(Chooser.jsonChooser.getFinal())) {
-                            Serializer.serialize(evilEr.diagramPanel.diagram.entities, writer);
+                            Serializer.serialize(diagram.entities, writer);
                         } catch (IOException e) {
                             report(e);
                             e.printStackTrace();
@@ -99,7 +100,7 @@ public class ERMenu extends JMenuBar {
             }));
             add(new JMenuItem(new AbstractAction("To clipboard") {
                 public void actionPerformed(ActionEvent ae) {
-                    TransferableImage transferable = new TransferableImage(evilEr.diagramPanel.diagram.export());
+                    TransferableImage transferable = new TransferableImage(diagram.export());
                     Toolkit.getDefaultToolkit().getSystemClipboard().setContents(transferable, null);
                 }
             }) {{
@@ -117,7 +118,7 @@ public class ERMenu extends JMenuBar {
                     dialog.setVisible(true);
 
                     try {
-                        Converter.convert(evilEr.diagramPanel.diagram.entities, rs.diagram.tables);
+                        Converter.convert(diagram.entities, rs.diagram.tables);
                     } catch (Exception ex) {
                         Prompts.report(ex);
                     }
@@ -127,7 +128,7 @@ public class ERMenu extends JMenuBar {
             add(new JMenuItem(new AbstractAction("Export...") {
                 public void actionPerformed(ActionEvent ae) {
                     if (JFileChooser.APPROVE_OPTION == Chooser.imageChooser.showSaveDialog(evilEr)) try {
-                        ImageIO.write(evilEr.diagramPanel.diagram.export(), "PNG", Chooser.imageChooser.getFinal());
+                        ImageIO.write(diagram.export(), "PNG", Chooser.imageChooser.getFinal());
                     } catch (IOException e) {
                         report(e);
                         e.printStackTrace();
@@ -137,8 +138,16 @@ public class ERMenu extends JMenuBar {
         }});
         add(new JMenu("Edit") {{
             setMnemonic('E');
+            add(new JMenuItem("Copy") {{
+                addActionListener(e -> diagram.copy());
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+            }});
+            add(new JMenuItem("Paste") {{
+                addActionListener(e -> diagram.paste());
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+            }});
             add(new JMenuItem("Delete") {{
-                addActionListener(e -> evilEr.diagramPanel.diagram.delete());
+                addActionListener(e -> diagram.delete());
                 setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
             }});
             add(new JMenuItem("Center") {{
@@ -151,12 +160,12 @@ public class ERMenu extends JMenuBar {
                     double total;
                     int ops = 0;
                     do {
-                        total = Entity.applyForces(evilEr.diagramPanel.diagram.entities, 100);
+                        total = Entity.applyForces(diagram.entities, 100);
                         ops++;
                     } while (total > 1 && ops < 100);
                     center(null);
                     System.out.println("Regression Complete, Operations = " + ops);
-                    evilEr.diagramPanel.diagram.repaint();
+                    diagram.repaint();
                 });
                 setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R,
                         InputEvent.SHIFT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
@@ -164,8 +173,8 @@ public class ERMenu extends JMenuBar {
             add(new JMenuItem(new AbstractAction("Clear") {
                 public void actionPerformed(ActionEvent ae) {
                     if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(evilEr, "Do you really want to clear all entities?", "Warning", JOptionPane.YES_NO_OPTION)) {
-                        evilEr.diagramPanel.diagram.entities.clear();
-                        evilEr.diagramPanel.diagram.repaint();
+                        diagram.entities.clear();
+                        diagram.repaint();
                     }
                 }
             }));
@@ -185,13 +194,13 @@ public class ERMenu extends JMenuBar {
                 Entity.Type type = values[i];
                 final char mnemonic = mnemonics[i];
                 add(new JMenuItem(type.name()) {{
-                    addActionListener(e -> evilEr.diagramPanel.diagram.setAddingType(type));
+                    addActionListener(e -> diagram.setAddingType(type));
                     setAccelerator(KeyStroke.getKeyStroke(KeyEvent.getExtendedKeyCodeForChar(mnemonic), 0));
                 }});
             }
             add(new JCheckBoxMenuItem("Locked") {{
-                evilEr.diagramPanel.diagram.locked.addListener(this::setState);
-                addActionListener(e -> evilEr.diagramPanel.diagram.locked.set(getState()));
+                diagram.locked.addListener(this::setState);
+                addActionListener(e -> diagram.locked.set(getState()));
             }});
         }});
         add(new JMenu("View") {{
@@ -204,22 +213,22 @@ public class ERMenu extends JMenuBar {
                 for (int i = 0; i < values.length; i++) {
                     Line.LineStyle type = values[i];
                     group.add(add(buttons[i] = new JRadioButtonMenuItem(type.toString())));
-                    buttons[i].addActionListener(evt -> evilEr.diagramPanel.diagram.lineStyle.set(type));
+                    buttons[i].addActionListener(evt -> diagram.lineStyle.set(type));
                 }
-                evilEr.diagramPanel.diagram.lineStyle.addListener(s -> group.setSelected(buttons[Arrays.binarySearch(values, s)].getModel(), true));
+                diagram.lineStyle.addListener(s -> group.setSelected(buttons[Arrays.binarySearch(values, s)].getModel(), true));
             }});
             add(new JCheckBoxMenuItem("AABB") {{
-                evilEr.diagramPanel.diagram.aabb.addListener(this::setState);
+                diagram.aabb.addListener(this::setState);
                 addActionListener(e -> {
-                    evilEr.diagramPanel.diagram.aabb.set(getState());
-                    evilEr.diagramPanel.diagram.repaint();
+                    diagram.aabb.set(getState());
+                    diagram.repaint();
                 });
             }});
             add(new JCheckBoxMenuItem("Grid") {{
-                evilEr.diagramPanel.diagram.grid.addListener(this::setState);
+                diagram.grid.addListener(this::setState);
                 addActionListener(e -> {
-                    evilEr.diagramPanel.diagram.grid.set(getState());
-                    evilEr.diagramPanel.diagram.repaint();
+                    diagram.grid.set(getState());
+                    diagram.repaint();
                 });
             }});
             add(new JMenuItem("Font...") {{

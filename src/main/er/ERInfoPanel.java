@@ -1,8 +1,8 @@
 package main.er;
 
 import main.EvilEr;
-import main.components.ButtonColumn;
-import main.components.PlaceholderTextField;
+import utils.components.ButtonColumn;
+import utils.components.PlaceholderTextField;
 import model.er.Attribute;
 import model.er.Entity;
 import model.er.Relationship;
