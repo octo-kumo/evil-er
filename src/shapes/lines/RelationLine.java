@@ -10,7 +10,7 @@ import shapes.SubsetSymbol;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 
-public class RelationLine<T extends Entity> extends Line<Relationship<T>, T> {
+public class RelationLine extends Line<Relationship, Entity> {
     public Relationship.RelationshipSpec spec;
 
     private final Vector normal = new Vector();
@@ -18,7 +18,7 @@ public class RelationLine<T extends Entity> extends Line<Relationship<T>, T> {
     private static final BasicStroke base = new BasicStroke(4, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
     private static final BasicStroke center = new BasicStroke(2.8f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
 
-    public RelationLine(Relationship<T> nodeA, T nodeB, Relationship.RelationshipSpec spec) {
+    public RelationLine(Relationship nodeA, Entity nodeB, Relationship.RelationshipSpec spec) {
         super(nodeA, nodeB);
         this.spec = spec;
     }

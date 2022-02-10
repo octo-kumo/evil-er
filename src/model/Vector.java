@@ -73,7 +73,7 @@ public class Vector extends Point2D {
     }
 
     public Vector add(double x, double y) {
-        return clone().incre(x, y);
+        return copy().incre(x, y);
     }
 
     public Vector minus(@NotNull Point2D other) {
@@ -81,7 +81,7 @@ public class Vector extends Point2D {
     }
 
     public Vector minus(double x, double y) {
-        return clone().decre(x, y);
+        return copy().decre(x, y);
     }
 
     public Vector incre(@NotNull Point2D other) {
@@ -113,15 +113,15 @@ public class Vector extends Point2D {
     }
 
     public Vector multi(double scale) {
-        return clone().scale(scale);
+        return copy().scale(scale);
     }
 
     public Vector multi(double x, double y) {
-        return clone().scale(x, y);
+        return copy().scale(x, y);
     }
 
     public Vector divide(double scale) {
-        return clone().div(scale);
+        return copy().div(scale);
     }
 
     public Vector div(double scale) {
@@ -139,7 +139,7 @@ public class Vector extends Point2D {
     }
 
     public Vector normalized() {
-        return clone().norm();
+        return copy().norm();
     }
 
     public double len() {
@@ -172,7 +172,7 @@ public class Vector extends Point2D {
     }
 
     public Vector rounded() {
-        return clone().round();
+        return copy().round();
     }
 
     public Vector neg() {
@@ -182,12 +182,16 @@ public class Vector extends Point2D {
     }
 
     public Vector negate() {
-        return clone().neg();
+        return copy().neg();
+    }
+
+    public Vector copy() {
+        return new Vector(getX(), getY());
     }
 
     @Override
     public Vector clone() {
-        return new Vector(getX(), getY());
+        return copy();
     }
 
     @Override
@@ -219,7 +223,7 @@ public class Vector extends Point2D {
     }
 
     public Vector rotate90() {
-        return clone().rot90();
+        return copy().rot90();
     }
 
     public static double alwaysUp(double radians) {

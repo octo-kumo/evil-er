@@ -8,9 +8,13 @@ import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.util.List;
 
-public class Specialization extends Relationship<Entity> {
+public class Specialization extends Relationship {
     @Expose
-    private boolean disjointSpecialization = false;
+    private boolean disjoint = false;
+
+    public Specialization() {
+        super();
+    }
 
     public Specialization(Entity superclass) {
         super();
@@ -32,13 +36,12 @@ public class Specialization extends Relationship<Entity> {
 
         if (nodes.size() > 0) {
             nodes.set(0, superclass);
-            lines.set(0, new RelationLine<>(this, superclass,
-                    specs.get(0)));
+            lines.set(0, new RelationLine(this, superclass, specs.get(0)));
         } else {
             nodes.add(superclass);
             RelationshipSpec spec;
             specs.add(spec = new RelationshipSpec());
-            lines.add(new RelationLine<>(this, superclass, spec));
+            lines.add(new RelationLine(this, superclass, spec));
             revalidate();
         }
         setName("Family Tree: " + (getSuperclass() == null ? "null" : getSuperclass().getName()));
@@ -55,11 +58,11 @@ public class Specialization extends Relationship<Entity> {
     }
 
     public String getName() {
-        return isDisjointSpecialization() ? "d" : "o";
+        return isDisjoint() ? "d" : "o";
     }
 
-    public boolean isDisjointSpecialization() {
-        return disjointSpecialization;
+    public boolean isDisjoint() {
+        return disjoint;
     }
 
     public void drawShape(DiagramGraphics g) {
@@ -71,8 +74,8 @@ public class Specialization extends Relationship<Entity> {
         return new Ellipse2D.Double(-height * .5 / 2d, -height * .5 / 2d, height * .5, height * .5);
     }
 
-    public void setDisjointSpecialization(boolean disjointSpecialization) {
-        this.disjointSpecialization = disjointSpecialization;
+    public void setDisjoint(boolean disjoint) {
+        this.disjoint = disjoint;
     }
 
     public boolean hasSubclass(Entity subclass) {
@@ -81,5 +84,19 @@ public class Specialization extends Relationship<Entity> {
 
     public List<Entity> getSubclasses() {
         return nodes.subList(1, nodes.size());
+    }
+
+    @Override
+    public Specialization clone() {
+        Specialization clone = new Specialization();
+        clone.setName(getName());
+        clone.setWeak(isWeak());
+        attributes.forEach(a -> clone.addAttribute(a.clone()));
+        clone.set(this);
+
+        for (int i = 0; i < specs.size(); i++) clone.addNode(nodes.get(i), specs.get(i).clone());
+
+        clone.setDisjoint(isDisjoint());
+        return clone;
     }
 }

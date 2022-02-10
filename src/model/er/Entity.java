@@ -36,16 +36,8 @@ public class Entity extends Node {
         return weak;
     }
 
-    public boolean isHighlighted() {
-        return highlighted;
-    }
-
-    public void setHighlighted(boolean highlighted) {
-        this.highlighted = highlighted;
-    }
-
     public enum Type {
-        Select, Entity, Relationship, Attribute, Specialization
+        Entity, Relationship, Attribute, Specialization
     }
 
     public static final double WIDTH = 100;
@@ -56,8 +48,6 @@ public class Entity extends Node {
     private String name;
     @Expose
     private boolean weak;
-    @Expose
-    private boolean highlighted = false;
     @Expose
     public ArrayList<Attribute> attributes;
 
@@ -104,7 +94,7 @@ public class Entity extends Node {
 
     public void drawShape(DiagramGraphics g, Shape shape) {
         Color toUse = g.getColor();
-        g.draw(shape, isHighlighted() ? g.context.highlight() : g.context.fill(), toUse);
+        g.draw(shape, g.context.fill(), toUse);
     }
 
     public Shape getShape() {
@@ -169,10 +159,10 @@ public class Entity extends Node {
     public static double shouldAttract(List<Entity> entities, Entity a, Entity b) {
         if (a.getClass() == Entity.class && b.getClass() == Entity.class) {
             boolean related = entities.stream().anyMatch(e -> e.getClass() == Relationship.class &&
-                    ((Relationship<?>) e).nodes.contains(a) && ((Relationship<?>) e).nodes.contains(b));
+                    ((Relationship) e).nodes.contains(a) && ((Relationship) e).nodes.contains(b));
 
             boolean shareSubclass = entities.stream().anyMatch(e -> e.getClass() == Specialization.class &&
-                    ((Relationship<?>) e).nodes.indexOf(a) > 0 && ((Relationship<?>) e).nodes.indexOf(b) > 0);
+                    ((Relationship) e).nodes.indexOf(a) > 0 && ((Relationship) e).nodes.indexOf(b) > 0);
 
             return shareSubclass ? 1 : related ? 1.5 : 4; // all entities attract
         }
@@ -182,7 +172,7 @@ public class Entity extends Node {
         if (a.getClass() == Entity.class && b instanceof Specialization && ((Specialization) b).getSuperclass() == a)
             return 0.8;
         if (a.getClass() == Entity.class && b instanceof Relationship)
-            return ((Relationship<?>) b).nodes.contains(a) ? 1 : 0;
+            return ((Relationship) b).nodes.contains(a) ? 1 : 0;
 
         return 0;
     }
@@ -210,5 +200,15 @@ public class Entity extends Node {
 
     public String toString() {
         return String.format("<%s : %.2f, %.2f>", getClass().getSimpleName(), getX(), getY());
+    }
+
+    @Override
+    public Entity clone() {
+        Entity n = new Entity();
+        n.setName(getName());
+        n.setWeak(isWeak());
+        attributes.forEach(a -> n.addAttribute(a.clone()));
+        n.set(this);
+        return n;
     }
 }

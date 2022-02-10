@@ -171,15 +171,15 @@ public class ERMenu extends JMenuBar {
             }));
             add(new JSeparator());
 
-            add(new JCheckBoxMenuItem("Connecting") {{
-                evilEr.diagramPanel.diagram.connecting.addListener(this::setState);
-                addActionListener(e -> evilEr.diagramPanel.diagram.connecting.set(getState()));
-                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.SHIFT_MASK));
-            }});
+//            add(new JCheckBoxMenuItem("Connecting") {{
+//                evilEr.diagramPanel.diagram.connecting.addListener(this::setState);
+//                addActionListener(e -> evilEr.diagramPanel.diagram.connecting.set(getState()));
+//                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.SHIFT_MASK));
+//            }});
         }});
         add(new JMenu("Add") {{
             setMnemonic('A');
-            char[] mnemonics = new char[]{'v', 'e', 'r', 'a', 's'};
+            char[] mnemonics = new char[]{'e', 'r', 'a', 's'};
             Entity.Type[] values = Entity.Type.values();
             for (int i = 0; i < values.length; i++) {
                 Entity.Type type = values[i];

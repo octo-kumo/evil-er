@@ -38,9 +38,9 @@ public class ERControlPanel extends JPanel implements ClipboardOwner {
             evilEr.diagramPanel.diagram.lineStyle.addListener(this::setSelectedItem);
             addActionListener(evt -> evilEr.diagramPanel.diagram.lineStyle.set((Line.LineStyle) getSelectedItem()));
         }});
-        add(new JCheckBox("Connect") {{
-            evilEr.diagramPanel.diagram.connecting.addListener(this::setSelected);
-            addActionListener(evt -> evilEr.diagramPanel.diagram.connecting.set(isSelected()));
+        add(new JComboBox<ERDiagram.ActionType>(ERDiagram.ActionType.values()) {{
+            evilEr.diagramPanel.diagram.action.addListener(this::setSelectedItem);
+            addActionListener(evt -> evilEr.diagramPanel.diagram.action.set((ERDiagram.ActionType) getSelectedItem()));
         }});
         add(new JButton("Delete") {{
             addActionListener(evt -> evilEr.diagramPanel.diagram.delete());
@@ -48,8 +48,7 @@ public class ERControlPanel extends JPanel implements ClipboardOwner {
         add(new JButton("Save...") {{
             addActionListener(evt -> {
                 JFileChooser fileChooser = new JFileChooser();
-                FileFilter imageFilter = new FileNameExtensionFilter(
-                        "Image files", ImageIO.getReaderFileSuffixes());
+                FileFilter imageFilter = new FileNameExtensionFilter("Image files", ImageIO.getReaderFileSuffixes());
                 fileChooser.setFileFilter(imageFilter);
                 fileChooser.setDialogTitle("Specify a file to save");
 
