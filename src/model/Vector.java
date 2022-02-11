@@ -11,39 +11,11 @@ import java.util.List;
  * A 2D Vector
  */
 public class Vector extends Point2D {
+    public static final ImmutableVector ZERO = new ImmutableVector();
     @Expose
     protected double x;
     @Expose
     protected double y;
-    public static final ImmutableVector ZERO = new ImmutableVector();
-
-    public static Vector average(@NotNull List<? extends Vector> nodes) {
-        return nodes.parallelStream()
-                .map(Vector.class::cast)
-                .reduce(Vector::add)
-                .orElse(Vector.ZERO).div(nodes.size());
-    }
-
-    public double getX() {
-        return x;
-    }
-
-    public double getY() {
-        return y;
-    }
-
-    public void setX(double x) {
-        this.x = x;
-    }
-
-    public void setY(double y) {
-        this.y = y;
-    }
-
-    @Override
-    public void setLocation(double x, double y) {
-        set(x, y);
-    }
 
     public Vector(double x, double y) {
         set(x, y);
@@ -55,6 +27,40 @@ public class Vector extends Point2D {
 
     public Vector(@NotNull Point2D other) {
         this(other.getX(), other.getY());
+    }
+
+    public static Vector average(@NotNull List<? extends Vector> nodes) {
+        return nodes.parallelStream()
+                .map(Vector.class::cast)
+                .reduce(Vector::add)
+                .orElse(Vector.ZERO).div(nodes.size());
+    }
+
+    public static double alwaysUp(double radians) {
+        double det = (radians / Math.PI) % 2;
+        if (det < 0) det += 2;
+        return det > 1 ? radians : radians + Math.PI;
+    }
+
+    public double getX() {
+        return x;
+    }
+
+    public void setX(double x) {
+        this.x = x;
+    }
+
+    public double getY() {
+        return y;
+    }
+
+    public void setY(double y) {
+        this.y = y;
+    }
+
+    @Override
+    public void setLocation(double x, double y) {
+        set(x, y);
     }
 
     public Vector set(@Nullable Point2D other) {
@@ -226,11 +232,5 @@ public class Vector extends Point2D {
 
     public Vector rotate90() {
         return copy().rot90();
-    }
-
-    public static double alwaysUp(double radians) {
-        double det = (radians / Math.PI) % 2;
-        if (det < 0) det += 2;
-        return det > 1 ? radians : radians + Math.PI;
     }
 }

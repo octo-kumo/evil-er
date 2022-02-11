@@ -21,12 +21,12 @@ public class Attribute extends Entity {
         return x + (getParent() == null ? 0 : getParent().getX());
     }
 
-    public double getY() {
-        return y + (getParent() == null ? 0 : getParent().getY());
-    }
-
     public void setX(double x) {
         this.x = x - (getParent() == null ? 0 : getParent().getX());
+    }
+
+    public double getY() {
+        return y + (getParent() == null ? 0 : getParent().getY());
     }
 
     public void setY(double y) {

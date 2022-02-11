@@ -1,8 +1,6 @@
 package main.er;
 
 import main.EvilEr;
-import utils.components.ButtonColumn;
-import utils.components.PlaceholderTextField;
 import model.er.Attribute;
 import model.er.Entity;
 import model.er.Relationship;
@@ -10,6 +8,8 @@ import model.er.Specialization;
 import utils.callbacks.ChangeListener;
 import utils.callbacks.Consumer;
 import utils.callbacks.Getter;
+import utils.components.ButtonColumn;
+import utils.components.PlaceholderTextField;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -115,12 +115,6 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
                 evilEr.diagramPanel.diagram.repaint();
             }
         }) {
-            @Override
-            public Class<?> getColumnClass(int column) {
-                if (column == 2) return Boolean.class;
-                else return String.class;
-            }
-
             {
                 new ButtonColumn(this, new AbstractAction() {
                     public void actionPerformed(ActionEvent e) {
@@ -132,6 +126,12 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
                         }
                     }
                 }, 4);
+            }
+
+            @Override
+            public Class<?> getColumnClass(int column) {
+                if (column == 2) return Boolean.class;
+                else return String.class;
             }
         }, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER));
         /* Add new entity or link to entity */
@@ -195,12 +195,6 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
                 evilEr.diagramPanel.diagram.repaint();
             }
         }) {
-            @Override
-            public Class<?> getColumnClass(int column) {
-                if (column == 1 || column == 2) return Boolean.class;
-                else return String.class;
-            }
-
             {
                 new ButtonColumn(this, new AbstractAction() {
                     public void actionPerformed(ActionEvent e) {
@@ -211,6 +205,12 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
                         evilEr.diagramPanel.diagram.repaint();
                     }
                 }, 3);
+            }
+
+            @Override
+            public Class<?> getColumnClass(int column) {
+                if (column == 1 || column == 2) return Boolean.class;
+                else return String.class;
             }
         }, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER));
 

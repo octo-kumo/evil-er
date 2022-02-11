@@ -5,13 +5,16 @@ import model.er.Attribute;
 import model.er.Entity;
 import model.er.Relationship;
 import model.er.Specialization;
-import utils.models.Pair;
 import model.rs.Column;
 import model.rs.Table;
 import org.jetbrains.annotations.Nullable;
 import utils.EnglishNoun;
+import utils.models.Pair;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;

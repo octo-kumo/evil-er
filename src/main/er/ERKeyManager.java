@@ -6,8 +6,8 @@ import java.awt.event.KeyListener;
 
 public class ERKeyManager implements KeyListener, KeyEventDispatcher {
 
-    public boolean CTRL, SHIFT, ALT;
     private final ERDiagram diagram;
+    public boolean CTRL, SHIFT, ALT;
 
     public ERKeyManager(ERDiagram diagram) {
         this.diagram = diagram;

@@ -35,44 +35,40 @@ import static main.renderer.DiagramGraphics.flatten;
 
 public class ERDiagram extends JComponent implements MouseListener, MouseMotionListener, DrawContext, Drawable, MouseWheelListener, FocusListener {
 
+    public static final Color FILL_DARK = new Color(0x222222);
+    public static final Color BACKGROUND_DARK = new Color(0x121212);
+    public static final Color FOREGROUND_DARK = new Color(0xefefef);
     public static FontMetrics UNIVERSAL_METRICS;
-    public boolean acceptingKeys = true;
-
+    public static double gridSize = 20;
+    public static Color HIGHLIGHT = new Color(0xff0000); // dummy color
     public final ERDiagramPanel diagramPanel;
     public final ERKeyManager keyManager;
     public final ArrayList<Entity> entities;
-
-    public Reactive<Line.LineStyle> lineStyle = new Reactive<>(Line.LineStyle.STRAIGHT);
-
-    enum ActionType {ADDING, CONNECTING, SELECTING}
-
-    /**
-     * PARAMS
-     */
-    private boolean exporting = false;
-    private final ArrayList<Entity> clipboard = new ArrayList<>(); // will be added to board on click, including new entity
     public final ArrayList<Entity> selection = new ArrayList<>(); // selection
-    private final Vector mouseStart = new Vector(), mouseWorld = new Vector();
-
     public final Vector origin = new Vector();
     public final Vector panStart = new Vector();
-    public double scale = 1;
-    public double exportScale = 4;
-
     public final Reactive<Entity> target = new Reactive<>();
     public final Reactive<Boolean> locked = new Reactive<>(false);
     public final Reactive<Boolean> aabb = new Reactive<>(false);
     public final Reactive<Boolean> grid = new Reactive<>(false);
     public final Reactive<Boolean> darkMode = new Reactive<>(false);
-
-    private Relationship connectBase;
-    private Entity clipboardTarget;
     public final Reactive<Vector> connectTarget = new Reactive<>(new Vector());
     public final Reactive<Entity.Type> addingType = new Reactive<>();
     public final Reactive<ActionType> action = new Reactive<>(ActionType.SELECTING);
-
     public final Stack<EntityTransaction> undoStack = new Stack<>();
     public final Stack<EntityTransaction> redoStack = new Stack<>();
+    private final ArrayList<Entity> clipboard = new ArrayList<>(); // will be added to board on click, including new entity
+    private final Vector mouseStart = new Vector(), mouseWorld = new Vector();
+    public boolean acceptingKeys = true;
+    public Reactive<Line.LineStyle> lineStyle = new Reactive<>(Line.LineStyle.STRAIGHT);
+    public double scale = 1;
+    public double exportScale = 4;
+    /**
+     * PARAMS
+     */
+    private boolean exporting = false;
+    private Relationship connectBase;
+    private Entity clipboardTarget;
 
     public ERDiagram(ERDiagramPanel diagramPanel) {
         this.diagramPanel = diagramPanel;
@@ -315,8 +311,6 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     public void mouseReleased(MouseEvent e) {
     }
 
-    public static double gridSize = 20;
-
     @Override
     public void mouseDragged(MouseEvent e) {
         Vector mouse = new Vector(e.getX(), e.getY());
@@ -460,11 +454,6 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         return project(new Vector(x, y));
     }
 
-    public static Color HIGHLIGHT = new Color(0xff0000); // dummy color
-    public static final Color FILL_DARK = new Color(0x222222);
-    public static final Color BACKGROUND_DARK = new Color(0x121212);
-    public static final Color FOREGROUND_DARK = new Color(0xefefef);
-
     @Override
     public Color foreground() {
         return darkMode.get() ? FOREGROUND_DARK : Color.BLACK;
@@ -494,4 +483,6 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     public void focusLost(FocusEvent e) {
         repaint();
     }
+
+    enum ActionType {ADDING, CONNECTING, SELECTING}
 }

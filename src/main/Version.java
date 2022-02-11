@@ -17,15 +17,57 @@ import java.util.Comparator;
 
 public class Version implements Comparable<Version> {
     public static final Gson gson = new Gson();
-    public static final Version CURRENT = new Version("v0.5.0");
+    public static final Version CURRENT = new Version(Version.class.getPackage().getImplementationVersion() == null ? "in-dev" : Version.class.getPackage().getImplementationVersion());
+    private final String version;
+    private final boolean string;
+
+    public Version(String version) {
+        if (version == null) throw new IllegalArgumentException("Version can not be null");
+        this.string = !version.matches("v?[0-9]+(\\.[0-9]+)*(?:-(.+))?");
+        this.version = version;
+    }
+
+    public final String get() {
+        return this.version.replaceFirst("^v", "").replaceAll("-(.+)$", "");
+    }
+
+    @Override
+    public String toString() {
+        return version;
+    }
+
+    @Override
+    public int compareTo(Version that) {
+        if (that == null) return 1;
+        if (this.string && that.string) return this.get().compareTo(that.get());
+        else if (this.string || that.string) return Boolean.compare(this.string, that.string);
+
+        String[] thisParts = this.get().split("\\.");
+        String[] thatParts = that.get().split("\\.");
+        int length = Math.max(thisParts.length, thatParts.length);
+        for (int i = 0; i < length; i++) {
+            int thisPart = i < thisParts.length ? Integer.parseInt(thisParts[i]) : 0;
+            int thatPart = i < thatParts.length ? Integer.parseInt(thatParts[i]) : 0;
+            if (thisPart < thatPart) return -1;
+            if (thisPart > thatPart) return 1;
+        }
+        return 0;
+    }
+
+    @Override
+    public boolean equals(Object that) {
+        if (this == that) return true;
+        if (that == null) return false;
+        if (this.getClass() != that.getClass()) return false;
+        return this.compareTo((Version) that) == 0;
+    }
 
     public static void asyncUpdate() {
         new Thread(() -> {
             try {
                 System.out.println("Checking for updates...");
                 Release[] releases = getReleases();
-                Arrays.stream(releases).max(Comparator.comparing(r -> new Version(r.tag_name)))
-                        .ifPresent(Version::notifyLatest);
+                Arrays.stream(releases).max(Comparator.comparing(r -> new Version(r.tag_name))).ifPresent(Version::notifyLatest);
             } catch (IOException e) {
                 System.out.printf("\tChecking failed: %s::%s%n", e.getClass().getSimpleName(), e.getMessage());
             }
@@ -44,8 +86,6 @@ public class Version implements Comparable<Version> {
         return new Release[0];
     }
 
-    private final String version;
-
     private static void notifyLatest(Release latest) {
         Version version = new Version(latest.tag_name);
         System.out.printf("\tLatest version = %s%n", version);
@@ -53,10 +93,7 @@ public class Version implements Comparable<Version> {
         if (compare == 0) System.out.printf("\tCurrent version %s is latest!%n", CURRENT);
         else if (compare < 0) {
             System.out.printf("\tCurrent version %s is behind!%n", CURRENT);
-            if (JOptionPane.showConfirmDialog(null,
-                    String.format("Download new version %s?", version),
-                    "Outdated Version!", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION
-                    && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
+            if (JOptionPane.showConfirmDialog(null, String.format("Download new version %s?", version), "Outdated Version!", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
                 try {
                     Desktop.getDesktop().browse(new URI(latest.html_url));
                 } catch (IOException | URISyntaxException e) {
@@ -65,92 +102,22 @@ public class Version implements Comparable<Version> {
         } else System.out.printf("\tCurrent version %s is in-dev!%n", CURRENT);
     }
 
-    public final String get() {
-        return this.version.replaceFirst("^v", "");
-    }
-
-    public Version(String version) {
-        if (version == null)
-            throw new IllegalArgumentException("Version can not be null");
-        if (!version.matches("v?[0-9]+(\\.[0-9]+)*"))
-            throw new IllegalArgumentException("Invalid version format");
-        this.version = version;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("%s", version);
-    }
-
-    @Override
-    public int compareTo(Version that) {
-        if (that == null)
-            return 1;
-        String[] thisParts = this.get().split("\\.");
-        String[] thatParts = that.get().split("\\.");
-        int length = Math.max(thisParts.length, thatParts.length);
-        for (int i = 0; i < length; i++) {
-            int thisPart = i < thisParts.length ?
-                    Integer.parseInt(thisParts[i]) : 0;
-            int thatPart = i < thatParts.length ?
-                    Integer.parseInt(thatParts[i]) : 0;
-            if (thisPart < thatPart)
-                return -1;
-            if (thisPart > thatPart)
-                return 1;
-        }
-        return 0;
-    }
-
-    @Override
-    public boolean equals(Object that) {
-        if (this == that)
-            return true;
-        if (that == null)
-            return false;
-        if (this.getClass() != that.getClass())
-            return false;
-        return this.compareTo((Version) that) == 0;
-    }
-
     public static class Release {
-        public String url,
-                assets_url,
-                upload_url,
-                html_url;
+        public String url, assets_url, upload_url, html_url;
         public int id;
-        public String node_id,
-                tag_name,
-                target_commitish,
-                name;
+        public String node_id, tag_name, target_commitish, name;
         public boolean draft;
         public User author;
         public boolean prerelease;
-        public String created_at,
-                published_at;
+        public String created_at, published_at;
         public Asset[] assets;
-        public String tarball_url,
-                zipball_url,
-                body;
+        public String tarball_url, zipball_url, body;
     }
 
     public static class User {
         public String login;
         public int id;
-        public String node_id,
-                avatar_url,
-                gravatar_id,
-                url,
-                html_url,
-                followers_url,
-                following_url,
-                gists_url,
-                starred_url,
-                subscriptions_url,
-                organizations_url,
-                repos_url,
-                events_url,
-                received_events_url, type;
+        public String node_id, avatar_url, gravatar_id, url, html_url, followers_url, following_url, gists_url, starred_url, subscriptions_url, organizations_url, repos_url, events_url, received_events_url, type;
         public boolean site_admin;
     }
 
@@ -168,5 +135,14 @@ public class Version implements Comparable<Version> {
         public String created_at;
         public String updated_at;
         public String browser_download_url;
+    }
+
+    public static boolean isInteger(String s) {
+        try {
+            Integer.parseInt(s);
+        } catch (NumberFormatException | NullPointerException e) {
+            return false;
+        }
+        return true;
     }
 }

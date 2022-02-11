@@ -1,6 +1,7 @@
 package utils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * An experimental class that provides static methods for testing
@@ -11,109 +12,6 @@ import java.util.*;
  * @version 1.01 2002 Feb
  */
 public class EnglishNoun {
-    /**
-     * Tests whether the given (presumed) English noun is plural.
-     * A word like "sheep" that can be either singular or plural
-     * yields true.
-     */
-    public static boolean isPlural(String word) {
-        word = word.toLowerCase();
-        if (irregularPlurals.containsKey(word)) return true;
-        if (word.length() <= 1) return false;
-        // If it is not an irregular plural, it must end in -s,
-        // but it must not be an irregular singular (like "bus")
-        // nor end in -ss (like "boss").
-        if (word.charAt(word.length() - 1) != 's') return false;
-        if (irregularSingulars.containsKey(word)) return false;
-        return word.charAt(word.length() - 2) != 's';
-    }
-
-    /**
-     * Tests whether the given (presumed) English noun is singular.
-     * A word like "sheep" that can be either singular or plural
-     * yields true.
-     */
-    public static boolean isSingular(String word) {
-        word = word.toLowerCase();
-        if (irregularSingulars.containsKey(word)) return true;
-        // If it is not an irregular singular, it must not be an
-        // irregular plural (like "children"), and it must not end
-        // in -s unless it ends in -ss (like "boss")).
-        if (irregularPlurals.containsKey(word)) return false;
-        if (word.length() <= 0) return false;
-        if (word.charAt(word.length() - 1) != 's') return true;
-        return word.length() >= 2 && word.charAt(word.length() - 2) == 's';  // word ends in -ss
-// word is not irregular, and ends in -s but not -ss
-    }
-
-    /**
-     * Returns the plural of a given (presumed) English word.
-     * The given word may be singular or (already) plural.
-     */
-    public static String pluralOf(String word) {
-        word = word.toLowerCase();
-        if (isPlural(word)) return word;
-        Object singularLookup = irregularSingulars.get(word);
-        if (singularLookup != null) {
-            if (singularLookup instanceof ArrayList)
-                return ((ArrayList<String>) singularLookup).get(0);
-            else return (String) singularLookup;
-        }
-        int length = word.length();
-        if (length <= 1) return word + "'s";
-        char lastLetter = word.charAt(length - 1);
-        char secondLast = word.charAt(length - 2);
-        if ("sxzo".indexOf(lastLetter) >= 0 ||
-                (lastLetter == 'h' && (secondLast == 's' || secondLast == 'c')))
-            return word + "es";
-        if (lastLetter == 'y') {
-            if ("aeiou".indexOf(secondLast) >= 0)
-                return word + "s";
-            else return word.substring(0, length - 1) + "ies";
-        }
-        return word + "s";
-    } // end pluralOf
-
-    /**
-     * Returns the singular of a given (presumed) English word.
-     * The given word may be plural or (already) singular.
-     */
-    public static String singularOf(String word) {
-        word = word.toLowerCase();
-        if (isSingular(word)) return word;
-        Object pluralLookup = irregularPlurals.get(word);
-        if (pluralLookup != null) {
-            if (pluralLookup instanceof ArrayList)
-                return ((ArrayList<String>) pluralLookup).get(0);
-            else return (String) pluralLookup;
-        }
-        int length = word.length();
-        if (length <= 1) return word;
-        char lastLetter = word.charAt(length - 1);
-        if (lastLetter != 's') return word;  // no final -s
-        char secondLast = word.charAt(length - 2);
-        if (secondLast == '\'') return word.substring(0, length - 2);
-        // remove -'s
-        if (word.equalsIgnoreCase("gas")) return word;
-        if (secondLast != 'e' || length <= 3)
-            return word.substring(0, length - 1); // remove final -s
-        // Word ends in -es and has length >= 4:
-        char thirdLast = word.charAt(length - 3);
-        if (thirdLast == 'i')  // -ies => -y
-            return word.substring(0, length - 3) + "y";
-        if (thirdLast == 'x')  // -xes => -x
-            return word.substring(0, length - 2);
-        if (length <= 4)       // e.g. uses => use
-            return word.substring(0, length - 1);
-        char fourthLast = word.charAt(length - 4);
-        if (thirdLast == 'h' && (fourthLast == 'c' || fourthLast == 's'))
-            // -ches or -shes => -ch or -sh
-            return word.substring(0, length - 2);
-        if (thirdLast == 's' && fourthLast == 's') // -sses => -ss
-            return word.substring(0, length - 2);
-        return word.substring(0, length - 1);  // keep the final e.
-    } // end singularOf
-
     private static final HashMap<String, Object> irregularSingulars = new HashMap<>(100);
     private static final HashMap<String, Object> irregularPlurals = new HashMap<>(100);
 
@@ -251,5 +149,108 @@ public class EnglishNoun {
         irregularPlurals.put("wolves", "wolf");
         irregularPlurals.put("women", "woman");
     } // end static initialization block
+
+    /**
+     * Tests whether the given (presumed) English noun is plural.
+     * A word like "sheep" that can be either singular or plural
+     * yields true.
+     */
+    public static boolean isPlural(String word) {
+        word = word.toLowerCase();
+        if (irregularPlurals.containsKey(word)) return true;
+        if (word.length() <= 1) return false;
+        // If it is not an irregular plural, it must end in -s,
+        // but it must not be an irregular singular (like "bus")
+        // nor end in -ss (like "boss").
+        if (word.charAt(word.length() - 1) != 's') return false;
+        if (irregularSingulars.containsKey(word)) return false;
+        return word.charAt(word.length() - 2) != 's';
+    }
+
+    /**
+     * Tests whether the given (presumed) English noun is singular.
+     * A word like "sheep" that can be either singular or plural
+     * yields true.
+     */
+    public static boolean isSingular(String word) {
+        word = word.toLowerCase();
+        if (irregularSingulars.containsKey(word)) return true;
+        // If it is not an irregular singular, it must not be an
+        // irregular plural (like "children"), and it must not end
+        // in -s unless it ends in -ss (like "boss")).
+        if (irregularPlurals.containsKey(word)) return false;
+        if (word.length() <= 0) return false;
+        if (word.charAt(word.length() - 1) != 's') return true;
+        return word.length() >= 2 && word.charAt(word.length() - 2) == 's';  // word ends in -ss
+// word is not irregular, and ends in -s but not -ss
+    }
+
+    /**
+     * Returns the plural of a given (presumed) English word.
+     * The given word may be singular or (already) plural.
+     */
+    public static String pluralOf(String word) {
+        word = word.toLowerCase();
+        if (isPlural(word)) return word;
+        Object singularLookup = irregularSingulars.get(word);
+        if (singularLookup != null) {
+            if (singularLookup instanceof ArrayList)
+                return ((ArrayList<String>) singularLookup).get(0);
+            else return (String) singularLookup;
+        }
+        int length = word.length();
+        if (length <= 1) return word + "'s";
+        char lastLetter = word.charAt(length - 1);
+        char secondLast = word.charAt(length - 2);
+        if ("sxzo".indexOf(lastLetter) >= 0 ||
+                (lastLetter == 'h' && (secondLast == 's' || secondLast == 'c')))
+            return word + "es";
+        if (lastLetter == 'y') {
+            if ("aeiou".indexOf(secondLast) >= 0)
+                return word + "s";
+            else return word.substring(0, length - 1) + "ies";
+        }
+        return word + "s";
+    } // end pluralOf
+
+    /**
+     * Returns the singular of a given (presumed) English word.
+     * The given word may be plural or (already) singular.
+     */
+    public static String singularOf(String word) {
+        word = word.toLowerCase();
+        if (isSingular(word)) return word;
+        Object pluralLookup = irregularPlurals.get(word);
+        if (pluralLookup != null) {
+            if (pluralLookup instanceof ArrayList)
+                return ((ArrayList<String>) pluralLookup).get(0);
+            else return (String) pluralLookup;
+        }
+        int length = word.length();
+        if (length <= 1) return word;
+        char lastLetter = word.charAt(length - 1);
+        if (lastLetter != 's') return word;  // no final -s
+        char secondLast = word.charAt(length - 2);
+        if (secondLast == '\'') return word.substring(0, length - 2);
+        // remove -'s
+        if (word.equalsIgnoreCase("gas")) return word;
+        if (secondLast != 'e' || length <= 3)
+            return word.substring(0, length - 1); // remove final -s
+        // Word ends in -es and has length >= 4:
+        char thirdLast = word.charAt(length - 3);
+        if (thirdLast == 'i')  // -ies => -y
+            return word.substring(0, length - 3) + "y";
+        if (thirdLast == 'x')  // -xes => -x
+            return word.substring(0, length - 2);
+        if (length <= 4)       // e.g. uses => use
+            return word.substring(0, length - 1);
+        char fourthLast = word.charAt(length - 4);
+        if (thirdLast == 'h' && (fourthLast == 'c' || fourthLast == 's'))
+            // -ches or -shes => -ch or -sh
+            return word.substring(0, length - 2);
+        if (thirdLast == 's' && fourthLast == 's') // -sses => -ss
+            return word.substring(0, length - 2);
+        return word.substring(0, length - 1);  // keep the final e.
+    } // end singularOf
 
 } // end class EnglishNoun

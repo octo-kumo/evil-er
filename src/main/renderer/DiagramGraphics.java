@@ -1,9 +1,9 @@
 package main.renderer;
 
 import model.Vector;
+import model.er.Entity;
 import org.jetbrains.annotations.NotNull;
 import utils.callbacks.DrawContext;
-import model.er.Entity;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;
@@ -23,10 +23,9 @@ import java.util.stream.Stream;
 
 public class DiagramGraphics extends Graphics2D {
     private static final Stroke dashed = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{2}, 0);
-    private final Graphics2D g;
-
     @NotNull
     public final DrawContext context;
+    private final Graphics2D g;
 
     public DiagramGraphics(Graphics2D g, @NotNull DrawContext context) {
         this.g = g;
@@ -211,21 +210,6 @@ public class DiagramGraphics extends Graphics2D {
     }
 
     @Override
-    public void setComposite(Composite comp) {
-        g.setComposite(comp);
-    }
-
-    @Override
-    public void setPaint(Paint paint) {
-        g.setPaint(paint);
-    }
-
-    @Override
-    public void setStroke(Stroke s) {
-        g.setStroke(s);
-    }
-
-    @Override
     public void setRenderingHint(RenderingHints.Key hintKey, Object hintValue) {
         g.setRenderingHint(hintKey, hintValue);
     }
@@ -236,11 +220,6 @@ public class DiagramGraphics extends Graphics2D {
     }
 
     @Override
-    public void setRenderingHints(Map<?, ?> hints) {
-        g.setRenderingHints(hints);
-    }
-
-    @Override
     public void addRenderingHints(Map<?, ?> hints) {
         g.addRenderingHints(hints);
     }
@@ -248,6 +227,11 @@ public class DiagramGraphics extends Graphics2D {
     @Override
     public RenderingHints getRenderingHints() {
         return g.getRenderingHints();
+    }
+
+    @Override
+    public void setRenderingHints(Map<?, ?> hints) {
+        g.setRenderingHints(hints);
     }
 
     @Override
@@ -416,13 +400,13 @@ public class DiagramGraphics extends Graphics2D {
     }
 
     @Override
-    public void setTransform(AffineTransform Tx) {
-        g.setTransform(Tx);
+    public AffineTransform getTransform() {
+        return g.getTransform();
     }
 
     @Override
-    public AffineTransform getTransform() {
-        return g.getTransform();
+    public void setTransform(AffineTransform Tx) {
+        g.setTransform(Tx);
     }
 
     @Override
@@ -431,13 +415,18 @@ public class DiagramGraphics extends Graphics2D {
     }
 
     @Override
+    public void setPaint(Paint paint) {
+        g.setPaint(paint);
+    }
+
+    @Override
     public Composite getComposite() {
         return g.getComposite();
     }
 
     @Override
-    public void setBackground(Color color) {
-        g.setBackground(color);
+    public void setComposite(Composite comp) {
+        g.setComposite(comp);
     }
 
     @Override
@@ -446,8 +435,18 @@ public class DiagramGraphics extends Graphics2D {
     }
 
     @Override
+    public void setBackground(Color color) {
+        g.setBackground(color);
+    }
+
+    @Override
     public Stroke getStroke() {
         return g.getStroke();
+    }
+
+    @Override
+    public void setStroke(Stroke s) {
+        g.setStroke(s);
     }
 
     @Override

@@ -1,0 +1,37 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'application'
+    id 'idea'
+}
+
+group = 'kumo.evil-er'
+version = '0.5.0-beta'
+application {
+    mainClass = 'main.EvilEr'
+}
+repositories {
+    mavenCentral()
+}
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+        }
+        resources {
+            srcDirs = ['res']
+        }
+    }
+}
+dependencies {
+    implementation("org.jetbrains:annotations:16.0.2")
+    implementation("com.google.guava:guava:31.0.1-jre")
+    implementation("com.github.weisj:darklaf-core:2.7.2")
+    implementation('com.google.code.gson:gson:2.8.9')
+}
+jar {
+    manifest {
+        attributes 'SplashScreen-Image': 'icon/icon.png',
+                'Implementation-Title': 'ER Diagram',
+                'Implementation-Version': version
+    }
+}
