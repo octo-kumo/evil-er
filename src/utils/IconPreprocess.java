@@ -10,7 +10,7 @@ import java.util.Objects;
 
 public class IconPreprocess {
     public static void main(String... args) throws IOException, URISyntaxException {
-        BufferedImage image = ImageIO.read(Objects.requireNonNull(IconPreprocess.class.getResourceAsStream("/icon/icon.png")));
+        BufferedImage image = ImageIO.read(Objects.requireNonNull(IconPreprocess.class.getResourceAsStream("/images/icons/icon.png")));
         ImageIO.write(pad(image, 16, 16), "PNG", new File("./res/icon/iconx16.png"));
         ImageIO.write(pad(image, 32, 32), "PNG", new File("./res/icon/iconx32.png"));
         ImageIO.write(pad(image, 64, 64), "PNG", new File("./res/icon/iconx64.png"));

@@ -365,7 +365,7 @@ public class ERMenu extends JMenuBar {
 
     public void openFontChooser() {
         if (fontChooserFrame == null) {
-            fontChooserFrame = new JDialog(evilEr.frame, "Font Chooser");
+            fontChooserFrame = new JDialog(evilEr.frame, "Choose Font");
             fontChooserFrame.setContentPane(new JPanel() {{
                 setLayout(new BorderLayout());
                 add(fontChooser, BorderLayout.CENTER);
@@ -397,6 +397,7 @@ public class ERMenu extends JMenuBar {
             }});
             fontChooserFrame.pack();
         }
+        SwingUtilities.updateComponentTreeUI(fontChooserFrame);
         fontChooserFrame.setLocationRelativeTo(evilEr);
         fontChooserFrame.setVisible(true);
     }
