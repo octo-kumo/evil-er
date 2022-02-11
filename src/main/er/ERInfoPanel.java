@@ -27,6 +27,7 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
     public ERInfoPanel(EvilEr evilEr) {
         this.evilEr = evilEr;
         setPreferredSize(new Dimension(333, 0));
+        setMaximumSize(new Dimension(456, 0));
         setMinimumSize(new Dimension(256, 0));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(new TitledBorder("Info Panel"));
