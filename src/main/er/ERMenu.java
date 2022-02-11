@@ -140,6 +140,10 @@ public class ERMenu extends JMenuBar {
                 addActionListener(e -> diagram.copy());
                 setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
             }});
+            add(new JMenuItem("Cut") {{
+                addActionListener(e -> diagram.copy());
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+            }});
             add(new JMenuItem("Paste") {{
                 addActionListener(e -> diagram.paste());
                 setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
@@ -148,6 +152,26 @@ public class ERMenu extends JMenuBar {
                 addActionListener(e -> diagram.delete());
                 setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
             }});
+            add(new JMenuItem("Select All") {{
+                addActionListener(e -> {
+                    diagram.selection.clear();
+                    diagram.selection.addAll(diagram.entities);
+                    diagram.repaint();
+                });
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+            }});
+            add(new JSeparator());
+            add(new JMenuItem("Undo") {{
+                addActionListener(e -> diagram.undo());
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z,
+                        Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+            }});
+            add(new JMenuItem("Redo") {{
+                addActionListener(e -> diagram.redo());
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z,
+                        KeyEvent.SHIFT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+            }});
+            add(new JSeparator());
             add(new JMenuItem("Center") {{
                 addActionListener(ERMenu.this::center);
                 setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C,
@@ -176,8 +200,6 @@ public class ERMenu extends JMenuBar {
                     }
                 }
             }));
-            add(new JSeparator());
-
 //            add(new JCheckBoxMenuItem("Connecting") {{
 //                evilEr.diagramPanel.diagram.connecting.addListener(this::setState);
 //                addActionListener(e -> evilEr.diagramPanel.diagram.connecting.set(getState()));
