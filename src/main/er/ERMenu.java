@@ -397,6 +397,7 @@ public class ERMenu extends JMenuBar {
             }});
             fontChooserFrame.pack();
         }
+        fontChooserFrame.setLocationRelativeTo(evilEr);
         fontChooserFrame.setVisible(true);
     }
 }
