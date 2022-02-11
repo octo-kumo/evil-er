@@ -1,11 +1,12 @@
 plugins {
     id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'edu.sc.seis.launch4j' version '2.5.1'
     id 'application'
     id 'idea'
 }
 
 group = 'kumo.evil-er'
-version = '0.5.0-beta'
+version = '0.5.1-beta'
 application {
     mainClass = 'main.EvilEr'
 }
@@ -34,4 +35,11 @@ jar {
                 'Implementation-Title': 'ER Diagram',
                 'Implementation-Version': version
     }
+}
+launch4j {
+    outfile = 'evil-er.exe'
+    mainClassName = project.mainClassName
+    icon = "${projectDir}/icons/icon.ico"
+    jarTask = project.tasks.shadowJar
+    productName = 'Evil ER'
 }
