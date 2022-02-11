@@ -17,7 +17,7 @@ import java.util.Comparator;
 
 public class Version implements Comparable<Version> {
     public static final Gson gson = new Gson();
-    public static final Version CURRENT = new Version("v0.4.2");
+    public static final Version CURRENT = new Version("v0.5.0");
 
     public static void asyncUpdate() {
         new Thread(() -> {

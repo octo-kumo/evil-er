@@ -47,6 +47,7 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
     public final Reactive<Boolean> grid = new Reactive<>(false);
     public final Reactive<Boolean> jumpLines = new Reactive<>(false);
     public final Reactive<Boolean> avoidOverlap = new Reactive<>(false);
+    public final Reactive<Boolean> darkMode = new Reactive<>(false);
 
     public final Reactive<Boolean> showBrackets = new Reactive<>(false);
 
@@ -256,5 +257,31 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
 
     public Vector project(double x, double y) {
         return project(new Vector(x, y));
+    }
+
+
+    public static Color HIGHLIGHT = new Color(0xff0000); // dummy color
+    public static final Color FILL_DARK = new Color(0x222222);
+    public static final Color BACKGROUND_DARK = new Color(0x121212);
+    public static final Color FOREGROUND_DARK = new Color(0xefefef);
+
+    @Override
+    public Color foreground() {
+        return darkMode.get() ? FOREGROUND_DARK : Color.BLACK;
+    }
+
+    @Override
+    public Color background() {
+        return darkMode.get() ? BACKGROUND_DARK : Color.WHITE;
+    }
+
+    @Override
+    public Color fill() {
+        return darkMode.get() ? FILL_DARK : Color.WHITE;
+    }
+
+    @Override
+    public Color highlight() {
+        return HIGHLIGHT;
     }
 }

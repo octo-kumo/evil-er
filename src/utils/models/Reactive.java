@@ -43,4 +43,8 @@ public class Reactive<T> {
     public boolean equal(T other) {
         return Objects.equals(other, get());
     }
+
+    public void set(Reactive<T> other) {
+        set(other.get());
+    }
 }
