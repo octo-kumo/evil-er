@@ -1,6 +1,8 @@
 package main.er;
 
 import main.EvilEr;
+import model.ts.DeleteTransaction;
+import model.ts.EntityTransaction;
 import utils.components.KeyManager;
 import main.renderer.DiagramGraphics;
 import model.Drawable;
@@ -24,6 +26,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.Stack;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -47,7 +50,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
      */
     private boolean exporting = false;
     private final ArrayList<Entity> clipboard = new ArrayList<>(); // will be added to board on click, including new entity
-    private final ArrayList<Entity> selection = new ArrayList<>(); // selection
+    public final ArrayList<Entity> selection = new ArrayList<>(); // selection
     private final Vector mouseStart = new Vector(), mouseWorld = new Vector();
 
     public final Vector origin = new Vector();
@@ -66,6 +69,9 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     public final Reactive<Vector> connectTarget = new Reactive<>(new Vector());
     public final Reactive<Entity.Type> addingType = new Reactive<>();
     public final Reactive<ActionType> action = new Reactive<>(ActionType.SELECTING);
+
+    public final Stack<EntityTransaction> undoStack = new Stack<>();
+    public final Stack<EntityTransaction> redoStack = new Stack<>();
 
     public ERDiagram(ERDiagramPanel diagramPanel) {
         this.diagramPanel = diagramPanel;
@@ -159,8 +165,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
     public void delete(Entity entity) {
         if (target.get() == entity) setTarget(null);
-        if (entity instanceof Attribute) ((Attribute) entity).getParent().removeAttribute((Attribute) entity);
-        else entities.remove(entity);
+        commit(new DeleteTransaction(entity));
     }
 
     public void copy(boolean cut) {
@@ -202,6 +207,31 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
             clipboard.clear();
             action.set(ActionType.SELECTING);
         }
+    }
+
+    public void commit(EntityTransaction transaction) {
+        transaction.redo(entities);
+        undoStack.push(transaction);
+        redoStack.clear();
+        repaint();
+    }
+
+    public void undo() {
+        System.out.println(":: undo");
+        if (undoStack.empty()) return;
+        EntityTransaction lastAction = undoStack.pop();
+        lastAction.undo(entities);
+        redoStack.push(lastAction);
+        repaint();
+    }
+
+    public void redo() {
+        System.out.println(":: redo");
+        if (redoStack.empty()) return;
+        EntityTransaction lastUndidAction = redoStack.pop();
+        lastUndidAction.redo(entities);
+        undoStack.push(lastUndidAction);
+        repaint();
     }
 
     public void burnBridges(Entity entity) {

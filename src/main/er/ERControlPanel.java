@@ -65,7 +65,7 @@ public class ERControlPanel extends JPanel implements ClipboardOwner {
                 }
             });
         }});
-        add(new JButton("Copy") {{
+        add(new JButton("Copy Image") {{
             addActionListener(evt -> saveToClipboard());
         }});
     }
