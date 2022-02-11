@@ -45,6 +45,7 @@ public class ERMenu extends JMenuBar {
     public static final Preferences DRAWING_FONT = Preferences.userRoot().node("drawingFont");
     private final EvilEr evilEr;
     private final JFontChooser fontChooser;
+    private JDialog fontChooserFrame;
 
     public ERMenu(EvilEr evilEr) {
         this.evilEr = evilEr;
@@ -282,71 +283,6 @@ public class ERMenu extends JMenuBar {
         }});
     }
 
-    private void resetFontSelector() {
-        String name = DRAWING_FONT.get("fontName", EvilEr.DEFAULT_FONT.getFamily());
-        int size = DRAWING_FONT.getInt("fontSize", EvilEr.DEFAULT_FONT.getSize());
-        int style = DRAWING_FONT.getInt("fontStyle", EvilEr.DEFAULT_FONT.getStyle());
-
-        fontChooser.setSelectedFontFamily(name);
-        fontChooser.setSelectedFontSize(size);
-        fontChooser.setSelectedFontStyle(style);
-        evilEr.diagramPanel.diagram.setFont(fontChooser.getSelectedFont());
-    }
-
-    private void persistFontSelector() {
-        DRAWING_FONT.put("fontName", fontChooser.getSelectedFontFamily());
-        DRAWING_FONT.getInt("fontSize", fontChooser.getSelectedFontSize());
-        DRAWING_FONT.getInt("fontStyle", fontChooser.getSelectedFontStyle());
-        evilEr.diagramPanel.diagram.setFont(fontChooser.getSelectedFont());
-    }
-
-    private void center(ActionEvent evt) {
-        Vector com = evilEr.diagramPanel.diagram.entities.parallelStream().map(e -> (Vector) e).reduce(Vector::add).orElse(Vector.ZERO).div(evilEr.diagramPanel.diagram.entities.size());
-        evilEr.diagramPanel.diagram.origin.set(com.negate()
-                .add(evilEr.diagramPanel.diagram.getWidth() / 2d / evilEr.diagramPanel.diagram.scale,
-                        evilEr.diagramPanel.diagram.getHeight() / 2d / evilEr.diagramPanel.diagram.scale));
-        evilEr.diagramPanel.diagram.repaint();
-    }
-
-    private JDialog fontChooserFrame;
-
-    public void openFontChooser() {
-        if (fontChooserFrame == null) {
-            fontChooserFrame = new JDialog(evilEr.frame, "Font Chooser");
-            fontChooserFrame.setContentPane(new JPanel() {{
-                setLayout(new BorderLayout());
-                add(fontChooser, BorderLayout.CENTER);
-                add(new JPanel() {{
-                    setLayout(new FlowLayout(FlowLayout.RIGHT));
-                    add(new JButton("Cancel") {{
-                        addActionListener(e -> {
-                            resetFontSelector();
-                            fontChooserFrame.setVisible(false);
-                        });
-                    }});
-                    add(new JButton("Reset") {{
-                        addActionListener(e -> {
-                            try {
-                                DRAWING_FONT.clear();
-                                resetFontSelector();
-                            } catch (BackingStoreException ex) {
-                                Prompts.report(ex);
-                            }
-                        });
-                    }});
-                    add(new JButton("Apply") {{
-                        addActionListener(e -> {
-                            persistFontSelector();
-                            fontChooserFrame.setVisible(false);
-                        });
-                    }});
-                }}, BorderLayout.SOUTH);
-            }});
-            fontChooserFrame.pack();
-        }
-        fontChooserFrame.setVisible(true);
-    }
-
     public static void saveThemeToPreference() {
         try {
             ThemeSettings instance = ThemeSettings.getInstance();
@@ -399,5 +335,68 @@ public class ERMenu extends JMenuBar {
             Prompts.report(e);
         }
         saveThemeToPreference();
+    }
+
+    private void resetFontSelector() {
+        String name = DRAWING_FONT.get("fontName", EvilEr.DEFAULT_FONT.getFamily());
+        int size = DRAWING_FONT.getInt("fontSize", EvilEr.DEFAULT_FONT.getSize());
+        int style = DRAWING_FONT.getInt("fontStyle", EvilEr.DEFAULT_FONT.getStyle());
+
+        fontChooser.setSelectedFontFamily(name);
+        fontChooser.setSelectedFontSize(size);
+        fontChooser.setSelectedFontStyle(style);
+        evilEr.diagramPanel.diagram.setFont(fontChooser.getSelectedFont());
+    }
+
+    private void persistFontSelector() {
+        DRAWING_FONT.put("fontName", fontChooser.getSelectedFontFamily());
+        DRAWING_FONT.getInt("fontSize", fontChooser.getSelectedFontSize());
+        DRAWING_FONT.getInt("fontStyle", fontChooser.getSelectedFontStyle());
+        evilEr.diagramPanel.diagram.setFont(fontChooser.getSelectedFont());
+    }
+
+    private void center(ActionEvent evt) {
+        Vector com = evilEr.diagramPanel.diagram.entities.parallelStream().map(e -> (Vector) e).reduce(Vector::add).orElse(Vector.ZERO).div(evilEr.diagramPanel.diagram.entities.size());
+        evilEr.diagramPanel.diagram.origin.set(com.negate()
+                .add(evilEr.diagramPanel.diagram.getWidth() / 2d / evilEr.diagramPanel.diagram.scale,
+                        evilEr.diagramPanel.diagram.getHeight() / 2d / evilEr.diagramPanel.diagram.scale));
+        evilEr.diagramPanel.diagram.repaint();
+    }
+
+    public void openFontChooser() {
+        if (fontChooserFrame == null) {
+            fontChooserFrame = new JDialog(evilEr.frame, "Font Chooser");
+            fontChooserFrame.setContentPane(new JPanel() {{
+                setLayout(new BorderLayout());
+                add(fontChooser, BorderLayout.CENTER);
+                add(new JPanel() {{
+                    setLayout(new FlowLayout(FlowLayout.RIGHT));
+                    add(new JButton("Cancel") {{
+                        addActionListener(e -> {
+                            resetFontSelector();
+                            fontChooserFrame.setVisible(false);
+                        });
+                    }});
+                    add(new JButton("Reset") {{
+                        addActionListener(e -> {
+                            try {
+                                DRAWING_FONT.clear();
+                                resetFontSelector();
+                            } catch (BackingStoreException ex) {
+                                Prompts.report(ex);
+                            }
+                        });
+                    }});
+                    add(new JButton("Apply") {{
+                        addActionListener(e -> {
+                            persistFontSelector();
+                            fontChooserFrame.setVisible(false);
+                        });
+                    }});
+                }}, BorderLayout.SOUTH);
+            }});
+            fontChooserFrame.pack();
+        }
+        fontChooserFrame.setVisible(true);
     }
 }

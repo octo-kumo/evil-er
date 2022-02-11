@@ -32,6 +32,10 @@ public class PlaceholderTextField extends JTextField {
         return placeholder;
     }
 
+    public void setPlaceholder(final String s) {
+        placeholder = s;
+    }
+
     @Override
     protected void paintComponent(final Graphics pG) {
         super.paintComponent(pG);
@@ -47,10 +51,6 @@ public class PlaceholderTextField extends JTextField {
         g.setColor(getDisabledTextColor());
         g.drawString(placeholder, getInsets().left, pG.getFontMetrics()
                 .getMaxAscent() + getInsets().top);
-    }
-
-    public void setPlaceholder(final String s) {
-        placeholder = s;
     }
 
 }

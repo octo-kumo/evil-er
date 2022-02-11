@@ -10,7 +10,9 @@ import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.datatransfer.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
+import java.awt.datatransfer.Transferable;
 import java.io.File;
 import java.io.IOException;
 
@@ -18,10 +20,10 @@ import static utils.Prompts.report;
 
 public class ERControlPanel extends JPanel implements ClipboardOwner {
 
-    private final EvilEr evilEr;
     public final JCheckBox lock;
     public final JComboBox<Entity.Type> typeBox;
     public final JComboBox<Line.LineStyle> styleBox;
+    private final EvilEr evilEr;
 
     public ERControlPanel(EvilEr evilEr) {
         this.evilEr = evilEr;

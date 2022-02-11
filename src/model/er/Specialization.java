@@ -65,6 +65,10 @@ public class Specialization extends Relationship {
         return disjoint;
     }
 
+    public void setDisjoint(boolean disjoint) {
+        this.disjoint = disjoint;
+    }
+
     public void drawShape(DiagramGraphics g) {
         super.drawShape(g);
     }
@@ -72,10 +76,6 @@ public class Specialization extends Relationship {
     @Override
     public Shape getShape(double width, double height) {
         return new Ellipse2D.Double(-height * .5 / 2d, -height * .5 / 2d, height * .5, height * .5);
-    }
-
-    public void setDisjoint(boolean disjoint) {
-        this.disjoint = disjoint;
     }
 
     public boolean hasSubclass(Entity subclass) {

@@ -4,28 +4,31 @@ import main.renderer.DiagramGraphics;
 import main.rs.RSDiagram;
 import model.Drawable;
 import model.Vector;
-import utils.models.Tuple;
 import org.jetbrains.annotations.NotNull;
 import shapes.lines.RangeLine;
+import utils.models.Tuple;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Table extends Vector implements Drawable {
+    private static final Font title = new Font(null, Font.BOLD, 12);
+    private static final Font normal = new Font(null, Font.PLAIN, 12);
+    private static final Font small = new Font(null, Font.PLAIN, 10);
+    private final List<Tuple<Boolean, String, Table>> foreign;
     public String name;
     public Map<String, Column> attributeMap;
-
-    private List<Column> sorted;
-    private final List<Tuple<Boolean, String, Table>> foreign;
-    private boolean highlighted;
     public long keyCount = 0;
     public long colCount = 0;
-
+    private List<Column> sorted;
+    private boolean highlighted;
     private List<Column> keys;
     private List<Column> cols;
 
@@ -58,10 +61,6 @@ public class Table extends Vector implements Drawable {
         keyCount = getKeys().size();
         colCount = getCols().size();
     }
-
-    private static final Font title = new Font(null, Font.BOLD, 12);
-    private static final Font normal = new Font(null, Font.PLAIN, 12);
-    private static final Font small = new Font(null, Font.PLAIN, 10);
 
     @Override
     public void draw(@NotNull DiagramGraphics g) {
@@ -163,11 +162,11 @@ public class Table extends Vector implements Drawable {
         return new Rectangle2D.Double(0, 0, colCount * Column.WIDTH, Column.HEIGHT * 2);
     }
 
-    public void setHighlighted(boolean highlighted) {
-        this.highlighted = highlighted;
-    }
-
     public boolean isHighlighted() {
         return highlighted;
+    }
+
+    public void setHighlighted(boolean highlighted) {
+        this.highlighted = highlighted;
     }
 }

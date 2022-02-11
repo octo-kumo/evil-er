@@ -1,8 +1,8 @@
 package model.er;
 
 import com.google.gson.annotations.Expose;
-import model.Vector;
 import main.renderer.DiagramGraphics;
+import model.Vector;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -16,9 +16,22 @@ import static main.er.ERDiagram.UNIVERSAL_METRICS;
 import static main.renderer.DiagramGraphics.flatten;
 
 public class Entity extends Node {
+    public static final double WIDTH = 100;
+    public static final double HEIGHT = 40;
+    public static final double INNER_WIDTH = WIDTH - 6;
+    public static final double INNER_HEIGHT = HEIGHT - 6;
+    @Expose
+    public ArrayList<Attribute> attributes;
+    @Expose
+    private String name;
+    @Expose
+    private boolean weak;
     public Entity(String name) {
         this();
         setName(name);
+    }
+    public Entity() {
+        attributes = new ArrayList<>();
     }
 
     public static void updateParents(Entity entity) {
@@ -26,91 +39,6 @@ public class Entity extends Node {
             a.setParent(entity);
             updateParents(a);
         });
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public boolean isWeak() {
-        return weak;
-    }
-
-    public enum Type {
-        Entity, Relationship, Attribute, Specialization
-    }
-
-    public static final double WIDTH = 100;
-    public static final double HEIGHT = 40;
-    public static final double INNER_WIDTH = WIDTH - 6;
-    public static final double INNER_HEIGHT = HEIGHT - 6;
-    @Expose
-    private String name;
-    @Expose
-    private boolean weak;
-    @Expose
-    public ArrayList<Attribute> attributes;
-
-    public Entity() {
-        attributes = new ArrayList<>();
-    }
-
-    public void addAttribute(Attribute attribute) {
-        this.attributes.add(attribute.setParent(this));
-    }
-
-    public void removeAttribute(Attribute attribute) {
-        this.attributes.remove(attribute.setParent(null));
-    }
-
-    public Entity setName(String name) {
-        this.name = name;
-        return this;
-    }
-
-    public Entity setWeak(boolean weak) {
-        this.weak = weak;
-        return this;
-    }
-
-    @Override
-    public void prepaint(DiagramGraphics g) {
-        attributes.forEach(a -> a.predraw(g));
-    }
-
-    @Override
-    public void paint(DiagramGraphics g) {
-        attributes.forEach(a -> a.draw(g));
-        drawShape(g);
-        g.drawStringCenter(getName(), 0, 0);
-    }
-
-    public void drawShape(DiagramGraphics g) {
-        drawShape(g, getShape());
-        // Ensure at least 7 px per character
-        double newWidth = Math.max(WIDTH, UNIVERSAL_METRICS.stringWidth(getName()) * 1.05f);
-        if (isWeak()) drawShape(g, getShape(newWidth - 6, INNER_HEIGHT));
-    }
-
-    public void drawShape(DiagramGraphics g, Shape shape) {
-        Color toUse = g.getColor();
-        g.draw(shape, g.context.fill(), toUse);
-    }
-
-    public Shape getShape() {
-        // Ensure at least 7 px per character
-        double newWidth = Math.max(WIDTH, UNIVERSAL_METRICS.stringWidth(getName()) * 1.05f);
-        return getShape(newWidth, HEIGHT);
-    }
-
-    public Shape getShape(double width, double height) {
-        return new Rectangle2D.Double(-width / 2d, -height / 2d, width, height);
-    }
-
-    public Shape getShapeWorld() {
-        AffineTransform tx = new AffineTransform();
-        tx.translate(getX(), getY());
-        return tx.createTransformedShape(getShape());
     }
 
     public static double applyForces(List<? extends Entity> entities, double pad) {
@@ -198,6 +126,72 @@ public class Entity extends Node {
         return num;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public Entity setName(String name) {
+        this.name = name;
+        return this;
+    }
+
+    public boolean isWeak() {
+        return weak;
+    }
+
+    public Entity setWeak(boolean weak) {
+        this.weak = weak;
+        return this;
+    }
+
+    public void addAttribute(Attribute attribute) {
+        this.attributes.add(attribute.setParent(this));
+    }
+
+    public void removeAttribute(Attribute attribute) {
+        this.attributes.remove(attribute.setParent(null));
+    }
+
+    @Override
+    public void prepaint(DiagramGraphics g) {
+        attributes.forEach(a -> a.predraw(g));
+    }
+
+    @Override
+    public void paint(DiagramGraphics g) {
+        attributes.forEach(a -> a.draw(g));
+        drawShape(g);
+        g.drawStringCenter(getName(), 0, 0);
+    }
+
+    public void drawShape(DiagramGraphics g) {
+        drawShape(g, getShape());
+        // Ensure at least 7 px per character
+        double newWidth = Math.max(WIDTH, UNIVERSAL_METRICS.stringWidth(getName()) * 1.05f);
+        if (isWeak()) drawShape(g, getShape(newWidth - 6, INNER_HEIGHT));
+    }
+
+    public void drawShape(DiagramGraphics g, Shape shape) {
+        Color toUse = g.getColor();
+        g.draw(shape, g.context.fill(), toUse);
+    }
+
+    public Shape getShape() {
+        // Ensure at least 7 px per character
+        double newWidth = Math.max(WIDTH, UNIVERSAL_METRICS.stringWidth(getName()) * 1.05f);
+        return getShape(newWidth, HEIGHT);
+    }
+
+    public Shape getShape(double width, double height) {
+        return new Rectangle2D.Double(-width / 2d, -height / 2d, width, height);
+    }
+
+    public Shape getShapeWorld() {
+        AffineTransform tx = new AffineTransform();
+        tx.translate(getX(), getY());
+        return tx.createTransformedShape(getShape());
+    }
+
     public String toString() {
         return String.format("<%s : %.2f, %.2f>", getClass().getSimpleName(), getX(), getY());
     }
@@ -210,5 +204,9 @@ public class Entity extends Node {
         attributes.forEach(a -> n.addAttribute(a.clone()));
         n.set(this);
         return n;
+    }
+
+    public enum Type {
+        Entity, Relationship, Attribute, Specialization
     }
 }

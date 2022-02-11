@@ -53,10 +53,11 @@ public class EvilEr extends JPanel {
         EvilEr evilEr;
         frame.setContentPane(evilEr = new EvilEr(frame));
         frame.setJMenuBar(new ERMenu(evilEr));
-
+        frame.setAutoRequestFocus(true);
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+        frame.requestFocus();
 
         Version.asyncUpdate();
         SwingUtilities.invokeLater(() -> {

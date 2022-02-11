@@ -21,7 +21,7 @@ public class ERDiagramPanel extends JPanel implements ComponentListener {
     public ERDiagramPanel() {
         setLayout(null);
         addComponentListener(this);
-        setPreferredSize(new Dimension(1280, 720));
+        setPreferredSize(new Dimension(820, 720));
         setMinimumSize(new Dimension(512, 0));
 
         add(input = new JTextField() {{

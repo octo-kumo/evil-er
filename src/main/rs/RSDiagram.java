@@ -3,12 +3,12 @@ package main.rs;
 import main.renderer.DiagramGraphics;
 import model.Drawable;
 import model.Vector;
-import utils.callbacks.DrawContext;
-import utils.models.Reactive;
 import model.rs.Table;
 import org.jetbrains.annotations.Nullable;
 import shapes.lines.Line;
 import shapes.lines.SchemaLine;
+import utils.callbacks.DrawContext;
+import utils.models.Reactive;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,23 +23,13 @@ import java.util.stream.Stream;
 
 public class RSDiagram extends JComponent implements MouseListener, MouseMotionListener, DrawContext, Drawable, MouseWheelListener {
 
+    public static final Color FILL_DARK = new Color(0x222222);
+    public static final Color BACKGROUND_DARK = new Color(0x121212);
+    public static final Color FOREGROUND_DARK = new Color(0xefefef);
+    public static double gridSize = 20;
+    public static Color HIGHLIGHT = new Color(0xff0000); // dummy color
     public final ArrayList<Table> tables;
-
-    public Reactive<Line.LineStyle> lineStyle = new Reactive<>(Line.LineStyle.CURVE);
-    boolean exporting = false;
-
-    enum ActionType {Moving, Panning, Creating}
-
-    /**
-     * PARAMS
-     */
-    private Table adding_buf;
-    private ActionType current = ActionType.Panning;
-    private final Vector dragStart = new Vector(), targetStart = new Vector();
     public final Vector origin = new Vector();
-    public double scale = 1;
-    public double exportScale = 4;
-
     public final Reactive<Table> target = new Reactive<>();
     public final Reactive<Boolean> connecting = new Reactive<>(false);
     public final Reactive<Boolean> locked = new Reactive<>(false);
@@ -48,8 +38,17 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
     public final Reactive<Boolean> jumpLines = new Reactive<>(false);
     public final Reactive<Boolean> avoidOverlap = new Reactive<>(false);
     public final Reactive<Boolean> darkMode = new Reactive<>(false);
-
     public final Reactive<Boolean> showBrackets = new Reactive<>(false);
+    private final Vector dragStart = new Vector(), targetStart = new Vector();
+    public Reactive<Line.LineStyle> lineStyle = new Reactive<>(Line.LineStyle.CURVE);
+    public double scale = 1;
+    public double exportScale = 4;
+    boolean exporting = false;
+    /**
+     * PARAMS
+     */
+    private Table adding_buf;
+    private ActionType current = ActionType.Panning;
 
     public RSDiagram() {
         addMouseListener(this);
@@ -171,8 +170,6 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
     public void mouseReleased(MouseEvent e) {
     }
 
-    public static double gridSize = 20;
-
     @Override
     public void mouseDragged(MouseEvent e) {
         if (SwingUtilities.isLeftMouseButton(e)) {
@@ -259,12 +256,6 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
         return project(new Vector(x, y));
     }
 
-
-    public static Color HIGHLIGHT = new Color(0xff0000); // dummy color
-    public static final Color FILL_DARK = new Color(0x222222);
-    public static final Color BACKGROUND_DARK = new Color(0x121212);
-    public static final Color FOREGROUND_DARK = new Color(0xefefef);
-
     @Override
     public Color foreground() {
         return darkMode.get() ? FOREGROUND_DARK : Color.BLACK;
@@ -284,4 +275,6 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
     public Color highlight() {
         return HIGHLIGHT;
     }
+
+    enum ActionType {Moving, Panning, Creating}
 }

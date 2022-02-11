@@ -211,6 +211,23 @@ public class JFontChooser extends JComponent {
     }
 
     /**
+     * Set the family name of the selected font.
+     *
+     * @param name the family name of the selected font.
+     * @see getSelectedFontFamily
+     **/
+    public void setSelectedFontFamily(String name) {
+        String[] names = getFontFamilies();
+        for (int i = 0; i < names.length; i++) {
+            if (names[i].equalsIgnoreCase(name)) {
+                getFontFamilyList().setSelectedIndex(i);
+                break;
+            }
+        }
+        updateSampleFont();
+    }
+
+    /**
      * Get the style of the selected font.
      *
      * @return the style of the selected font.
@@ -224,58 +241,6 @@ public class JFontChooser extends JComponent {
     public int getSelectedFontStyle() {
         int index = getFontStyleList().getSelectedIndex();
         return FONT_STYLE_CODES[index];
-    }
-
-    /**
-     * Get the size of the selected font.
-     *
-     * @return the size of the selected font
-     * @see #setSelectedFontSize
-     **/
-    public int getSelectedFontSize() {
-        int fontSize = 1;
-        String fontSizeString = getFontSizeTextField().getText();
-        while (true) {
-            try {
-                fontSize = Integer.parseInt(fontSizeString);
-                break;
-            } catch (NumberFormatException e) {
-                fontSizeString = (String) getFontSizeList().getSelectedValue();
-                getFontSizeTextField().setText(fontSizeString);
-            }
-        }
-
-        return fontSize;
-    }
-
-    /**
-     * Get the selected font.
-     *
-     * @return the selected font
-     * @see #setSelectedFont
-     * @see java.awt.Font
-     **/
-    public Font getSelectedFont() {
-        Font font = new Font(getSelectedFontFamily(),
-                getSelectedFontStyle(), getSelectedFontSize());
-        return font;
-    }
-
-    /**
-     * Set the family name of the selected font.
-     *
-     * @param name the family name of the selected font.
-     * @see getSelectedFontFamily
-     **/
-    public void setSelectedFontFamily(String name) {
-        String[] names = getFontFamilies();
-        for (int i = 0; i < names.length; i++) {
-            if (names[i].toLowerCase().equals(name.toLowerCase())) {
-                getFontFamilyList().setSelectedIndex(i);
-                break;
-            }
-        }
-        updateSampleFont();
     }
 
     /**
@@ -301,6 +266,28 @@ public class JFontChooser extends JComponent {
     }
 
     /**
+     * Get the size of the selected font.
+     *
+     * @return the size of the selected font
+     * @see #setSelectedFontSize
+     **/
+    public int getSelectedFontSize() {
+        int fontSize = 1;
+        String fontSizeString = getFontSizeTextField().getText();
+        while (true) {
+            try {
+                fontSize = Integer.parseInt(fontSizeString);
+                break;
+            } catch (NumberFormatException e) {
+                fontSizeString = (String) getFontSizeList().getSelectedValue();
+                getFontSizeTextField().setText(fontSizeString);
+            }
+        }
+
+        return fontSize;
+    }
+
+    /**
      * Set the size of the selected font.
      *
      * @param size the size of the selected font
@@ -316,6 +303,19 @@ public class JFontChooser extends JComponent {
         }
         getFontSizeTextField().setText(sizeString);
         updateSampleFont();
+    }
+
+    /**
+     * Get the selected font.
+     *
+     * @return the selected font
+     * @see #setSelectedFont
+     * @see java.awt.Font
+     **/
+    public Font getSelectedFont() {
+        Font font = new Font(getSelectedFontFamily(),
+                getSelectedFontStyle(), getSelectedFontSize());
+        return font;
     }
 
     /**
@@ -358,169 +358,6 @@ public class JFontChooser extends JComponent {
         dialog = null;
 
         return dialogResultValue;
-    }
-
-    protected class ListSelectionHandler implements ListSelectionListener {
-        private JTextComponent textComponent;
-
-        ListSelectionHandler(JTextComponent textComponent) {
-            this.textComponent = textComponent;
-        }
-
-        public void valueChanged(ListSelectionEvent e) {
-            if (e.getValueIsAdjusting() == false) {
-                JList list = (JList) e.getSource();
-                String selectedValue = (String) list.getSelectedValue();
-
-                String oldValue = textComponent.getText();
-                textComponent.setText(selectedValue);
-                if (!oldValue.equalsIgnoreCase(selectedValue)) {
-                    textComponent.selectAll();
-                    textComponent.requestFocus();
-                }
-
-                updateSampleFont();
-            }
-        }
-    }
-
-    protected class TextFieldFocusHandlerForTextSelection extends FocusAdapter {
-        private JTextComponent textComponent;
-
-        public TextFieldFocusHandlerForTextSelection(JTextComponent textComponent) {
-            this.textComponent = textComponent;
-        }
-
-        public void focusGained(FocusEvent e) {
-            textComponent.selectAll();
-        }
-
-        public void focusLost(FocusEvent e) {
-            textComponent.select(0, 0);
-            updateSampleFont();
-        }
-    }
-
-    protected class TextFieldKeyHandlerForListSelectionUpDown extends KeyAdapter {
-        private JList targetList;
-
-        public TextFieldKeyHandlerForListSelectionUpDown(JList list) {
-            this.targetList = list;
-        }
-
-        public void keyPressed(KeyEvent e) {
-            int i = targetList.getSelectedIndex();
-            switch (e.getKeyCode()) {
-                case KeyEvent.VK_UP:
-                    i = targetList.getSelectedIndex() - 1;
-                    if (i < 0) {
-                        i = 0;
-                    }
-                    targetList.setSelectedIndex(i);
-                    break;
-                case KeyEvent.VK_DOWN:
-                    int listSize = targetList.getModel().getSize();
-                    i = targetList.getSelectedIndex() + 1;
-                    if (i >= listSize) {
-                        i = listSize - 1;
-                    }
-                    targetList.setSelectedIndex(i);
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-
-    protected class ListSearchTextFieldDocumentHandler implements DocumentListener {
-        JList targetList;
-
-        public ListSearchTextFieldDocumentHandler(JList targetList) {
-            this.targetList = targetList;
-        }
-
-        public void insertUpdate(DocumentEvent e) {
-            update(e);
-        }
-
-        public void removeUpdate(DocumentEvent e) {
-            update(e);
-        }
-
-        public void changedUpdate(DocumentEvent e) {
-            update(e);
-        }
-
-        private void update(DocumentEvent event) {
-            String newValue = "";
-            try {
-                Document doc = event.getDocument();
-                newValue = doc.getText(0, doc.getLength());
-            } catch (BadLocationException e) {
-                e.printStackTrace();
-            }
-
-            if (newValue.length() > 0) {
-                int index = targetList.getNextMatch(newValue, 0, Position.Bias.Forward);
-                if (index < 0) {
-                    index = 0;
-                }
-                targetList.ensureIndexIsVisible(index);
-
-                String matchedName = targetList.getModel().getElementAt(index).toString();
-                if (newValue.equalsIgnoreCase(matchedName)) {
-                    if (index != targetList.getSelectedIndex()) {
-                        SwingUtilities.invokeLater(new ListSelector(index));
-                    }
-                }
-            }
-        }
-
-        public class ListSelector implements Runnable {
-            private int index;
-
-            public ListSelector(int index) {
-                this.index = index;
-            }
-
-            public void run() {
-                targetList.setSelectedIndex(this.index);
-            }
-        }
-    }
-
-    protected class DialogOKAction extends AbstractAction {
-        protected static final String ACTION_NAME = "OK";
-        private JDialog dialog;
-
-        protected DialogOKAction(JDialog dialog) {
-            this.dialog = dialog;
-            putValue(Action.DEFAULT, ACTION_NAME);
-            putValue(Action.ACTION_COMMAND_KEY, ACTION_NAME);
-            putValue(Action.NAME, (ACTION_NAME));
-        }
-
-        public void actionPerformed(ActionEvent e) {
-            dialogResultValue = OK_OPTION;
-            dialog.setVisible(false);
-        }
-    }
-
-    protected class DialogCancelAction extends AbstractAction {
-        protected static final String ACTION_NAME = "Cancel";
-        private JDialog dialog;
-
-        protected DialogCancelAction(JDialog dialog) {
-            this.dialog = dialog;
-            putValue(Action.DEFAULT, ACTION_NAME);
-            putValue(Action.ACTION_COMMAND_KEY, ACTION_NAME);
-            putValue(Action.NAME, (ACTION_NAME));
-        }
-
-        public void actionPerformed(ActionEvent e) {
-            dialogResultValue = CANCEL_OPTION;
-            dialog.setVisible(false);
-        }
     }
 
     protected JDialog createDialog(Component parent) {
@@ -695,5 +532,168 @@ public class JFontChooser extends JComponent {
             fontStyleNames[i++] = ("BoldItalic");
         }
         return fontStyleNames;
+    }
+
+    protected class ListSelectionHandler implements ListSelectionListener {
+        private final JTextComponent textComponent;
+
+        ListSelectionHandler(JTextComponent textComponent) {
+            this.textComponent = textComponent;
+        }
+
+        public void valueChanged(ListSelectionEvent e) {
+            if (e.getValueIsAdjusting() == false) {
+                JList list = (JList) e.getSource();
+                String selectedValue = (String) list.getSelectedValue();
+
+                String oldValue = textComponent.getText();
+                textComponent.setText(selectedValue);
+                if (!oldValue.equalsIgnoreCase(selectedValue)) {
+                    textComponent.selectAll();
+                    textComponent.requestFocus();
+                }
+
+                updateSampleFont();
+            }
+        }
+    }
+
+    protected class TextFieldFocusHandlerForTextSelection extends FocusAdapter {
+        private final JTextComponent textComponent;
+
+        public TextFieldFocusHandlerForTextSelection(JTextComponent textComponent) {
+            this.textComponent = textComponent;
+        }
+
+        public void focusGained(FocusEvent e) {
+            textComponent.selectAll();
+        }
+
+        public void focusLost(FocusEvent e) {
+            textComponent.select(0, 0);
+            updateSampleFont();
+        }
+    }
+
+    protected class TextFieldKeyHandlerForListSelectionUpDown extends KeyAdapter {
+        private final JList targetList;
+
+        public TextFieldKeyHandlerForListSelectionUpDown(JList list) {
+            this.targetList = list;
+        }
+
+        public void keyPressed(KeyEvent e) {
+            int i = targetList.getSelectedIndex();
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_UP:
+                    i = targetList.getSelectedIndex() - 1;
+                    if (i < 0) {
+                        i = 0;
+                    }
+                    targetList.setSelectedIndex(i);
+                    break;
+                case KeyEvent.VK_DOWN:
+                    int listSize = targetList.getModel().getSize();
+                    i = targetList.getSelectedIndex() + 1;
+                    if (i >= listSize) {
+                        i = listSize - 1;
+                    }
+                    targetList.setSelectedIndex(i);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    protected class ListSearchTextFieldDocumentHandler implements DocumentListener {
+        JList targetList;
+
+        public ListSearchTextFieldDocumentHandler(JList targetList) {
+            this.targetList = targetList;
+        }
+
+        public void insertUpdate(DocumentEvent e) {
+            update(e);
+        }
+
+        public void removeUpdate(DocumentEvent e) {
+            update(e);
+        }
+
+        public void changedUpdate(DocumentEvent e) {
+            update(e);
+        }
+
+        private void update(DocumentEvent event) {
+            String newValue = "";
+            try {
+                Document doc = event.getDocument();
+                newValue = doc.getText(0, doc.getLength());
+            } catch (BadLocationException e) {
+                e.printStackTrace();
+            }
+
+            if (newValue.length() > 0) {
+                int index = targetList.getNextMatch(newValue, 0, Position.Bias.Forward);
+                if (index < 0) {
+                    index = 0;
+                }
+                targetList.ensureIndexIsVisible(index);
+
+                String matchedName = targetList.getModel().getElementAt(index).toString();
+                if (newValue.equalsIgnoreCase(matchedName)) {
+                    if (index != targetList.getSelectedIndex()) {
+                        SwingUtilities.invokeLater(new ListSelector(index));
+                    }
+                }
+            }
+        }
+
+        public class ListSelector implements Runnable {
+            private final int index;
+
+            public ListSelector(int index) {
+                this.index = index;
+            }
+
+            public void run() {
+                targetList.setSelectedIndex(this.index);
+            }
+        }
+    }
+
+    protected class DialogOKAction extends AbstractAction {
+        protected static final String ACTION_NAME = "OK";
+        private final JDialog dialog;
+
+        protected DialogOKAction(JDialog dialog) {
+            this.dialog = dialog;
+            putValue(Action.DEFAULT, ACTION_NAME);
+            putValue(Action.ACTION_COMMAND_KEY, ACTION_NAME);
+            putValue(Action.NAME, (ACTION_NAME));
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            dialogResultValue = OK_OPTION;
+            dialog.setVisible(false);
+        }
+    }
+
+    protected class DialogCancelAction extends AbstractAction {
+        protected static final String ACTION_NAME = "Cancel";
+        private final JDialog dialog;
+
+        protected DialogCancelAction(JDialog dialog) {
+            this.dialog = dialog;
+            putValue(Action.DEFAULT, ACTION_NAME);
+            putValue(Action.ACTION_COMMAND_KEY, ACTION_NAME);
+            putValue(Action.NAME, (ACTION_NAME));
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            dialogResultValue = CANCEL_OPTION;
+            dialog.setVisible(false);
+        }
     }
 }
