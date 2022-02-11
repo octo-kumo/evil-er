@@ -1,5 +1,7 @@
 package main.er;
 
+import com.github.weisj.darklaf.icons.IconLoader;
+import images.ImageRoot;
 import main.EvilEr;
 import model.er.Attribute;
 import model.er.Entity;
@@ -23,6 +25,11 @@ import java.util.stream.IntStream;
 public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
     private final JPanel entityControls;
     private final EvilEr evilEr;
+    private static final Icon CLOSE_ICON;
+
+    static {
+        CLOSE_ICON = IconLoader.get(ImageRoot.class).getIcon("icons/close_black_24dp.svg");
+    }
 
     public ERInfoPanel(EvilEr evilEr) {
         this.evilEr = evilEr;
@@ -90,7 +97,7 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
         Object[][] data = IntStream.range(0, relationship.nodes.size()).mapToObj(i -> {
             Entity t = relationship.nodes.get(i);
             Relationship.RelationshipSpec spec = relationship.specs.get(i);
-            return new Object[]{t.getName(), spec.amm, spec.total, spec.role, "✕"};
+            return new Object[]{t.getName(), spec.amm, spec.total, spec.role, CLOSE_ICON};
         }).toArray(Object[][]::new);
 
         DefaultTableModel tableModel;
@@ -156,7 +163,7 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
                         });
                 relationship.addNode(entity, new Relationship.RelationshipSpec(amm.getText(), total.isSelected()));
 
-                tableModel.addRow(new Object[]{entity.getName(), amm.getText(), total.isSelected(), "✕"});
+                tableModel.addRow(new Object[]{entity.getName(), amm.getText(), total.isSelected(), CLOSE_ICON});
                 evilEr.diagramPanel.diagram.repaint();
                 name.setText("");
                 amm.setText("");
@@ -175,7 +182,7 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
         panel.setBorder(new TitledBorder("Attributes"));
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-        Object[][] data = parent.attributes.parallelStream().map(a -> new Object[]{a.getName(), a.isDerived(), a.isKey(), "✕"}).toArray(Object[][]::new);
+        Object[][] data = parent.attributes.parallelStream().map(a -> new Object[]{a.getName(), a.isDerived(), a.isKey(), CLOSE_ICON}).toArray(Object[][]::new);
 
         DefaultTableModel tableModel;
         panel.add(new JScrollPane(new JTable(tableModel = new DefaultTableModel(data, new String[]{"Name", "Derived", "Key", ""}) {
@@ -229,7 +236,7 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
                         .setDerived(derived.isSelected())
                         .setKey(key.isSelected()).setName(name.getText())
                         .set(100 * Math.cos(angle), 100 * Math.sin(angle)));
-                tableModel.addRow(new Object[]{name.getText(), derived.isSelected(), key.isSelected(), "✕"});
+                tableModel.addRow(new Object[]{name.getText(), derived.isSelected(), key.isSelected(), CLOSE_ICON});
                 evilEr.diagramPanel.diagram.repaint();
                 name.setText("");
                 derived.setSelected(false);

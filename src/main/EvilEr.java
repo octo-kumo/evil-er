@@ -63,11 +63,11 @@ public class EvilEr extends JPanel {
         SwingUtilities.invokeLater(() -> {
             try {
                 frame.setIconImages(Arrays.asList(
-                        ImageIO.read(Objects.requireNonNull(EvilEr.class.getResourceAsStream("/icon/iconx16.png"))),
-                        ImageIO.read(Objects.requireNonNull(EvilEr.class.getResourceAsStream("/icon/iconx32.png"))),
-                        ImageIO.read(Objects.requireNonNull(EvilEr.class.getResourceAsStream("/icon/iconx64.png"))),
-                        ImageIO.read(Objects.requireNonNull(EvilEr.class.getResourceAsStream("/icon/iconx128.png"))),
-                        ImageIO.read(Objects.requireNonNull(EvilEr.class.getResourceAsStream("/icon/iconx256.png")))
+                        ImageIO.read(Objects.requireNonNull(EvilEr.class.getResourceAsStream("/images/icons/iconx16.png"))),
+                        ImageIO.read(Objects.requireNonNull(EvilEr.class.getResourceAsStream("/images/icons/iconx32.png"))),
+                        ImageIO.read(Objects.requireNonNull(EvilEr.class.getResourceAsStream("/images/icons/iconx64.png"))),
+                        ImageIO.read(Objects.requireNonNull(EvilEr.class.getResourceAsStream("/images/icons/iconx128.png"))),
+                        ImageIO.read(Objects.requireNonNull(EvilEr.class.getResourceAsStream("/images/icons/iconx256.png")))
                 ));
             } catch (IOException e) {
                 Prompts.report(e);
