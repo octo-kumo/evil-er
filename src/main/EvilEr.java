@@ -33,6 +33,8 @@ public class EvilEr extends JPanel {
 
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, diagramPanel, infoPanel);
         splitPane.setOneTouchExpandable(true);
+        splitPane.setDividerLocation(0.9);
+        splitPane.setResizeWeight(1);
         add(splitPane, BorderLayout.CENTER);
 
         controlPanel = new ERControlPanel(this);
