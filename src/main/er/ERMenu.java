@@ -108,6 +108,7 @@ public class ERMenu extends JMenuBar {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     EvilRs rs = new EvilRs();
+                    rs.diagram.darkMode.set(diagram.darkMode);
                     JDialog dialog = new JDialog(evilEr.frame, "Relational Schema");
                     dialog.setJMenuBar(new RSMenu(rs));
                     dialog.setContentPane(rs);
@@ -251,6 +252,13 @@ public class ERMenu extends JMenuBar {
                     diagram.repaint();
                 });
             }});
+            add(new JMenuItem("Toggle Info Panel") {{
+                addActionListener(e -> {
+                    int width = evilEr.splitPane.getWidth() - evilEr.splitPane.getDividerSize();
+                    double pos = 1d * evilEr.splitPane.getDividerLocation() / width;
+                    evilEr.splitPane.setDividerLocation(pos == 1 ? width - 256 : width);
+                });
+            }});
             add(new JMenuItem("Font...") {{
                 addActionListener(e -> openFontChooser());
             }});
@@ -275,9 +283,9 @@ public class ERMenu extends JMenuBar {
     }
 
     private void resetFontSelector() {
-        String name = DRAWING_FONT.get("fontName", "Arial");
-        int size = DRAWING_FONT.getInt("fontSize", 14);
-        int style = DRAWING_FONT.getInt("fontStyle", Font.PLAIN);
+        String name = DRAWING_FONT.get("fontName", EvilEr.DEFAULT_FONT.getFamily());
+        int size = DRAWING_FONT.getInt("fontSize", EvilEr.DEFAULT_FONT.getSize());
+        int style = DRAWING_FONT.getInt("fontStyle", EvilEr.DEFAULT_FONT.getStyle());
 
         fontChooser.setSelectedFontFamily(name);
         fontChooser.setSelectedFontSize(size);

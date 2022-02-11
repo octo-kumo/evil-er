@@ -89,9 +89,7 @@ public class Vector extends Point2D {
     }
 
     public Vector incre(double x, double y) {
-        setX(getX() + x);
-        setY(getY() + y);
-        return this;
+        return set(getX() + x, getY() + y);
     }
 
     public Vector decre(@NotNull Point2D other) {
@@ -107,9 +105,7 @@ public class Vector extends Point2D {
     }
 
     public Vector scale(double x, double y) {
-        setX(this.getX() * x);
-        setY(this.getY() * y);
-        return this;
+        return set(this.getX() * x, this.getY() * y);
     }
 
     public Vector multi(double scale) {
@@ -126,6 +122,14 @@ public class Vector extends Point2D {
 
     public Vector div(double scale) {
         return scale(1 / scale);
+    }
+
+    public Vector snap(double grid) {
+        return div(grid).round().scale(grid);
+    }
+
+    public Vector snapTo(double grid) {
+        return copy().snap(grid);
     }
 
     public Vector norm() {
@@ -166,9 +170,7 @@ public class Vector extends Point2D {
     }
 
     public Vector round() {
-        setX(Math.round(getX()));
-        setY(Math.round(getY()));
-        return this;
+        return set(Math.round(getX()), Math.round(getY()));
     }
 
     public Vector rounded() {

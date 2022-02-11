@@ -16,10 +16,12 @@ import java.util.Map;
 import java.util.Objects;
 
 public class EvilEr extends JPanel {
+    public static final Font DEFAULT_FONT = new Font(null);
     public static Map<?, ?> RENDER_HINTS;
     public final ERControlPanel controlPanel;
     public final ERDiagramPanel diagramPanel;
     public final ERInfoPanel infoPanel;
+    public final JSplitPane splitPane;
     public JFrame frame;
 
     public EvilEr(JFrame frame) {
@@ -27,13 +29,14 @@ public class EvilEr extends JPanel {
         setLayout(new BorderLayout());
 
         diagramPanel = new ERDiagramPanel();
-        add(diagramPanel, BorderLayout.CENTER);
+        infoPanel = new ERInfoPanel(this);
+
+        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, diagramPanel, infoPanel);
+        splitPane.setOneTouchExpandable(true);
+        add(splitPane, BorderLayout.CENTER);
 
         controlPanel = new ERControlPanel(this);
         add(controlPanel, BorderLayout.NORTH);
-
-        infoPanel = new ERInfoPanel(this);
-        add(infoPanel, BorderLayout.EAST);
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(diagramPanel.diagram.keyManager);
     }

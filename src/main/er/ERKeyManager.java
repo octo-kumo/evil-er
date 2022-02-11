@@ -1,17 +1,15 @@
-package utils.components;
-
-import main.er.ERDiagram;
+package main.er;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
-public class KeyManager implements KeyListener, KeyEventDispatcher {
+public class ERKeyManager implements KeyListener, KeyEventDispatcher {
 
     public boolean CTRL, SHIFT, ALT;
     private final ERDiagram diagram;
 
-    public KeyManager(ERDiagram diagram) {
+    public ERKeyManager(ERDiagram diagram) {
         this.diagram = diagram;
     }
 
@@ -63,6 +61,7 @@ public class KeyManager implements KeyListener, KeyEventDispatcher {
                 keyTyped(e);
                 break;
         }
+        diagram.repaint();
         return false;
     }
 }

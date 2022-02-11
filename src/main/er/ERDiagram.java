@@ -1,9 +1,6 @@
 package main.er;
 
 import main.EvilEr;
-import model.ts.DeleteTransaction;
-import model.ts.EntityTransaction;
-import utils.components.KeyManager;
 import main.renderer.DiagramGraphics;
 import model.Drawable;
 import model.Vector;
@@ -11,6 +8,10 @@ import model.er.Attribute;
 import model.er.Entity;
 import model.er.Relationship;
 import model.er.Specialization;
+import model.ts.AddTransaction;
+import model.ts.DeleteTransaction;
+import model.ts.EntityTransaction;
+import model.ts.TransactionGroup;
 import org.jetbrains.annotations.Nullable;
 import shapes.lines.Line;
 import utils.Examples;
@@ -38,7 +39,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     public boolean acceptingKeys = true;
 
     public final ERDiagramPanel diagramPanel;
-    public final KeyManager keyManager;
+    public final ERKeyManager keyManager;
     public final ArrayList<Entity> entities;
 
     public Reactive<Line.LineStyle> lineStyle = new Reactive<>(Line.LineStyle.STRAIGHT);
@@ -81,7 +82,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         addMouseMotionListener(this);
         addMouseWheelListener(this);
         addFocusListener(this);
-        keyManager = new KeyManager(this);
+        keyManager = new ERKeyManager(this);
 
         entities = new ArrayList<>();
         addListeners();
@@ -106,11 +107,11 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         g.scale(scale, scale);
         g.translate(origin.getX(), origin.getY());
 
-        if (grid.get()) drawGrid(g);
+        if (grid.get() || keyManager.CTRL) drawGrid(g);
         draw(g);
         g.setTransform(transform);
         g.drawStringCenter("@yun", getWidth() - 25, getHeight() - 15);
-        if (hasFocus()) g.draw(getBounds());
+        if (hasFocus()) g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
     }
 
     public void draw(DiagramGraphics g) {
@@ -181,8 +182,8 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
             e.decre(mouseWorld);
             clipboard.add(e);
             if (cut) {
-                delete(e);
-                burnBridges(e);
+                ERDiagram.this.delete(e);
+                ERDiagram.this.burnBridges(e);
             }
         });
         action.set(ActionType.ADDING);
@@ -201,7 +202,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
     public void paste() {
         System.out.println(":: paste");
-        clipboard.stream().map(Entity::clone).forEach(this::processEntitiesBeforeAddition);
+        commit(new TransactionGroup(clipboard.stream().map(Entity::clone).map(this::processEntitiesBeforeAddition).toArray(AddTransaction[]::new)));
         if (!locked.get()) {
             setAddingType(null);
             clipboard.clear();
@@ -322,12 +323,12 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         Vector newMouse = unproject(mouse);
         if (SwingUtilities.isLeftMouseButton(e)) {
             if (action.equal(ActionType.SELECTING)) {
-                Vector diff = newMouse.minus(mouseWorld);
-                selection.forEach(entity -> {
-                    if (entity instanceof Attribute && selection.contains(((Attribute) entity).getParent())) return;
-                    entity.incre(diff);
-                    if (e.isControlDown()) entity.div(gridSize).round().scale(gridSize);
-                });
+                Vector diff = !e.isControlDown() ? newMouse.minus(mouseWorld) :
+                        newMouse.snapTo(gridSize).decre(mouseWorld.snapTo(gridSize))
+                                .incre(target.nonNull() ? target.get().snapTo(gridSize).minus(target.get()) : Vector.ZERO);
+                selection.stream()
+                        .filter(entity -> !(entity instanceof Attribute) || !selection.contains(((Attribute) entity).getParent()))
+                        .forEach(entity -> entity.incre(diff));
                 repaint();
             }
         } else if (SwingUtilities.isRightMouseButton(e)) {
@@ -380,19 +381,20 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         }
     }
 
-    private void processEntitiesBeforeAddition(Entity clipboardItem) {
+    private AddTransaction processEntitiesBeforeAddition(Entity clipboardItem) {
         Vector pos = clipboardItem.add(mouseWorld); // translate to mouse position, from clipboard world
+        Entity parent = null;
         if (clipboardItem instanceof Attribute) {
             if (((Attribute) clipboardItem).getParent() == null && clipboardTarget != null)
-                clipboardTarget.addAttribute((Attribute) clipboardItem);
+                parent = clipboardTarget;
         } else {
             if (clipboardItem instanceof Specialization
                     && ((Specialization) clipboardItem).getSuperclass() == null
                     && clipboardTarget != null)
-                ((Specialization) clipboardItem).setSuperclass(clipboardTarget);
-            entities.add(clipboardItem);
+                parent = clipboardTarget;
         }
         clipboardItem.set(pos);
+        return new AddTransaction(clipboardItem, parent);
     }
 
     public Optional<Entity> getIntersect(Vector vector) {
