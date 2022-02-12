@@ -21,13 +21,14 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import static main.er.ERDiagram.HIGHLIGHT;
+
 public class RSDiagram extends JComponent implements MouseListener, MouseMotionListener, DrawContext, Drawable, MouseWheelListener {
 
     public static final Color FILL_DARK = new Color(0x222222);
     public static final Color BACKGROUND_DARK = new Color(0x121212);
     public static final Color FOREGROUND_DARK = new Color(0xefefef);
     public static double gridSize = 20;
-    public static Color HIGHLIGHT = new Color(0xff0000); // dummy color
     public final ArrayList<Table> tables;
     public final Vector origin = new Vector();
     public final Reactive<Table> target = new Reactive<>();
@@ -217,7 +218,11 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
         if (current != ActionType.Creating) {
+            Vector mouse = new Vector(e.getX(), e.getY());
+            Vector a = mouse.divide(scale);
             scale *= Math.pow(0.95, e.getPreciseWheelRotation());
+            Vector b = mouse.divide(scale);
+            origin.incre(b.minus(a));
             repaint();
         }
     }

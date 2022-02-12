@@ -22,8 +22,6 @@ out
 hs_err_pid*
 replay_pid*
 
-jar/
-
 # Gradle
 .gradle
 gradle

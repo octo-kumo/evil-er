@@ -11,6 +11,7 @@ import java.awt.font.GlyphVector;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
 import java.awt.image.ImageObserver;
@@ -26,10 +27,12 @@ public class DiagramGraphics extends Graphics2D {
     @NotNull
     public final DrawContext context;
     private final Graphics2D g;
+    private Font fallback;
 
     public DiagramGraphics(Graphics2D g, @NotNull DrawContext context) {
         this.g = g;
         this.context = context;
+        fallback = new Font(null, getFont().getStyle(), getFont().getSize());
     }
 
 
@@ -50,30 +53,28 @@ public class DiagramGraphics extends Graphics2D {
     }
 
     public void drawStringCenter(String text, float cx, float cy) {
-        FontMetrics metrics = getFontMetrics(getFont());
-        cx += -metrics.stringWidth(text) / 2f;
-        cy += -metrics.getHeight() / 2f + metrics.getAscent();
+        Rectangle2D size = getStringBounds(text);
+        cx += -size.getWidth() / 2f;
+        cy += -size.getY() - size.getHeight() / 2f;
         drawString(text, cx, cy);
     }
 
     public void drawStringCenter(String text, float cx, float cy, Color color) {
         Color bak = getColor();
         setColor(color);
-        FontMetrics metrics = getFontMetrics(getFont());
-
-        cx += -metrics.stringWidth(text) / 2f;
-        cy += -metrics.getHeight() / 2f + metrics.getAscent();
+        Rectangle2D size = getStringBounds(text);
+        cx += -size.getWidth() / 2f;
+        cy += -size.getY() - size.getHeight() / 2f;
         AffineTransform at = AffineTransform.getTranslateInstance(cx, cy);
-        fill(at.createTransformedShape(metrics.getStringBounds(text, this)));
+        fill(at.createTransformedShape(size));
         setColor(bak);
         drawString(text, cx, cy);
     }
 
     public Line2D lineUnderString(String text, double cx, double cy) {
-        FontMetrics metrics = getFontMetrics(getFont());
-        double width = metrics.stringWidth(text);
-        cy += -metrics.getHeight() / 2f + metrics.getAscent();
-        return new Line2D.Double(cx - width / 2, cy, cx + width / 2, cy);
+        Rectangle2D size = getStringBounds(text);
+        cy += -size.getY() - size.getHeight() / 2f;
+        return new Line2D.Double(cx - size.getWidth() / 2, cy, cx + size.getWidth() / 2, cy);
     }
 
     public Line2D lineUnderString(String text, Vector vector) {
@@ -141,7 +142,18 @@ public class DiagramGraphics extends Graphics2D {
 
     @Override
     public void drawString(String str, float x, float y) {
+        boolean canDisplay = -1 == getFont().canDisplayUpTo(str);
+        Font font = getFont();
+        if (!canDisplay) setFont(fallback);
         g.drawString(str, x, y);
+        if (!canDisplay) setFont(font);
+    }
+
+    public Rectangle2D getStringBounds(String string) {
+        boolean canDisplay = -1 == getFont().canDisplayUpTo(string);
+        Font font = getFont();
+        if (!canDisplay) font = fallback;
+        return font.getStringBounds(string, getFontRenderContext());
     }
 
     @Override
@@ -271,6 +283,7 @@ public class DiagramGraphics extends Graphics2D {
 
     @Override
     public void setFont(Font font) {
+        fallback = new Font(null, fallback.getStyle(), fallback.getSize());
         g.setFont(font);
     }
 

@@ -41,6 +41,14 @@ public class Relationship extends Entity {
         revalidate();
     }
 
+    public boolean set(int index, Entity node) {
+        if (index >= nodes.size()) return false;
+        nodes.set(index, node);
+        lines.get(index).b = node;
+        revalidate();
+        return true;
+    }
+
     public boolean remove(int index) {
         if (index >= nodes.size()) return false;
         nodes.remove(index);

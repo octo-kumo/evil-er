@@ -13,7 +13,9 @@ public class EvilRs extends JPanel {
         setLayout(new BorderLayout());
 
         diagram = new RSDiagram();
-        add(diagram, BorderLayout.CENTER);
+        JSplitPane splitpane;
+        add(splitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, diagram, new RSInfoPanel(diagram)), BorderLayout.CENTER);
+        splitpane.setResizeWeight(1);
     }
 
     public static void main(String... args) {

@@ -44,7 +44,7 @@ public class Converter {
 
             int combinedInTo = findEntityToMerge((Relationship) entity);
             Table table = combinedInTo == -1 ? new Table(entity.getName()) : tableMap.get(((Relationship) entity).nodes.get(combinedInTo));
-            if (combinedInTo != -1) System.out.printf("\tCombining into: %s%n", table.name);
+            if (combinedInTo != -1) System.out.printf("\tCombining into: %s%n", table.getName());
 
             flatten(entity.attributes).forEach(e -> table.add(new Column(e.getName(), e.isKey())));
             entity.attributes.stream().filter(Attribute::isWeak).forEach(a -> multiAttributes.add(new Pair<>(a, table)));
@@ -57,8 +57,8 @@ public class Converter {
                 Relationship.RelationshipSpec spec = specs.get(i);
                 Table found = firstIdentifiableTable(tableMap, entities, e);
                 if (found != null) {
-                    System.out.printf("\tAdded table, %s%n", found.name);
-                    table.add(found, combinedInTo == -1 ? spec.role.isEmpty() ? found.name : spec.role : entity.getName(),
+                    System.out.printf("\tAdded table, %s%n", found.getName());
+                    table.add(found, combinedInTo == -1 ? spec.role.isEmpty() ? found.getName() : spec.role : entity.getName(),
                             combinedInTo == -1 || entity.isWeak());
                 }
             });
@@ -84,7 +84,7 @@ public class Converter {
         });
         tables.forEach(Table::revalidate);
         multiAttributes.forEach(p -> {
-            Table table = new Table(p.b.name + "::" + EnglishNoun.pluralOf(p.a.getName()));
+            Table table = new Table(p.b.getName() + "::" + EnglishNoun.pluralOf(p.a.getName()));
             if (p.a.attributes.size() > 0) // wtf composite multivalued attribute, ignoring recursive ones
                 flatten(p.a.attributes).forEach(e -> table.add(new Column(e.getName(), true)));
             else
