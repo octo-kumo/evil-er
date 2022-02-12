@@ -138,7 +138,7 @@ public class Table extends Vector implements Drawable {
     }
 
     public Stream<Column> selfKeys() {
-        return sorted.stream().filter(e -> e.isKey());
+        return sorted.stream().filter(Column::isKey);
     }
 
     /**
