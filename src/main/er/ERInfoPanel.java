@@ -25,7 +25,7 @@ import java.util.stream.IntStream;
 public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
     private final JPanel entityControls;
     private final EvilEr evilEr;
-    private static final Icon CLOSE_ICON;
+    public static final Icon CLOSE_ICON;
 
     static {
         CLOSE_ICON = IconLoader.get(ImageRoot.class).getIcon("icons/close_black_24dp.svg");
@@ -105,20 +105,10 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
         panel.add(new JScrollPane(new JTable(tableModel = new DefaultTableModel(data, new String[]{"Name", "Amount", "Total", "Role", ""}) {
             public void setValueAt(Object value, int row, int column) {
                 super.setValueAt(value, row, column);
-                switch (column) {
-                    case 0:
-                        relationship.nodes.get(row).setName((String) value);
-                        break;
-                    case 1:
-                        relationship.specs.get(row).amm = (String) value;
-                        break;
-                    case 2:
-                        relationship.specs.get(row).total = (boolean) value;
-                        break;
-                    case 3:
-                        relationship.specs.get(row).role = (String) value;
-                        break;
-                }
+                if (column == 0) relationship.nodes.get(row).setName((String) value);
+                else if (column == 1) relationship.specs.get(row).amm = (String) value;
+                else if (column == 2) relationship.specs.get(row).total = (boolean) value;
+                else if (column == 3) relationship.specs.get(row).role = (String) value;
                 evilEr.diagramPanel.diagram.repaint();
             }
         }) {
@@ -188,17 +178,9 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
         panel.add(new JScrollPane(new JTable(tableModel = new DefaultTableModel(data, new String[]{"Name", "Derived", "Key", ""}) {
             public void setValueAt(Object value, int row, int column) {
                 super.setValueAt(value, row, column);
-                switch (column) {
-                    case 0:
-                        parent.attributes.get(row).setName((String) value);
-                        break;
-                    case 1:
-                        parent.attributes.get(row).setDerived((boolean) value);
-                        break;
-                    case 2:
-                        parent.attributes.get(row).setKey((boolean) value);
-                        break;
-                }
+                if (column == 0) parent.attributes.get(row).setName((String) value);
+                else if (column == 1) parent.attributes.get(row).setDerived((boolean) value);
+                else if (column == 2) parent.attributes.get(row).setKey((boolean) value);
                 evilEr.diagramPanel.diagram.repaint();
             }
         }) {

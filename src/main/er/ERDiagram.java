@@ -26,9 +26,12 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static main.renderer.DiagramGraphics.flatten;
@@ -167,19 +170,35 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
     public void copy(boolean cut) {
         clipboard.clear();
-        Stream<Entity> entityStream = selection.stream().filter(e -> !(e instanceof Attribute) || !selection.contains(((Attribute) e).getParent()));
-        if (!cut) entityStream = entityStream.map(Entity::clone);
+        HashMap<Entity, Entity> worldToClip = new HashMap<>();
+        List<Entity> entityStream = selection.stream()
+                .filter(e -> !(e instanceof Attribute && selection.contains(((Attribute) e).getParent())))
+                .map(entity -> {
+                    if (!cut) worldToClip.put(entity, entity = entity.clone());
+                    return entity;
+                })
+                .collect(Collectors.toList());
+        System.out.println(worldToClip);
         entityStream.forEach(e -> {
+            clipboard.add(e);
+            if (cut) {
+                ERDiagram.this.delete(e);
+                ERDiagram.this.burnBridges(e, entityStream);
+                return;
+            }
+            e.decre(mouseWorld);
             if (e instanceof Attribute) {
                 double x = e.getX(), y = e.getY();
                 ((Attribute) e).setParent(null);
                 e.set(x, y);
             }
-            e.decre(mouseWorld);
-            clipboard.add(e);
-            if (cut) {
-                ERDiagram.this.delete(e);
-                ERDiagram.this.burnBridges(e);
+            if (e instanceof Relationship) {
+                System.out.printf("\tHandling Relationship: %s%n", e);
+                Relationship r = (Relationship) e;
+                for (int i = 0; i < r.nodes.size(); i++) {
+                    Entity key = r.nodes.get(i);
+                    if (worldToClip.containsKey(key)) r.set(i, worldToClip.get(key));
+                }
             }
         });
         action.set(ActionType.ADDING);
@@ -198,10 +217,27 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
     public void paste() {
         System.out.println(":: paste");
-        commit(new TransactionGroup(clipboard.stream().map(Entity::clone).map(this::processEntitiesBeforeAddition).toArray(AddTransaction[]::new)));
+        selection.clear();
+        List<Entity> list = new ArrayList<>();
+        HashMap<Entity, Entity> clipToWorld = new HashMap<>();
+        for (Entity entity : clipboard) {
+            clipToWorld.put(entity, entity = entity.clone());
+            entity.incre(mouseWorld);
+            list.add(entity);
+            selection.add(entity);
+        }
+        for (Entity entity : list) {
+            if (entity instanceof Relationship) {
+                Relationship r = (Relationship) entity;
+                for (int i = 0; i < r.nodes.size(); i++) {
+                    Entity key = r.nodes.get(i);
+                    if (clipToWorld.containsKey(key)) r.nodes.set(i, clipToWorld.get(key));
+                }
+            }
+        }
+        commit(new TransactionGroup(list.stream().map(AddTransaction::new).toArray(AddTransaction[]::new)));
         if (!locked.get()) {
             setAddingType(null);
-            clipboard.clear();
             action.set(ActionType.SELECTING);
         }
     }
@@ -233,6 +269,13 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
     public void burnBridges(Entity entity) {
         entities.parallelStream().filter(e -> e instanceof Relationship).forEach(r -> ((Relationship) r).remove(entity));
+    }
+
+    public void burnBridges(Entity entity, List<Entity> toIgnore) {
+        entities.parallelStream()
+                .filter(e -> e instanceof Relationship)
+                .filter(e -> !toIgnore.contains(e))
+                .forEach(r -> ((Relationship) r).remove(entity));
     }
 
     public void setAddingType(Entity.Type type) {

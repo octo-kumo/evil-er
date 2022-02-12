@@ -22,9 +22,9 @@ public class Table extends Vector implements Drawable {
     private static final Font title = new Font(null, Font.BOLD, 12);
     private static final Font normal = new Font(null, Font.PLAIN, 12);
     private static final Font small = new Font(null, Font.PLAIN, 10);
-    private final List<Tuple<Boolean, String, Table>> foreign;
-    public String name;
-    public Map<String, Column> attributeMap;
+    public final List<Tuple<Boolean, String, Table>> foreign;
+    public final Map<String, Column> attributeMap;
+    private String name;
     public long keyCount = 0;
     public long colCount = 0;
     private List<Column> sorted;
@@ -39,10 +39,11 @@ public class Table extends Vector implements Drawable {
         this.foreign = new ArrayList<>();
     }
 
-    public void add(@NotNull Column column) {
-        column.parent = this;
-        this.attributeMap.put(column.name, column);
+    public boolean add(@NotNull Column column) {
+        column.setParent(this);
+        boolean n = this.attributeMap.put(column.getName(), column) == null;
         revalidate();
+        return n;
     }
 
     public void add(Table other, String name, boolean required) {
@@ -50,14 +51,19 @@ public class Table extends Vector implements Drawable {
         revalidate();
     }
 
-    public void remove(Column column) {
-        if (this.attributeMap.remove(column.name, column)) column.parent = null;
-        revalidate();
+
+    public boolean remove(Column column) {
+        if (this.attributeMap.remove(column.getName(), column)) {
+            column.setParent(null);
+            revalidate();
+            return true;
+        }
+        return false;
     }
 
     public void revalidate() {
         this.sorted = attributeMap.values().stream().sorted().collect(Collectors.toList());
-        for (int i = 0; i < this.sorted.size(); i++) this.sorted.get(i).index = i;
+        for (int i = 0; i < this.sorted.size(); i++) this.sorted.get(i).setIndex(i);
         keyCount = getKeys().size();
         colCount = getCols().size();
     }
@@ -84,7 +90,11 @@ public class Table extends Vector implements Drawable {
             other.c.drawAsForeign(g, other.a, other.b, offset.clone());
             offset.incre(other.c.keyCount * Column.WIDTH, 0);
         }
-        if (highlighted) g.draw(getShapeWorld(), new Color(0, 0, 0, 30), g.context.foreground());
+        if (highlighted) {
+            g.setColor(g.context.highlight());
+            g.draw(getShapeWorld());
+            g.setColor(g.context.foreground());
+        }
     }
 
     @Override
@@ -128,7 +138,7 @@ public class Table extends Vector implements Drawable {
     }
 
     public Stream<Column> selfKeys() {
-        return sorted.stream().filter(e -> e.key);
+        return sorted.stream().filter(e -> e.isKey());
     }
 
     /**
@@ -154,12 +164,14 @@ public class Table extends Vector implements Drawable {
         return this.add(cols.indexOf(column) * Column.WIDTH, Column.HEIGHT);
     }
 
-    public Rectangle2D getShapeWorld() {
-        return new Rectangle2D.Double(getX(), getY(), colCount * Column.WIDTH, Column.HEIGHT * 2);
+    public Shape getShapeWorld() {
+        AffineTransform tx = new AffineTransform();
+        tx.translate(getX(), getY());
+        return tx.createTransformedShape(getShape());
     }
 
     public Rectangle2D getShape() {
-        return new Rectangle2D.Double(0, 0, colCount * Column.WIDTH, Column.HEIGHT * 2);
+        return new Rectangle2D.Double(0, 0, Math.max(colCount, 1) * Column.WIDTH, Column.HEIGHT * 2);
     }
 
     public boolean isHighlighted() {
@@ -168,5 +180,13 @@ public class Table extends Vector implements Drawable {
 
     public void setHighlighted(boolean highlighted) {
         this.highlighted = highlighted;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

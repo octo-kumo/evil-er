@@ -17,10 +17,10 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
         y = HEIGHT / 2;
     }};
 
-    public int index;
-    public Table parent;
-    public String name;
-    public boolean key;
+    private int index;
+    private Table parent;
+    private String name;
+    private boolean key;
 
     public Column(String name, boolean key) {
         this.name = name;
@@ -66,5 +66,37 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
                 ", name='" + name + '\'' +
                 ", key=" + key +
                 '}';
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
+    public Table getParent() {
+        return parent;
+    }
+
+    public void setParent(Table parent) {
+        this.parent = parent;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public boolean isKey() {
+        return key;
+    }
+
+    public void setKey(boolean key) {
+        this.key = key;
     }
 }

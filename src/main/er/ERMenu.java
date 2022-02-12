@@ -202,11 +202,6 @@ public class ERMenu extends JMenuBar {
                     }
                 }
             }));
-//            add(new JCheckBoxMenuItem("Connecting") {{
-//                evilEr.diagramPanel.diagram.connecting.addListener(this::setState);
-//                addActionListener(e -> evilEr.diagramPanel.diagram.connecting.set(getState()));
-//                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.SHIFT_MASK));
-//            }});
         }});
         add(new JMenu("Add") {{
             setMnemonic('A');
