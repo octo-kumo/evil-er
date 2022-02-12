@@ -28,11 +28,11 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
     }
 
     public double getX() {
-        return parent.getX() + WIDTH * index;
+        return this.parent == null ? x : (x = parent.getX() + WIDTH * index);
     }
 
     public double getY() {
-        return parent.getY() + HEIGHT;
+        return this.parent == null ? y : (y = parent.getY() + HEIGHT);
     }
 
     @Override

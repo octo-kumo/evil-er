@@ -222,11 +222,22 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         HashMap<Entity, Entity> clipToWorld = new HashMap<>();
         for (Entity entity : clipboard) {
             clipToWorld.put(entity, entity = entity.clone());
+
             entity.incre(mouseWorld);
             list.add(entity);
             selection.add(entity);
         }
         for (Entity entity : list) {
+            if (entity instanceof Attribute) {
+                if (((Attribute) entity).getParent() == null) {
+                    ((Attribute) entity).setParent(clipboardTarget);
+                    entity.decre(clipboardTarget);
+                }
+            }
+            if (entity instanceof Specialization) {
+                if (((Specialization) entity).getSuperclass() == null)
+                    ((Specialization) entity).setSuperclass(clipboardTarget);
+            }
             if (entity instanceof Relationship) {
                 Relationship r = (Relationship) entity;
                 for (int i = 0; i < r.nodes.size(); i++) {
@@ -280,7 +291,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
     public void setAddingType(Entity.Type type) {
         if (action.equal(ActionType.SELECTING) && selection.isEmpty()) action.set(ActionType.ADDING);
-        else return;
+        if (!action.equal(ActionType.ADDING)) return;
 
         addingType.set(type);
         clipboard.clear();

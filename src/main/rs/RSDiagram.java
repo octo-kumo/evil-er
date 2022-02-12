@@ -61,6 +61,12 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
         setPreferredSize(new Dimension(1280, 720));
     }
 
+
+    public void newTable() {
+        adding_buf = new Table("Unnamed");
+        current = ActionType.Creating;
+    }
+
     private void addListeners() {
         lineStyle.addListener(s -> repaint());
         locked.addListener(s -> {
@@ -102,8 +108,9 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
         tables.forEach(d -> d.draw(g));
 
         if (exporting) return;
-        g.setColor(disabled());
+        g.setColor(highlight());
         if (aabb.get()) g.draw(getAABB());
+        if (adding_buf != null) adding_buf.draw(g);
     }
 
     public BufferedImage export() {
@@ -129,18 +136,36 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
         return img;
     }
 
+    public void delete() {
+        delete(target.get());
+    }
+
     public void delete(Table table) {
         if (target.get() == table) setTarget(null);
-        else tables.remove(table);
+        tables.remove(table);
+        burnBridges(table);
+        revalidate();
+    }
+
+    public void burnBridges(Table table) {
+        tables.forEach(other -> other.foreign.removeIf(t -> t.c == table));
+    }
+
+    public void revalidate() {
+        tables.forEach(Table::revalidate);
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
         if (current == ActionType.Creating && adding_buf != null) {
+            dragStart.set(e.getX(), e.getY());
             tables.add(adding_buf);
+            target.set(adding_buf);
+            targetStart.set(adding_buf);
+            adding_buf = null;
+            current = ActionType.Moving;
         } else if (e.getButton() == MouseEvent.BUTTON1) {
             dragStart.set(e.getX(), e.getY());
-
             /* SELECT ELEMENT */
             /* IF NOT SELECT MULTIPLE, CLEAR HIGHLIGHT */
             if (target.get() != null && !e.isShiftDown()) {
@@ -208,10 +233,7 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        Vector pos = unproject(e.getX(), e.getY());
-        if (adding_buf != null) {
-            adding_buf.set(pos);
-        }
+        if (adding_buf != null) adding_buf.set(unproject(e.getX(), e.getY()));
         repaint();
     }
 

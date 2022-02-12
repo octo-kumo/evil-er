@@ -8,7 +8,9 @@ import utils.Chooser;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,6 +46,23 @@ public class RSMenu extends JMenuBar {
                     }
                 }
             }));
+        }});
+        add(new JMenu("Edit") {{
+            setMnemonic('E');
+            add(new JMenuItem(new AbstractAction("New Table") {
+                public void actionPerformed(ActionEvent ae) {
+                    evilRs.diagram.newTable();
+                }
+            }));
+            add(new JMenuItem("New Table") {{
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+                addActionListener(e -> {
+                    evilRs.diagram.delete();
+                });
+            }});
+            add(new JMenuItem("Revalidate") {{
+                addActionListener(e -> evilRs.diagram.revalidate());
+            }});
         }});
         add(new JMenu("View") {{
             setMnemonic('V');
