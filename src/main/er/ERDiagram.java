@@ -42,7 +42,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     public static final Color BACKGROUND_DARK = new Color(0x121212);
     public static final Color FOREGROUND_DARK = new Color(0xefefef);
     public static FontMetrics UNIVERSAL_METRICS;
-    public static double gridSize = 20;
+    public static double GRID_SIZE = 16;
     public static Color HIGHLIGHT = new Color(0xff0000); // dummy color
     public final ERDiagramPanel diagramPanel;
     public final ERKeyManager keyManager;
@@ -372,8 +372,8 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         if (SwingUtilities.isLeftMouseButton(e)) {
             if (action.equal(ActionType.SELECTING)) {
                 Vector diff = !e.isControlDown() ? newMouse.minus(mouseWorld) :
-                        newMouse.snapTo(gridSize).decre(mouseWorld.snapTo(gridSize))
-                                .incre(target.nonNull() ? target.get().snapTo(gridSize).minus(target.get()) : Vector.ZERO);
+                        newMouse.snapTo(GRID_SIZE).decre(mouseWorld.snapTo(GRID_SIZE))
+                                .incre(target.nonNull() ? target.get().snapTo(GRID_SIZE).minus(target.get()) : Vector.ZERO);
                 selection.stream()
                         .filter(entity -> !(entity instanceof Attribute) || !selection.contains(((Attribute) entity).getParent()))
                         .forEach(entity -> entity.incre(diff));
@@ -476,7 +476,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         Vector sz = new Vector(getWidth(), getHeight()).div(scale);
         double maxX = lt.getX() + sz.getX();
         double maxY = lt.getY() + sz.getY();
-        double size = 100;
+        double size = GRID_SIZE * 8;
         for (int x = (int) (Math.ceil(lt.getX() / size) * size); x < maxX; x += size)
             g.drawLine(x, (int) lt.getY(), x, (int) maxY);
         for (int y = (int) (Math.ceil(lt.getY() / size) * size); y < maxY; y += size)
