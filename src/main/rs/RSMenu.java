@@ -2,6 +2,7 @@ package main.rs;
 
 import com.google.gson.stream.JsonReader;
 import model.er.Entity;
+import model.rs.Table;
 import model.serializers.Serializer;
 import shapes.lines.Line;
 import utils.Chooser;
@@ -12,9 +13,12 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
 
 import static utils.Prompts.report;
 
@@ -22,6 +26,34 @@ public class RSMenu extends JMenuBar {
     public RSMenu(EvilRs evilRs) {
         add(new JMenu("File") {{
             setMnemonic('F');
+            add(new JMenuItem(new AbstractAction("Open") {
+                public void actionPerformed(ActionEvent ae) {
+                    if (JFileChooser.APPROVE_OPTION == Chooser.jsonChooser.showOpenDialog(evilRs)) {
+                        try (JsonReader reader = new JsonReader(new FileReader(Chooser.jsonChooser.getFinal()))) {
+                            ArrayList<Table> deserialized = Serializer.deserializeTables(reader);
+                            deserialized.forEach(t -> evilRs.diagram.tables.stream().filter(T -> Objects.equals(T.getName(), t.getName())).findAny().ifPresent(T -> {
+                                T.set(t);
+                            }));
+                            evilRs.diagram.repaint();
+                        } catch (IOException e) {
+                            report(e);
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }));
+            add(new JMenuItem(new AbstractAction("Save as...") {
+                public void actionPerformed(ActionEvent ae) {
+                    if (JFileChooser.APPROVE_OPTION == Chooser.jsonChooser.showSaveDialog(evilRs)) {
+                        try (Writer writer = new FileWriter(Chooser.jsonChooser.getFinal())) {
+                            Serializer.serializeTables(evilRs.diagram.tables, writer);
+                        } catch (IOException e) {
+                            report(e);
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }));
             add(new JMenuItem(new AbstractAction("Open ER") {
                 public void actionPerformed(ActionEvent ae) {
                     if (JFileChooser.APPROVE_OPTION == Chooser.jsonChooser.showOpenDialog(evilRs)) {
@@ -46,6 +78,11 @@ public class RSMenu extends JMenuBar {
                     }
                 }
             }));
+            add(new JMenuItem(new AbstractAction("To SQL") {
+                public void actionPerformed(ActionEvent ae) {
+                    SQLConverter.showSQLDialog(SQLConverter.toSQLInit(evilRs.diagram.tables), evilRs.frame);
+                }
+            }));
         }});
         add(new JMenu("Edit") {{
             setMnemonic('E');
@@ -54,7 +91,7 @@ public class RSMenu extends JMenuBar {
                     evilRs.diagram.newTable();
                 }
             }));
-            add(new JMenuItem("New Table") {{
+            add(new JMenuItem("Delete Table") {{
                 setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
                 addActionListener(e -> {
                     evilRs.diagram.delete();

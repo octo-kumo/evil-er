@@ -26,4 +26,8 @@ public interface DrawContext {
     default Color disabled() {
         return new Color(fill().getRGB() | 0xaa000000, true);
     }
+
+    default boolean drawDebugInfo() {
+        return false;
+    }
 }

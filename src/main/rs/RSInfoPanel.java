@@ -11,6 +11,7 @@ import utils.models.Tuple;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -61,6 +62,9 @@ public class RSInfoPanel extends JPanel implements ChangeListener<Table> {
                 diagram.repaint();
             });
         }});
+        panel.add(new JButton("Preview SQL") {{
+            addActionListener(e -> SQLConverter.showSQLDialog(table.toSQL(), null));
+        }});
         return panel;
     }
 
@@ -71,14 +75,16 @@ public class RSInfoPanel extends JPanel implements ChangeListener<Table> {
 
         ArrayList<Column> values = new ArrayList<>(table.attributeMap.values());
         Object[][] data = values.parallelStream()
-                .map(a -> new Object[]{a.getName(), a.isKey(), CLOSE_ICON}).toArray(Object[][]::new);
+                .map(a -> new Object[]{a.getName(), a.isKey(), a.getType(), a.getParam(), CLOSE_ICON}).toArray(Object[][]::new);
 
         DefaultTableModel tableModel;
-        panel.add(new JScrollPane(new JTable(tableModel = new DefaultTableModel(data, new String[]{"Name", "Key", ""}) {
+        panel.add(new JScrollPane(new JTable(tableModel = new DefaultTableModel(data, new String[]{"Name", "Key", "Type", "N", ""}) {
             public void setValueAt(Object value, int row, int column) {
                 super.setValueAt(value, row, column);
                 if (column == 0) values.get(row).setName((String) value);
                 else if (column == 1) values.get(row).setKey((boolean) value);
+                else if (column == 2) values.get(row).setType((Column.DataType) value);
+                else if (column == 3) values.get(row).setParam((String) value);
                 diagram.repaint();
             }
         }) {
@@ -93,29 +99,40 @@ public class RSInfoPanel extends JPanel implements ChangeListener<Table> {
                         }
                         diagram.repaint();
                     }
-                }, 2);
+                }, 4);
+
+                TableColumn column = getColumnModel().getColumn(2);
+                column.setCellEditor(new DefaultCellEditor(new JComboBox<>(Column.DataType.values())));
             }
 
             @Override
             public Class<?> getColumnClass(int column) {
                 if (column == 1) return Boolean.class;
+                if (column == 2) return Column.DataType.class;
                 else return String.class;
             }
         }, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER));
 
         panel.add(new JPanel() {{
             setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-            JTextField name;
+            JTextField name, param;
             JCheckBox key;
+            JComboBox<Column.DataType> type;
             add(name = new PlaceholderTextField() {{
                 setPlaceholder("Name");
             }});
             add(key = new JCheckBox());
+            add(type = new JComboBox<>(Column.DataType.values()));
+            add(param = new PlaceholderTextField() {{
+                setPlaceholder("N");
+            }});
             ActionListener action = evt -> {
                 Column column = new Column(name.getText(), key.isSelected());
+                column.setType((Column.DataType) type.getSelectedItem());
+                column.setParam(param.getText());
                 if (table.add(column)) {
                     values.add(column);
-                    tableModel.addRow(new Object[]{name.getText(), key.isSelected(), CLOSE_ICON});
+                    tableModel.addRow(new Object[]{name.getText(), key.isSelected(), type.getSelectedItem(), param.getText(), CLOSE_ICON});
                 }
                 diagram.repaint();
                 name.setText("");

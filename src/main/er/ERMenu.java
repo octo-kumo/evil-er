@@ -5,7 +5,6 @@ import com.github.weisj.darklaf.settings.ThemeSettings;
 import com.github.weisj.darklaf.theme.Theme;
 import com.github.weisj.darklaf.theme.info.AccentColorRule;
 import com.github.weisj.darklaf.theme.info.FontSizeRule;
-import com.google.gson.stream.JsonReader;
 import main.EvilEr;
 import main.rs.Converter;
 import main.rs.EvilRs;
@@ -25,13 +24,12 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.io.FileReader;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.prefs.BackingStoreException;
@@ -57,34 +55,12 @@ public class ERMenu extends JMenuBar {
             setMnemonic('F');
             add(new JMenuItem(new AbstractAction("Open") {
                 public void actionPerformed(ActionEvent ae) {
-                    if (JFileChooser.APPROVE_OPTION == Chooser.jsonChooser.showOpenDialog(evilEr)) {
-                        try (JsonReader reader = new JsonReader(new FileReader(Chooser.jsonChooser.getFinal()))) {
-                            ArrayList<Entity> deserialized = Serializer.deserialize(reader);
-                            diagram.entities.clear();
-                            diagram.entities.addAll(deserialized);
-                            diagram.repaint();
-                        } catch (IOException e) {
-                            report(e);
-                            e.printStackTrace();
-                        }
-                    }
+                    if (JFileChooser.APPROVE_OPTION == Chooser.jsonChooser.showOpenDialog(evilEr))
+                        diagram.readFromFile(Chooser.jsonChooser.getFinal());
                 }
             }));
-            add(new JMenuItem(new AbstractAction("Save") {
-                public void actionPerformed(ActionEvent ae) {
-                    String json = Serializer.serialize(diagram.entities);
-                    try (FileWriter fw = new FileWriter("session.json")) {
-                        fw.write(json);
-                    } catch (IOException e) {
-                        report(e);
-                        e.printStackTrace();
-                    }
-                    ArrayList<Entity> deserialized = Serializer.deserialize(json);
-                    diagram.entities.clear();
-                    diagram.entities.addAll(deserialized);
-                    diagram.repaint();
-                }
-            }) {{
+            add(new JMenuItem("Save") {{
+                addActionListener(e -> diagram.saveToFile(new File("session.json")));
                 setAccelerator(KeyStroke.getKeyStroke('S', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
             }});
             add(new JMenuItem(new AbstractAction("Save as...") {
@@ -108,9 +84,9 @@ public class ERMenu extends JMenuBar {
             add(new JMenuItem(new AbstractAction("To schema") {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    EvilRs rs = new EvilRs();
-                    rs.diagram.darkMode.set(diagram.darkMode);
                     JDialog dialog = new JDialog(evilEr.frame, "Relational Schema");
+                    EvilRs rs = new EvilRs(dialog);
+                    rs.diagram.darkMode.set(diagram.darkMode);
                     dialog.setJMenuBar(new RSMenu(rs));
                     dialog.setContentPane(rs);
                     dialog.pack();
@@ -233,6 +209,13 @@ public class ERMenu extends JMenuBar {
                     buttons[i].addActionListener(evt -> diagram.lineStyle.set(type));
                 }
                 diagram.lineStyle.addListener(s -> group.setSelected(buttons[Arrays.binarySearch(values, s)].getModel(), true));
+            }});
+            add(new JCheckBoxMenuItem("Debug") {{
+                diagram.debug.addListener(this::setState);
+                addActionListener(e -> {
+                    diagram.debug.set(getState());
+                    diagram.repaint();
+                });
             }});
             add(new JCheckBoxMenuItem("AABB") {{
                 diagram.aabb.addListener(this::setState);

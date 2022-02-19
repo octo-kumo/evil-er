@@ -63,6 +63,7 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
             addTextListener(this, entity::setY, Double::parseDouble);
         }});
         panel.add(new JCheckBox("Weak") {{
+            setAlignmentX(LEFT_ALIGNMENT);
             addBooleanListener(this, entity::setWeak, entity::isWeak);
         }});
         return panel;
@@ -78,6 +79,11 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
         panel.add(new JCheckBox("Derived") {{
             addBooleanListener(this, attribute::setDerived, attribute::isDerived);
         }});
+        panel.add(new JComboBox<Attribute.AttributeType>(Attribute.AttributeType.values()) {{
+            setSelectedItem(attribute.getDataType());
+            addActionListener(evt -> attribute.setDataType((Attribute.AttributeType) getSelectedItem()));
+        }});
+        panel.setAlignmentX(LEFT_ALIGNMENT);
         return panel;
     }
 
@@ -244,6 +250,7 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
         if (newEntity instanceof Attribute) entityControls.add(attributeWindow((Attribute) newEntity));
         if (newEntity instanceof Relationship) entityControls.add(relationWindow((Relationship) newEntity));
         entityControls.add(attributesWindow(newEntity));
+        entityControls.revalidate();
         entityControls.repaint();
     }
 

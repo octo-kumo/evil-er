@@ -1,8 +1,13 @@
 package utils.models;
 
+import com.google.gson.annotations.Expose;
+
 public class Tuple<A, B, C> {
+    @Expose
     public A a;
+    @Expose
     public B b;
+    @Expose
     public C c;
 
     public Tuple() {

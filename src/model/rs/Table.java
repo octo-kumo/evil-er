@@ -1,5 +1,6 @@
 package model.rs;
 
+import com.google.gson.annotations.Expose;
 import main.renderer.DiagramGraphics;
 import main.rs.RSDiagram;
 import model.Drawable;
@@ -23,14 +24,24 @@ public class Table extends Vector implements Drawable {
     private static final Font normal = new Font(null, Font.PLAIN, 12);
     private static final Font small = new Font(null, Font.PLAIN, 10);
     public final List<Tuple<Boolean, String, Table>> foreign;
+    @Expose
+    public List<Tuple<Boolean, String, String>> _foreign;
+
+    @Expose
     public final Map<String, Column> attributeMap;
+    @Expose
     private String name;
+
     public long keyCount = 0;
     public long colCount = 0;
     private List<Column> sorted;
     private boolean highlighted;
     private List<Column> keys;
     private List<Column> cols;
+
+    public Table() {
+        this("Unnamed");
+    }
 
     public Table(String name) {
         this.name = name;
@@ -186,7 +197,53 @@ public class Table extends Vector implements Drawable {
         return name;
     }
 
+    public String getEscapedName() {
+        return getName().replaceAll("[^A-Za-z0-9_]", "_");
+    }
+
     public void setName(String name) {
         this.name = name;
+    }
+
+    public static void updateParents(Table table) {
+        table.attributeMap.values().forEach(a -> a.setParent(table));
+    }
+
+    public String getKeysSQL(String prefix) {
+        return Stream.concat(
+                        selfKeys().map(column -> prefix + column.getName()),
+                        foreign.stream().filter(f -> f.a)
+                                .flatMap(t -> t.c.getKeys().stream().map(c -> prefix + t.c.getEscapedName() + "_" + c.getName())))
+                .collect(Collectors.joining(", "));
+    }
+
+    public String getKeysSQL() {
+        return getKeysSQL("");
+    }
+
+    public String toSQL() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("CREATE TABLE IF NOT EXISTS ").append(getEscapedName()).append("\n(\n");
+        for (Column value : sorted) {
+            builder.append('\t').append(value.toSQL()).append(",\n");
+        }
+        for (Tuple<Boolean, String, Table> tuple : foreign) {
+            for (Column c : tuple.c.getKeys()) {
+                builder.append('\t').append(c.toSQL(tuple.c.getEscapedName() + "_")).append(",\n");
+            }
+        }
+        builder.append("\tPRIMARY KEY (").append(getKeysSQL()).append(")\n");
+        builder.append(");");
+        return builder.toString();
+    }
+
+    public String toSQLForeign() {
+        return foreign.isEmpty() ? "" : "ALTER TABLE " + getEscapedName() + "\n" +
+                foreign.stream().map(tuple ->
+                        String.format("\tADD FOREIGN KEY (%s) REFERENCES %s(%s)",
+                                tuple.c.getKeys().stream().map(c -> tuple.c.getEscapedName() + "_" + c.getName()).collect(Collectors.joining(", ")),
+                                tuple.c.getEscapedName(),
+                                tuple.c.getKeysSQL())
+                ).collect(Collectors.joining(",\n")) + ";";
     }
 }

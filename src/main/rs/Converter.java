@@ -22,79 +22,105 @@ import java.util.stream.Stream;
 
 public class Converter {
     public static void convert(ArrayList<Entity> entities, ArrayList<Table> tables) {
-        HashMap<Entity, Table> tableMap = new HashMap<>();
-        AtomicInteger numEntity = new AtomicInteger();
-        ArrayList<Pair<Attribute, Table>> multiAttributes = new ArrayList<>();
-        entities.stream().filter(entity -> entity.getClass() == Entity.class).filter(entity -> !entity.attributes.isEmpty()).forEach(entity -> {
-            System.out.printf("Entity, %s%n", entity.getName());
-            Table table = new Table(entity.getName());
+        try {
+            HashMap<Entity, Table> tableMap = new HashMap<>();
+            AtomicInteger numEntity = new AtomicInteger();
+            ArrayList<Pair<Attribute, Table>> multiAttributes = new ArrayList<>();
+            entities.stream().filter(entity -> entity.getClass() == Entity.class).forEach(entity -> {
+                System.out.printf("Entity, %s%n", entity.getName());
+                Table table = new Table(entity.getName());
 
-            flatten(entity.attributes).forEach(e -> table.add(new Column(e.getName(), e.isKey())));
-            entity.attributes.stream().filter(Attribute::isWeak).forEach(a -> {
-                System.out.println("\tMultivalued attribute " + entity.getName() + "::" + a.getName() + ", saving for later");
-                multiAttributes.add(new Pair<>(a, table));
-            });
+                flatten(entity.attributes).forEach(e -> table.add(new Column(e.getName(), e.isKey(), getColumnType(e.getDataType()))));
+                entity.attributes.stream().filter(Attribute::isWeak).forEach(a -> {
+                    System.out.println("\tMultivalued attribute " + entity.getName() + "::" + a.getName() + ", saving for later");
+                    multiAttributes.add(new Pair<>(a, table));
+                });
 
-            table.set(0, numEntity.getAndIncrement() * Column.HEIGHT * 2);
-            tables.add(table);
-            tableMap.put(entity, table);
-        });
-        entities.stream().filter(entity -> entity.getClass() == Relationship.class).forEach(entity -> {
-            System.out.printf("Relationship, %s, %s%n", entity.getName(), ((Relationship) entity).nodes.stream().map(Entity::getName).collect(Collectors.toList()));
-
-            int combinedInTo = findEntityToMerge((Relationship) entity);
-            Table table = combinedInTo == -1 ? new Table(entity.getName()) : tableMap.get(((Relationship) entity).nodes.get(combinedInTo));
-            if (combinedInTo != -1) System.out.printf("\tCombining into: %s%n", table.getName());
-
-            flatten(entity.attributes).forEach(e -> table.add(new Column(e.getName(), e.isKey())));
-            entity.attributes.stream().filter(Attribute::isWeak).forEach(a -> multiAttributes.add(new Pair<>(a, table)));
-
-            List<Entity> nodes = ((Relationship) entity).nodes;
-            List<Relationship.RelationshipSpec> specs = ((Relationship) entity).specs;
-            int bound = nodes.size();
-            IntStream.range(0, bound).filter(i -> i != combinedInTo).forEach(i -> {
-                Entity e = nodes.get(i);
-                Relationship.RelationshipSpec spec = specs.get(i);
-                Table found = firstIdentifiableTable(tableMap, entities, e);
-                if (found != null) {
-                    System.out.printf("\tAdded table, %s%n", found.getName());
-                    table.add(found, combinedInTo == -1 ? spec.role.isEmpty() ? found.getName() : spec.role : entity.getName(),
-                            combinedInTo == -1 || entity.isWeak());
-                }
-            });
-
-            if (combinedInTo == -1) {
-                table.set(600, Vector.average(((Relationship) entity).nodes.stream()
-                        .map(tableMap::get).filter(Objects::nonNull)
-                        .collect(Collectors.toList())).getY());
+                table.set(0, numEntity.getAndIncrement() * Column.HEIGHT * 2);
                 tables.add(table);
-            }
-            tableMap.put(entity, table);
-        });
-        entities.stream().filter(entity -> entity.getClass() == Specialization.class).forEach(entity -> {
-            System.out.printf("Specialization, %s%n", ((Specialization) entity).nodes.stream().map(Entity::getName).collect(Collectors.toList()));
+                tableMap.put(entity, table);
+            });
+            entities.stream().filter(entity -> entity.getClass() == Relationship.class).forEach(entity -> {
+                System.out.printf("Relationship, %s, %s%n", entity.getName(), ((Relationship) entity).nodes.stream().map(Entity::getName).collect(Collectors.toList()));
 
-            Entity sp = ((Specialization) entity).getSuperclass();
-            if (tableMap.get(sp) == null) sp = findSuperclass(entities, sp);
-            Table parent = tableMap.get(sp);
-            if (parent == null) return;
-            parent.add(new Column("type", false));
+                int combinedInTo = findEntityToMerge((Relationship) entity);
 
-            ((Specialization) entity).getSubclasses().stream().map(tableMap::get).filter(Objects::nonNull).forEach(child -> child.add(parent, "inherits", true));
-        });
-        tables.forEach(Table::revalidate);
-        multiAttributes.forEach(p -> {
-            Table table = new Table(p.b.getName() + "::" + EnglishNoun.pluralOf(p.a.getName()));
-            if (p.a.attributes.size() > 0) // wtf composite multivalued attribute, ignoring recursive ones
-                flatten(p.a.attributes).forEach(e -> table.add(new Column(e.getName(), true)));
-            else
-                table.add(new Column(EnglishNoun.singularOf(p.a.getName()), true));
-            table.add(p.b, "attribute of", true);
-            table.set(p.b.add(p.b.getShape().getWidth() + Column.WIDTH, 0));
-            tables.add(table);
-            tableMap.put(p.a, table);
-        });
-        tables.forEach(Table::revalidate);
+                Table table = combinedInTo == -1 ? new Table(entity.getName()) : tableMap.get(((Relationship) entity).nodes.get(combinedInTo));
+                if (combinedInTo != -1) System.out.printf("\tCombining into: %s%n", table.getName());
+
+                flatten(entity.attributes).forEach(e -> table.add(new Column(e.getName(), e.isKey(), getColumnType(e.getDataType()))));
+                entity.attributes.stream().filter(Attribute::isWeak).forEach(a -> multiAttributes.add(new Pair<>(a, table)));
+
+                List<Entity> nodes = ((Relationship) entity).nodes;
+                List<Relationship.RelationshipSpec> specs = ((Relationship) entity).specs;
+                int bound = nodes.size();
+                IntStream.range(0, bound).filter(i -> i != combinedInTo).forEach(i -> {
+                    Entity e = nodes.get(i);
+                    Relationship.RelationshipSpec spec = specs.get(i);
+                    Table found = firstIdentifiableTable(tableMap, entities, e);
+                    if (found != null) {
+                        System.out.printf("\tAdded table, %s%n", found.getName());
+                        table.add(found, combinedInTo == -1 ? spec.role.isEmpty() ? found.getName() : spec.role : entity.getName(),
+                                combinedInTo == -1 || entity.isWeak());
+                    }
+                });
+
+                if (combinedInTo == -1) {
+                    table.set(600, Vector.average(((Relationship) entity).nodes.stream()
+                            .map(tableMap::get).filter(Objects::nonNull)
+                            .collect(Collectors.toList())).getY());
+                    tables.add(table);
+                }
+                tableMap.put(entity, table);
+            });
+            entities.stream().filter(entity -> entity.getClass() == Specialization.class).forEach(entity -> {
+                System.out.printf("Specialization, %s%n", ((Specialization) entity).nodes.stream().map(Entity::getName).collect(Collectors.toList()));
+
+                Entity sp = ((Specialization) entity).getSuperclass();
+                if (tableMap.get(sp) == null) sp = findSuperclass(entities, sp);
+                Table parent = tableMap.get(sp);
+                if (parent == null) return;
+                parent.add(new Column("type", false, Column.DataType.VARCHAR));
+
+                ((Specialization) entity).getSubclasses().stream().map(tableMap::get).filter(Objects::nonNull).forEach(child -> child.add(parent, "inherits", true));
+            });
+            tables.forEach(Table::revalidate);
+            multiAttributes.forEach(p -> {
+                Table table = new Table(p.b.getName() + "::" + EnglishNoun.pluralOf(p.a.getName()));
+                if (p.a.attributes.size() > 0) // wtf composite multivalued attribute, ignoring recursive ones
+                    flatten(p.a.attributes).forEach(e -> table.add(new Column(e.getName(), true, getColumnType(e.getDataType()))));
+                else
+                    table.add(new Column(EnglishNoun.singularOf(p.a.getName()), true));
+                table.add(p.b, "attribute of", true);
+                table.set(p.b.add(p.b.getShape().getWidth() + Column.WIDTH, 0));
+                tables.add(table);
+                tableMap.put(p.a, table);
+            });
+            tables.forEach(Table::revalidate);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
+    private static Column.DataType getColumnType(Attribute.AttributeType dataType) {
+        switch (dataType) {
+            case Char:
+                return Column.DataType.CHAR;
+            case String:
+                return Column.DataType.VARCHAR;
+            case Boolean:
+                return Column.DataType.BOOL;
+            case Integer:
+                return Column.DataType.INTEGER;
+            case Float:
+                return Column.DataType.FLOAT;
+            case DateTime:
+                return Column.DataType.DATETIME;
+            case Date:
+                return Column.DataType.DATE;
+        }
+        return null;
     }
 
     public static @Nullable Entity findSuperclass(ArrayList<Entity> entities, Entity entity) {
