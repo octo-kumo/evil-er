@@ -11,11 +11,18 @@ import java.awt.geom.Line2D;
 import static main.er.ERDiagram.UNIVERSAL_METRICS;
 
 public class Attribute extends Entity {
+
+    public enum AttributeType {
+        Char, String, Boolean, Integer, Float, DateTime, Date
+    }
+
     private Entity parent;
     @Expose
     private boolean key;
     @Expose
     private boolean derived;
+    @Expose
+    private AttributeType dataType;
 
     public double getX() {
         return x + (getParent() == null ? 0 : getParent().getX());
@@ -31,6 +38,14 @@ public class Attribute extends Entity {
 
     public void setY(double y) {
         this.y = y - (getParent() == null ? 0 : getParent().getY());
+    }
+
+    public AttributeType getDataType() {
+        return dataType;
+    }
+
+    public void setDataType(AttributeType dataType) {
+        this.dataType = dataType;
     }
 
     public Vector truePosition() {
@@ -56,6 +71,10 @@ public class Attribute extends Entity {
             Line2D shape = g.lineUnderString(getName(), 0, 3);
             if (parent.isWeak()) g.dashed(shape);
             else drawShape(g, shape);
+        }
+        if (g.getContext().drawDebugInfo()) {
+            g.scale(0.7, 0.7);
+            g.drawStringCenter(String.valueOf(dataType), 0, -12);
         }
     }
 
@@ -101,7 +120,7 @@ public class Attribute extends Entity {
         attributes.forEach(a -> clone.addAttribute(a.clone()));
         clone.x = x;
         clone.y = y;
-
+        clone.setDataType(getDataType());
         clone.setKey(isKey());
         clone.setDerived(isDerived());
         clone.setParent(getParent());

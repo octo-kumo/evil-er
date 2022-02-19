@@ -1,5 +1,6 @@
 package main.er;
 
+import com.google.gson.stream.JsonReader;
 import main.EvilEr;
 import main.renderer.DiagramGraphics;
 import model.Drawable;
@@ -8,6 +9,7 @@ import model.er.Attribute;
 import model.er.Entity;
 import model.er.Relationship;
 import model.er.Specialization;
+import model.serializers.Serializer;
 import model.ts.AddTransaction;
 import model.ts.DeleteTransaction;
 import model.ts.EntityTransaction;
@@ -25,16 +27,18 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
-import java.util.Stack;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static main.renderer.DiagramGraphics.flatten;
+import static utils.Prompts.report;
 
 public class ERDiagram extends JComponent implements MouseListener, MouseMotionListener, DrawContext, Drawable, MouseWheelListener, FocusListener {
 
@@ -51,6 +55,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     public final Vector origin = new Vector();
     public final Vector panStart = new Vector();
     public final Reactive<Entity> target = new Reactive<>();
+    public final Reactive<Boolean> debug = new Reactive<>(false);
     public final Reactive<Boolean> locked = new Reactive<>(false);
     public final Reactive<Boolean> aabb = new Reactive<>(false);
     public final Reactive<Boolean> grid = new Reactive<>(false);
@@ -85,7 +90,13 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
         entities = new ArrayList<>();
         addListeners();
-        SwingUtilities.invokeLater(() -> Examples.populate(entities));
+        File file = new File("session.json");
+        if (file.exists()) try {
+            readFromFile(file);
+        } catch (Exception e) {
+            SwingUtilities.invokeLater(() -> Examples.populate(entities));
+        }
+        else SwingUtilities.invokeLater(() -> Examples.populate(entities));
     }
 
     private void addListeners() {
@@ -536,6 +547,36 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     @Override
     public void focusLost(FocusEvent e) {
         repaint();
+    }
+
+    public void readFromFile(File file) {
+        try (JsonReader reader = new JsonReader(new FileReader(file))) {
+            ArrayList<Entity> deserialized = Serializer.deserialize(reader);
+            entities.clear();
+            entities.addAll(deserialized);
+            repaint();
+        } catch (IOException e) {
+            report(e);
+            e.printStackTrace();
+        }
+    }
+
+    public void saveToFile(File file) {
+        String json = Serializer.serialize(entities);
+        try (FileWriter fw = new FileWriter(file)) {
+            fw.write(json);
+        } catch (IOException e) {
+            report(e);
+            e.printStackTrace();
+        }
+        ArrayList<Entity> deserialized = Serializer.deserialize(json);
+        entities.clear();
+        entities.addAll(deserialized);
+        repaint();
+    }
+
+    public boolean drawDebugInfo() {
+        return debug.get();
     }
 
     enum ActionType {ADDING, CONNECTING, SELECTING}

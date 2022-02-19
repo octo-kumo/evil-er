@@ -8,10 +8,11 @@ import static utils.Prompts.report;
 public class EvilRs extends JPanel {
 
     public final RSDiagram diagram;
+    public Window frame;
 
-    public EvilRs() {
+    public EvilRs(Window frame) {
+        this.frame = frame;
         setLayout(new BorderLayout());
-
         diagram = new RSDiagram();
         JSplitPane splitpane;
         add(splitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, diagram, new RSInfoPanel(diagram)), BorderLayout.CENTER);
@@ -28,7 +29,7 @@ public class EvilRs extends JPanel {
         }
         JFrame frame = new JFrame("Evil RS");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        EvilRs evilRs = new EvilRs();
+        EvilRs evilRs = new EvilRs(frame);
         frame.setContentPane(evilRs);
         frame.setJMenuBar(new RSMenu(evilRs));
         frame.pack();

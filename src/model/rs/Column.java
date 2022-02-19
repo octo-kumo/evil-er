@@ -1,5 +1,6 @@
 package model.rs;
 
+import com.google.gson.annotations.Expose;
 import main.renderer.DiagramGraphics;
 import model.Drawable;
 import model.ImmutableVector;
@@ -10,6 +11,29 @@ import shapes.lines.SchemaLine;
 import java.awt.geom.Rectangle2D;
 
 public class Column extends Vector implements Drawable, Comparable<Column> {
+
+    public enum DataType {
+        CHAR(true), VARCHAR(true),
+
+        BOOL, INT(true), FLOAT(true), INTEGER,
+
+        DATE, DATETIME,
+
+        TIMESTAMP, TIME, YEAR,
+
+        BINARY(true), VARBINARY(true), TINYBLOB, TINYTEXT, TEXT(true), BLOB(true), MEDIUMTEXT, MEDIUMBLOB, LONGTEXT, LONGBLOB, BIT(true), BOOLEAN, TINYINT(true), SMALLINT(true), MEDIUMINT(true), BIGINT(true);
+
+        private final boolean numbered;
+
+        DataType() {
+            this(false);
+        }
+
+        DataType(boolean numbered) {
+            this.numbered = numbered;
+        }
+    }
+
     public static final double WIDTH = 100;
     public static final double HEIGHT = 40;
     public static final ImmutableVector OFFSET = new ImmutableVector() {{
@@ -17,14 +41,32 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
         y = HEIGHT / 2;
     }};
 
-    private int index;
     private Table parent;
+    @Expose
+    private int index;
+    @Expose
     private String name;
+    @Expose
+    private DataType type;
+    @Expose
+    private String param = "8";
+    @Expose
     private boolean key;
+    @Expose
+    private boolean notNull = false;
+
+    public Column() {
+        this("Unnamed", false);
+    }
 
     public Column(String name, boolean key) {
+        this(name, key, DataType.VARCHAR);
+    }
+
+    public Column(String name, boolean key, DataType columnType) {
         this.name = name;
         this.key = key;
+        this.type = columnType;
     }
 
     public double getX() {
@@ -60,12 +102,7 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
 
     @Override
     public String toString() {
-        return "Column{" +
-                "index=" + index +
-                ", parent=" + parent +
-                ", name='" + name + '\'' +
-                ", key=" + key +
-                '}';
+        return "Column{" + "index=" + index + ", parent=" + parent + ", name='" + name + '\'' + ", key=" + key + '}';
     }
 
     public int getIndex() {
@@ -98,5 +135,29 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
 
     public void setKey(boolean key) {
         this.key = key;
+    }
+
+    public String getParam() {
+        return param;
+    }
+
+    public void setParam(String param) {
+        this.param = param;
+    }
+
+    public DataType getType() {
+        return type;
+    }
+
+    public void setType(DataType type) {
+        this.type = type;
+    }
+
+    public String toSQL() {
+        return toSQL("");
+    }
+
+    public String toSQL(String prefix) {
+        return String.format("%-16s %s%s %s", prefix + name, type, type.numbered ? "(" + param + ")" : "", notNull ? "NOT NULL" : "").trim();
     }
 }

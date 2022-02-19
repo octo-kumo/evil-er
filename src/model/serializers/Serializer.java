@@ -1,13 +1,14 @@
 package model.serializers;
 
-import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import model.er.Attribute;
 import model.er.Entity;
 import model.er.Relationship;
 import model.er.Specialization;
+import model.rs.Table;
 import shapes.lines.RelationLine;
 
 import java.io.Writer;
@@ -27,11 +28,14 @@ public class Serializer {
     public static final Gson specialization;
     private static final Type ARRAYLIST_ENTITY = new TypeToken<ArrayList<Entity>>() {
     }.getType();
+    private static final Type ARRAYLIST_TABLE = new TypeToken<ArrayList<Table>>() {
+    }.getType();
 
     static {
         GsonBuilder builder = new GsonBuilder()
                 .setPrettyPrinting()
                 .excludeFieldsWithoutExposeAnnotation()
+                .registerTypeAdapter(Table.class, new TableSerializer())
                 .registerTypeAdapter(Attribute.class, new AttributeSerializer())
                 .registerTypeAdapter(Entity.class, new TypedEntitySerializer())
                 .registerTypeAdapter(Specialization.class, new SpecializationSerializer())
@@ -65,6 +69,14 @@ public class Serializer {
         clean = builder.create();
     }
 
+    public static String serializeTables(List<Table> tables) {
+        return gson.toJson(tables);
+    }
+
+    public static void serializeTables(List<Table> tables, Writer writer) {
+        gson.toJson(tables, writer);
+    }
+
     public static String serialize(List<Entity> entities) {
         return gson.toJson(entities);
     }
@@ -85,6 +97,18 @@ public class Serializer {
         return entities;
     }
 
+    public static ArrayList<Table> deserializeTables(String json) {
+        ArrayList<Table> tables = gson.fromJson(json, ARRAYLIST_TABLE);
+        postprocessTables(tables);
+        return tables;
+    }
+
+    public static ArrayList<Table> deserializeTables(JsonReader json) {
+        ArrayList<Table> tables = gson.fromJson(json, ARRAYLIST_TABLE);
+        postprocessTables(tables);
+        return tables;
+    }
+
     private static void postprocess(ArrayList<Entity> entities) {
         for (Entity o : entities) {
             Entity.updateParents(o);
@@ -99,5 +123,18 @@ public class Serializer {
                 r.revalidate();
             }
         }
+        VersionUpgrade.upgrade(entities);
+    }
+
+    private static void postprocessTables(ArrayList<Table> tables) {
+        for (Table t : tables) {
+            Table.updateParents(t);
+            t._foreign.forEach(r ->
+                    t.add(
+                            tables.stream().filter(ot ->
+                                    ot.getName().equals(r.c)).findAny().orElse(null), r.b, r.a));
+        }
+        tables.forEach(Table::revalidate);
+        VersionUpgrade.upgradeTables(tables);
     }
 }
