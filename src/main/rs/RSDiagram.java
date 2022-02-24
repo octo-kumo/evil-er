@@ -148,7 +148,7 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
     }
 
     public void burnBridges(Table table) {
-        tables.forEach(other -> other.foreign.removeIf(t -> t.c == table));
+        tables.forEach(other -> other.foreign.removeIf(t -> t.table == table));
     }
 
     public void revalidate() {

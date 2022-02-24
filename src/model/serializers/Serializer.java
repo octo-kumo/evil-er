@@ -10,6 +10,7 @@ import model.er.Relationship;
 import model.er.Specialization;
 import model.rs.Table;
 import shapes.lines.RelationLine;
+import utils.Prompts;
 
 import java.io.Writer;
 import java.lang.reflect.Type;
@@ -97,15 +98,13 @@ public class Serializer {
         return entities;
     }
 
-    public static ArrayList<Table> deserializeTables(String json) {
-        ArrayList<Table> tables = gson.fromJson(json, ARRAYLIST_TABLE);
-        postprocessTables(tables);
-        return tables;
-    }
-
     public static ArrayList<Table> deserializeTables(JsonReader json) {
         ArrayList<Table> tables = gson.fromJson(json, ARRAYLIST_TABLE);
-        postprocessTables(tables);
+        try {
+            postprocessTables(tables);
+        } catch (Exception e) {
+            Prompts.report(e);
+        }
         return tables;
     }
 
@@ -130,9 +129,8 @@ public class Serializer {
         for (Table t : tables) {
             Table.updateParents(t);
             t._foreign.forEach(r ->
-                    t.add(
-                            tables.stream().filter(ot ->
-                                    ot.getName().equals(r.c)).findAny().orElse(null), r.b, r.a));
+                    t.add(tables.stream().filter(ot ->
+                            ot.getName().equals(r.table)).findAny().orElse(null), r.role, r.required, r.prefix));
         }
         tables.forEach(Table::revalidate);
         VersionUpgrade.upgradeTables(tables);

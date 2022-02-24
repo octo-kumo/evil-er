@@ -49,11 +49,13 @@ public class SchemaLine extends Path2D.Double {
         else axisCurvyLine(a, b, context);
     }
 
+    private static final double OFF_SET = 40;
+
     public void straightLine(@NotNull Vector a, @NotNull Vector b, DrawContext context) {
         boolean bUp = getBUp(a, b);
         moveTo(a.getX(), a.getY());
-        lineTo(a.getX(), a.getY() + (getAUp(a, b) ? -30 : 30));
-        dodgingTo(b.getX(), b.getY() + (bUp ? -30 : 30), context);
+        lineTo(a.getX(), a.getY() + (getAUp(a, b) ? -OFF_SET : OFF_SET));
+        dodgingTo(b.getX(), b.getY() + (bUp ? -OFF_SET : OFF_SET), context);
         lineTo(b.getX(), b.getY());
         arrow(bUp, b.getX(), b.getY() + (bUp ? -Column.HEIGHT / 2 : Column.HEIGHT / 2));
     }
@@ -61,13 +63,13 @@ public class SchemaLine extends Path2D.Double {
     public void axisLine(@NotNull Vector a, @NotNull Vector b, DrawContext context) {
         boolean aUp = getAUp(a, b);
         boolean bUp = getBUp(a, b);
-        int aY = (int) (a.getY() + (aUp ? -30 : 30));
-        int bY = (int) (b.getY() + (bUp ? -30 : 30));
+        int aY = (int) (a.getY() + (aUp ? -OFF_SET : OFF_SET));
+        int bY = (int) (b.getY() + (bUp ? -OFF_SET : OFF_SET));
         int targetX = (int) b.getX();
         int targetY = aUp && bUp ? Math.min(aY, bY) : aUp ? aY : bUp ? bY : Math.max(aY, bY);
         if (((RSDiagram) context).avoidOverlap.get()) {
             targetX = getTarget(xTaken, targetX, (int) a.getY(), (int) b.getY(), 10, true);
-            targetY = getTarget(yTaken, targetY, (int) b.getX(), (int) a.getX(), aUp || bUp ? -7 : 7, false);
+            targetY = getTarget(yTaken, targetY, (int) b.getX(), (int) a.getX(), aUp || bUp ? -10 : 10, false);
         }
 
         moveTo(a.getX(), a.getY());
@@ -87,13 +89,13 @@ public class SchemaLine extends Path2D.Double {
 
         boolean aUp = getAUp(a, b);
         boolean bUp = getBUp(a, b);
-        int aY = (int) (a.getY() + (aUp ? -30 : 30));
-        int bY = (int) (b.getY() + (bUp ? -30 : 30));
+        int aY = (int) (a.getY() + (aUp ? -OFF_SET : OFF_SET));
+        int bY = (int) (b.getY() + (bUp ? -OFF_SET : OFF_SET));
         int targetX = (int) b.getX();
         int targetY = aUp && bUp ? Math.min(aY, bY) : aUp ? aY : bUp ? bY : Math.max(aY, bY);
         if (((RSDiagram) context).avoidOverlap.get()) {
             targetX = getTarget(xTaken, targetX, (int) a.getY(), (int) b.getY(), 10, true);
-            targetY = getTarget(yTaken, targetY, (int) b.getX(), (int) a.getX(), aUp || bUp ? -7 : 7, false);
+            targetY = getTarget(yTaken, targetY, (int) b.getX(), (int) a.getX(), aUp || bUp ? -10 : 10, false);
         }
 
         moveTo(a.getX(), a.getY());
@@ -109,12 +111,12 @@ public class SchemaLine extends Path2D.Double {
     }
 
     private boolean getAUp(Vector a, Vector b) {
-        if (Math.abs(b.getY() - a.getY()) < (Attribute.HEIGHT + 20)) return false;
+        if (Math.abs(b.getY() - a.getY()) < (Attribute.HEIGHT + OFF_SET)) return false;
         else return b.getY() < a.getY();
     }
 
     private boolean getBUp(Vector a, Vector b) {
-        if (Math.abs(b.getY() - a.getY()) < (Attribute.HEIGHT + 20)) return false;
+        if (Math.abs(b.getY() - a.getY()) < (Attribute.HEIGHT + OFF_SET)) return false;
         return b.getY() > a.getY();
     }
 

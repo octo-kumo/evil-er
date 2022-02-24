@@ -6,7 +6,6 @@ import utils.callbacks.ChangeListener;
 import utils.callbacks.Consumer;
 import utils.components.ButtonColumn;
 import utils.components.PlaceholderTextField;
-import utils.models.Tuple;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -152,15 +151,16 @@ public class RSInfoPanel extends JPanel implements ChangeListener<Table> {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
         Object[][] data = table.foreign.parallelStream()
-                .map(a -> new Object[]{a.c.getName(), a.a, a.b, CLOSE_ICON}).toArray(Object[][]::new);
+                .map(a -> new Object[]{a.table.getName(), a.required, a.role, a.prefix, CLOSE_ICON}).toArray(Object[][]::new);
 
         DefaultTableModel tableModel;
-        panel.add(new JScrollPane(new JTable(tableModel = new DefaultTableModel(data, new String[]{"Name", "Required", "Role", ""}) {
+        panel.add(new JScrollPane(new JTable(tableModel = new DefaultTableModel(data, new String[]{"Name", "Required", "Role", "Prefix", ""}) {
             public void setValueAt(Object value, int row, int column) {
                 super.setValueAt(value, row, column);
-                if (column == 0) table.foreign.get(row).c.setName((String) value);
-                else if (column == 1) table.foreign.get(row).a = (Boolean) value;
-                else if (column == 2) table.foreign.get(row).b = (String) value;
+                if (column == 0) table.foreign.get(row).table.setName((String) value);
+                else if (column == 1) table.foreign.get(row).required = (Boolean) value;
+                else if (column == 2) table.foreign.get(row).role = (String) value;
+                else if (column == 3) table.foreign.get(row).prefix = (String) value;
                 diagram.repaint();
             }
         }) {
@@ -173,7 +173,7 @@ public class RSInfoPanel extends JPanel implements ChangeListener<Table> {
                         ((DefaultTableModel) source.getModel()).removeRow(row);
                         diagram.repaint();
                     }
-                }, 3);
+                }, 4);
             }
 
             @Override
@@ -185,7 +185,7 @@ public class RSInfoPanel extends JPanel implements ChangeListener<Table> {
 
         panel.add(new JPanel() {{
             setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-            JTextField name, role;
+            JTextField name, role, prefix;
             JCheckBox needed;
             add(name = new PlaceholderTextField() {{
                 setPlaceholder("Name");
@@ -194,13 +194,17 @@ public class RSInfoPanel extends JPanel implements ChangeListener<Table> {
             add(role = new PlaceholderTextField() {{
                 setPlaceholder("Role");
             }});
+            add(prefix = new PlaceholderTextField() {{
+                setPlaceholder("Prefix");
+            }});
             ActionListener action = evt -> {
                 diagram.tables.stream().filter(t -> t.getName().equals(name.getText())).findAny().ifPresent(other -> {
-                    table.foreign.add(new Tuple<>(needed.isSelected(), role.getText(), other));
-                    tableModel.addRow(new Object[]{other.getName(), needed.isSelected(), role.getText(), CLOSE_ICON});
+                    table.foreign.add(new Table.Foreign(needed.isSelected(), role.getText(), other, prefix.getText()));
+                    tableModel.addRow(new Object[]{other.getName(), needed.isSelected(), role.getText(), prefix.getText(), CLOSE_ICON});
                     diagram.repaint();
                     name.setText("");
                     role.setText("");
+                    prefix.setText("");
                     needed.setSelected(false);
                 });
             };
