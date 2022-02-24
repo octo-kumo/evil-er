@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import shapes.lines.SchemaLine;
 
 import java.awt.geom.Rectangle2D;
+import java.util.Objects;
 
 public class Column extends Vector implements Drawable, Comparable<Column> {
 
@@ -94,10 +95,11 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
         g.draw(new SchemaLine(origin.add(OFFSET), parent.positionOf(this).add(OFFSET), g.getContext()));
     }
 
-    public void drawAsForeign(@NotNull DiagramGraphics g, @NotNull Boolean key, @NotNull Vector origin) {
+    public void drawAsForeign(@NotNull DiagramGraphics g, Table.Foreign foreign, @NotNull Vector origin) {
         g.draw(new Rectangle2D.Double(origin.getX(), origin.getY(), WIDTH, HEIGHT), g.context.fill(), g.context.foreground());
-        g.drawStringCenter(name + " (FK)", origin.add(WIDTH / 2, HEIGHT / 2));
-        if (key) g.draw(g.lineUnderString(name + " (FK)", origin.add(WIDTH / 2, HEIGHT / 2 + 3)));
+        g.drawStringCenter(foreign.prefix + name + " (FK)", origin.add(WIDTH / 2, HEIGHT / 2));
+        if (foreign.required)
+            g.draw(g.lineUnderString(foreign.prefix + name + " (FK)", origin.add(WIDTH / 2, HEIGHT / 2 + 3)));
     }
 
     @Override
@@ -154,10 +156,18 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
     }
 
     public String toSQL() {
-        return toSQL("");
+        return toSQL(null);
     }
 
-    public String toSQL(String prefix) {
-        return String.format("%-16s %s%s %s", prefix + name, type, type.numbered ? "(" + param + ")" : "", notNull ? "NOT NULL" : "").trim();
+    public String toSQL(Table.Foreign foreign) {
+        return String.format("%-16s %s%s %s",
+                getName(foreign),
+                type,
+                type.numbered ? "(" + param + ")" : "",
+                notNull ? "NOT NULL" : "").trim();
+    }
+
+    public String getName(Table.Foreign foreign) {
+        return foreign == null ? name : Objects.equals(foreign.role, "inherits") ? name : foreign.prefix + name;
     }
 }

@@ -14,7 +14,7 @@ public class Range {
     }
 
     public static boolean intersects(int x1, int x2, int y1, int y2) {
-        return x1 < y2 && y1 < x2;
+        return x1 <= y2 && y1 <= x2;
     }
 
     public double getX1() {

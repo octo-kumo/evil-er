@@ -2,7 +2,6 @@ package model.serializers;
 
 import com.google.gson.*;
 import model.rs.Table;
-import utils.models.Tuple;
 
 import java.lang.reflect.Type;
 import java.util.stream.Collectors;
@@ -10,7 +9,7 @@ import java.util.stream.Collectors;
 public class TableSerializer implements JsonSerializer<Table>, JsonDeserializer<Table> {
     @Override
     public JsonElement serialize(Table src, Type typeOfSrc, JsonSerializationContext context) {
-        src._foreign = src.foreign.stream().map(t -> new Tuple<>(t.a, t.b, t.c.getName())).collect(Collectors.toList());
+        src._foreign = src.foreign.stream().map(Table._Foreign::new).collect(Collectors.toList());
         return Serializer.clean.toJsonTree(src).getAsJsonObject();
     }
 
