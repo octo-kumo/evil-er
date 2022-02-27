@@ -86,6 +86,22 @@ public class Specialization extends Relationship {
         return nodes.subList(1, nodes.size());
     }
 
+    public void drawShape(DiagramGraphics g, Shape shape) {
+        Color toUse = g.getColor();
+        if (nodes.size() == 2) {
+            if (g.context.exporting()) return;
+            g.dashed(shape, g.context.fill(), toUse);
+        } else g.draw(shape, g.context.fill(), toUse);
+    }
+
+    @Override
+    public void paint(DiagramGraphics g) {
+        attributes.forEach(a -> a.draw(g));
+        drawShape(g);
+        if (nodes.size() == 2 && g.context.exporting()) return;
+        g.drawStringCenter(getName(), 0, 0);
+    }
+
     @Override
     public Specialization clone() {
         Specialization clone = new Specialization();

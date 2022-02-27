@@ -3,6 +3,7 @@ package model.er;
 import com.google.gson.annotations.Expose;
 import main.renderer.DiagramGraphics;
 import model.Vector;
+import model.rs.Column;
 
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
@@ -11,18 +12,15 @@ import java.awt.geom.Line2D;
 import static main.er.ERDiagram.UNIVERSAL_METRICS;
 
 public class Attribute extends Entity {
-
-    public enum AttributeType {
-        Char, String, Boolean, Integer, Float, DateTime, Date
-    }
-
     private Entity parent;
     @Expose
     private boolean key;
     @Expose
     private boolean derived;
     @Expose
-    private AttributeType dataType;
+    private Column.DataType dataType;
+    @Expose
+    private String dataParam;
 
     public double getX() {
         return x + (getParent() == null ? 0 : getParent().getX());
@@ -40,11 +38,11 @@ public class Attribute extends Entity {
         this.y = y - (getParent() == null ? 0 : getParent().getY());
     }
 
-    public AttributeType getDataType() {
+    public Column.DataType getDataType() {
         return dataType;
     }
 
-    public void setDataType(AttributeType dataType) {
+    public void setDataType(Column.DataType dataType) {
         this.dataType = dataType;
     }
 
@@ -74,7 +72,7 @@ public class Attribute extends Entity {
         }
         if (g.getContext().drawDebugInfo()) {
             g.scale(0.7, 0.7);
-            g.drawStringCenter(String.valueOf(dataType), 0, -12);
+            g.drawStringCenter(getDataType() + "(" + getDataParam() + ")", 0, -12);
         }
     }
 
@@ -120,10 +118,19 @@ public class Attribute extends Entity {
         attributes.forEach(a -> clone.addAttribute(a.clone()));
         clone.x = x;
         clone.y = y;
+        clone.setDataParam(getDataParam());
         clone.setDataType(getDataType());
         clone.setKey(isKey());
         clone.setDerived(isDerived());
         clone.setParent(getParent());
         return clone;
+    }
+
+    public String getDataParam() {
+        return dataParam;
+    }
+
+    public void setDataParam(String dataParam) {
+        this.dataParam = dataParam;
     }
 }

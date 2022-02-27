@@ -7,6 +7,7 @@ import model.er.Attribute;
 import model.er.Entity;
 import model.er.Relationship;
 import model.er.Specialization;
+import model.rs.Column;
 import utils.callbacks.ChangeListener;
 import utils.callbacks.Consumer;
 import utils.callbacks.Getter;
@@ -79,9 +80,14 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
         panel.add(new JCheckBox("Derived") {{
             addBooleanListener(this, attribute::setDerived, attribute::isDerived);
         }});
-        panel.add(new JComboBox<Attribute.AttributeType>(Attribute.AttributeType.values()) {{
+        panel.add(new JComboBox<Column.DataType>(Column.DataType.values()) {{
             setSelectedItem(attribute.getDataType());
-            addActionListener(evt -> attribute.setDataType((Attribute.AttributeType) getSelectedItem()));
+            addActionListener(evt -> attribute.setDataType((Column.DataType) getSelectedItem()));
+        }});
+        panel.add(new PlaceholderTextField() {{
+            setPlaceholder("Param");
+            setText(attribute.getDataParam());
+            addActionListener(evt -> attribute.setDataParam(getText()));
         }});
         panel.setAlignmentX(LEFT_ALIGNMENT);
         return panel;

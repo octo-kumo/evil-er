@@ -23,7 +23,8 @@ public class VersionUpgrade {
         flatten(entities).forEach(e -> {
             if (e instanceof Attribute) {
                 Attribute a = (Attribute) e;
-                if (a.getDataType() == null) a.setDataType(Attribute.AttributeType.String);
+                if (a.getDataType() == null) a.setDataType(Column.DataType.VARCHAR);
+                if (a.getDataParam() == null) a.setDataParam("");
             }
         });
     }

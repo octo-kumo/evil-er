@@ -61,13 +61,14 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
     }
 
     public Column(String name, boolean key) {
-        this(name, key, DataType.VARCHAR);
+        this(name, key, DataType.VARCHAR, "");
     }
 
-    public Column(String name, boolean key, DataType columnType) {
+    public Column(String name, boolean key, DataType columnType, String param) {
         this.name = name;
         this.key = key;
         this.type = columnType;
+        this.param = param;
     }
 
     public double getX() {
@@ -163,7 +164,7 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
         return String.format("%-16s %s%s %s",
                 getName(foreign),
                 type,
-                type.numbered ? "(" + param + ")" : "",
+                type.numbered && !param.isEmpty() ? "(" + param + ")" : "",
                 notNull ? "NOT NULL" : "").trim();
     }
 

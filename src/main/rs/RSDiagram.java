@@ -304,4 +304,8 @@ public class RSDiagram extends JComponent implements MouseListener, MouseMotionL
     }
 
     enum ActionType {Moving, Panning, Creating}
+
+    public boolean exporting() {
+        return exporting;
+    }
 }

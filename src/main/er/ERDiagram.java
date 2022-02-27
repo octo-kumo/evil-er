@@ -579,5 +579,9 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         return debug.get();
     }
 
+    public boolean exporting() {
+        return exporting;
+    }
+
     enum ActionType {ADDING, CONNECTING, SELECTING}
 }
