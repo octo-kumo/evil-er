@@ -217,7 +217,7 @@ public class Table extends Vector implements Drawable {
 
     public String getEscapedName() {
         String name = getName().replaceAll("[^A-Za-z0-9_]", "_");
-        if (Arrays.binarySearch(SQL_KEYWORDS, name.toUpperCase(Locale.ROOT)) >= 0) name = '"' + name + '"';
+        if (Arrays.binarySearch(SQL_KEYWORDS, name.toUpperCase(Locale.ROOT)) >= 0) name = '`' + name + '`';
         return name;
     }
 
@@ -243,7 +243,7 @@ public class Table extends Vector implements Drawable {
 
     public String toSQL() {
         StringBuilder builder = new StringBuilder();
-        builder.append("CREATE TABLE ").append(getEscapedName()).append("\n(\n");
+        builder.append("CREATE TABLE IF NOT EXISTS ").append(getEscapedName()).append("\n(\n");
         for (Column value : sorted) {
             builder.append('\t').append(value.toSQL()).append(",\n");
         }

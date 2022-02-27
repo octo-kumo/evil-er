@@ -27,6 +27,10 @@ public interface DrawContext {
         return new Color(fill().getRGB() | 0xaa000000, true);
     }
 
+    default boolean exporting() {
+        return false;
+    }
+
     default boolean drawDebugInfo() {
         return false;
     }
