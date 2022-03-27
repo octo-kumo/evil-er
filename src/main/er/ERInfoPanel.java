@@ -80,6 +80,9 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
         panel.add(new JCheckBox("Derived") {{
             addBooleanListener(this, attribute::setDerived, attribute::isDerived);
         }});
+        panel.add(new JCheckBox("Unique") {{
+            addBooleanListener(this, attribute::setUnique, attribute::isUnique);
+        }});
         panel.add(new JComboBox<Column.DataType>(Column.DataType.values()) {{
             setSelectedItem(attribute.getDataType());
             addActionListener(evt -> attribute.setDataType((Column.DataType) getSelectedItem()));

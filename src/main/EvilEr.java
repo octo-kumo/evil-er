@@ -48,6 +48,15 @@ public class EvilEr extends JPanel {
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         LafManager.install(LafManager.themeForPreferredStyle(LafManager.getPreferredThemeStyle()));
         ERMenu.loadThemeFromPreference();
+
+        try {
+            GraphicsEnvironment ge =
+                    GraphicsEnvironment.getLocalGraphicsEnvironment();
+            ge.registerFont(Font.createFont(Font.TRUETYPE_FONT, Objects.requireNonNull(EvilEr.class.getResourceAsStream("/main/zh-cn.ttf"))));
+        } catch (IOException | FontFormatException e) {
+            //Handle exception
+        }
+
         JFrame frame = new JFrame("Evil ER :: " + Version.CURRENT);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         EvilEr evilEr;

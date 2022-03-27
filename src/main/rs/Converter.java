@@ -31,7 +31,7 @@ public class Converter {
                 System.out.printf("Entity, %s%n", entity.getName());
                 Table table = new Table(entity.getName());
 
-                flatten(entity.attributes).forEach(e -> table.add(new Column(e.getName(), e.isKey(), e.getDataType(), e.getDataParam())));
+                flatten(entity.attributes).forEach(e -> table.add(new Column(e.getName(), e.isKey(), e.isUnique(), e.getDataType(), e.getDataParam())));
                 entity.attributes.stream().filter(Attribute::isWeak).forEach(a -> {
                     System.out.println("\tMultivalued attribute " + entity.getName() + "::" + a.getName() + ", saving for later");
                     multiAttributes.add(new Pair<>(a, table));
@@ -56,7 +56,7 @@ public class Converter {
                 if (combinedInTo != -1) System.out.printf("\tCombining into: %s%n", table.getName());
 
                 Table finalTable = table;
-                flatten(entity.attributes).forEach(e -> finalTable.add(new Column(e.getName(), e.isKey(), e.getDataType(), e.getDataParam())));
+                flatten(entity.attributes).forEach(e -> finalTable.add(new Column(e.getName(), e.isKey(), e.isUnique(), e.getDataType(), e.getDataParam())));
                 entity.attributes.stream().filter(Attribute::isWeak).forEach(a -> multiAttributes.add(new Pair<>(a, finalTable)));
 
                 List<Entity> nodes = ((Relationship) entity).nodes;
@@ -96,7 +96,7 @@ public class Converter {
             multiAttributes.forEach(p -> {
                 Table table = new Table(p.b.getName() + "::" + EnglishNoun.pluralOf(p.a.getName()));
                 if (p.a.attributes.size() > 0) // wtf composite multivalued attribute, ignoring recursive ones
-                    flatten(p.a.attributes).forEach(e -> table.add(new Column(e.getName(), true, e.getDataType(), e.getDataParam())));
+                    flatten(p.a.attributes).forEach(e -> table.add(new Column(e.getName(), true, e.isUnique(), e.getDataType(), e.getDataParam())));
                 else
                     table.add(new Column(EnglishNoun.singularOf(p.a.getName()), true));
                 table.add(p.b, "attribute of", true);

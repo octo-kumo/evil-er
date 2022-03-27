@@ -13,6 +13,14 @@ import java.util.Objects;
 
 public class Column extends Vector implements Drawable, Comparable<Column> {
 
+    public boolean isUnique() {
+        return unique;
+    }
+
+    public void setUnique(boolean unique) {
+        this.unique = unique;
+    }
+
     public enum DataType {
         CHAR(true), VARCHAR(true),
 
@@ -54,6 +62,8 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
     @Expose
     private boolean key;
     @Expose
+    private boolean unique;
+    @Expose
     private boolean notNull = false;
 
     public Column() {
@@ -65,8 +75,13 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
     }
 
     public Column(String name, boolean key, DataType columnType, String param) {
+        this(name, key, false, columnType, param);
+    }
+
+    public Column(String name, boolean key, boolean unique, DataType columnType, String param) {
         this.name = name;
         this.key = key;
+        this.unique = unique;
         this.type = columnType;
         this.param = param;
     }
@@ -161,11 +176,12 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
     }
 
     public String toSQL(Table.Foreign foreign) {
-        return String.format("%-16s %s%s %s",
+        return String.format("%-16s %s%s %s %s",
                 getName(foreign),
                 type,
                 type.numbered && !param.isEmpty() ? "(" + param + ")" : "",
-                notNull ? "NOT NULL" : "").trim();
+                notNull ? "NOT NULL" : "",
+                unique ? "UNIQUE" : "").trim();
     }
 
     public String getName(Table.Foreign foreign) {
