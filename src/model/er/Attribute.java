@@ -18,6 +18,8 @@ public class Attribute extends Entity {
     @Expose
     private boolean derived;
     @Expose
+    private boolean unique;
+    @Expose
     private Column.DataType dataType;
     @Expose
     private String dataParam;
@@ -118,6 +120,7 @@ public class Attribute extends Entity {
         attributes.forEach(a -> clone.addAttribute(a.clone()));
         clone.x = x;
         clone.y = y;
+        clone.setUnique(isUnique());
         clone.setDataParam(getDataParam());
         clone.setDataType(getDataType());
         clone.setKey(isKey());
@@ -132,5 +135,13 @@ public class Attribute extends Entity {
 
     public void setDataParam(String dataParam) {
         this.dataParam = dataParam;
+    }
+
+    public boolean isUnique() {
+        return unique;
+    }
+
+    public void setUnique(boolean unique) {
+        this.unique = unique;
     }
 }
