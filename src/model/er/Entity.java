@@ -9,6 +9,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -26,11 +27,17 @@ public class Entity extends Node {
     private String name;
     @Expose
     private boolean weak;
+
+    @Expose
+    public String id;
+
     public Entity(String name) {
         this();
         setName(name);
     }
+
     public Entity() {
+        id = UUID.randomUUID().toString();
         attributes = new ArrayList<>();
     }
 
@@ -199,11 +206,20 @@ public class Entity extends Node {
     @Override
     public Entity clone() {
         Entity n = new Entity();
+        n.id = id;
         n.setName(getName());
         n.setWeak(isWeak());
         attributes.forEach(a -> n.addAttribute(a.clone()));
         n.set(this);
         return n;
+    }
+
+    public String getID() {
+        return id;
+    }
+
+    public void setID(String id) {
+        this.id = id;
     }
 
     public enum Type {

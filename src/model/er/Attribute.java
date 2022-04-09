@@ -118,6 +118,7 @@ public class Attribute extends Entity {
         clone.setName(getName());
         clone.setWeak(isWeak());
         attributes.forEach(a -> clone.addAttribute(a.clone()));
+        clone.id = id;
         clone.x = x;
         clone.y = y;
         clone.setUnique(isUnique());

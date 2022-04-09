@@ -9,6 +9,7 @@ import main.EvilEr;
 import main.rs.Converter;
 import main.rs.EvilRs;
 import main.rs.RSMenu;
+import main.rs.SQLConverter;
 import model.Vector;
 import model.er.Entity;
 import model.serializers.Serializer;
@@ -98,6 +99,12 @@ public class ERMenu extends JMenuBar {
                     } catch (Exception ex) {
                         Prompts.report(ex);
                     }
+                }
+            }));
+            add(new JMenuItem(new AbstractAction("To sql") {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    SQLConverter.showSQLDialog(Converter.convertToSQLInsert(diagram.entities, "[DID]"), evilEr.frame);
                 }
             }));
             add(new JSeparator());

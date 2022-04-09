@@ -97,6 +97,7 @@ public class Relationship extends Entity {
 
     public Relationship clone() {
         Relationship clone = new Relationship();
+        clone.id = id;
         clone.setName(getName());
         clone.setWeak(isWeak());
         attributes.forEach(a -> clone.addAttribute(a.clone()));
