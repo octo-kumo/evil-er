@@ -181,7 +181,7 @@ public class Column extends Vector implements Drawable, Comparable<Column> {
                 type,
                 type.numbered && !param.isEmpty() ? "(" + param + ")" : "",
                 notNull ? "NOT NULL" : "",
-                unique ? "UNIQUE" : "").trim();
+                foreign == null && unique ? "UNIQUE" : "").trim();
     }
 
     public String getName(Table.Foreign foreign) {

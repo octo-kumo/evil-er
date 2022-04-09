@@ -6,6 +6,7 @@ import model.rs.Column;
 import model.rs.Table;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 import static main.renderer.DiagramGraphics.flatten;
 
@@ -21,6 +22,7 @@ public class VersionUpgrade {
 
     public static void upgrade(ArrayList<Entity> entities) {
         flatten(entities).forEach(e -> {
+            if (e.id == null) e.id = UUID.randomUUID().toString();
             if (e instanceof Attribute) {
                 Attribute a = (Attribute) e;
                 if (a.getDataType() == null) a.setDataType(Column.DataType.VARCHAR);

@@ -51,6 +51,11 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
         panel.setBorder(new TitledBorder("Entity"));
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
+        panel.add(new PlaceholderTextField(entity.getID()) {{
+            setPlaceholder("ID");
+            setEditable(false);
+            addTextListener(this, entity::setID, Function.identity());
+        }});
         panel.add(new PlaceholderTextField(entity.getName()) {{
             setPlaceholder("Name");
             addTextListener(this, entity::setName, Function.identity());

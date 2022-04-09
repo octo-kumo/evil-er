@@ -105,6 +105,7 @@ public class Specialization extends Relationship {
     @Override
     public Specialization clone() {
         Specialization clone = new Specialization();
+        clone.id = id;
         clone.setName(getName());
         clone.setWeak(isWeak());
         attributes.forEach(a -> clone.addAttribute(a.clone()));
