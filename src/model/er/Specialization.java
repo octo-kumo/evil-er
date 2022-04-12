@@ -69,10 +69,6 @@ public class Specialization extends Relationship {
         this.disjoint = disjoint;
     }
 
-    public void drawShape(DiagramGraphics g) {
-        super.drawShape(g);
-    }
-
     @Override
     public Shape getShape(double width, double height) {
         return new Ellipse2D.Double(-height * .5 / 2d, -height * .5 / 2d, height * .5, height * .5);
