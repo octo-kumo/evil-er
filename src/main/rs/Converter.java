@@ -150,14 +150,14 @@ public class Converter {
         }
         if (e instanceof Attribute) {
             Attribute a = (Attribute) e;
-            builder.append(new String(new char[depth]).replace("\0", "  ")).append("INSERT INTO attribute VALUES (").append(a.isKey()).append(", ").append(a.isDerived()).append(", '").append(a.getParent().getID()).append("', '").append(did).append("', '").append(a.getID()).append("', '").append(did).append("');\n");
+            builder.append(new String(new char[depth]).replace("\0", "  ")).append("INSERT INTO attribute VALUES (").append(a.isKey()).append(", ").append(a.isDerived()).append(", '").append(a.getParent().getID()).append("', '").append(a.getID()).append("', '").append(did).append("');\n");
         }
         if (e instanceof Relationship) {
             Relationship r = (Relationship) e;
             for (int i = 0; i < r.nodes.size(); i++) {
                 Relationship.RelationshipSpec s = r.specs.get(i);
                 Entity o = r.nodes.get(i);
-                builder.append(new String(new char[depth + 1]).replace("\0", "  ")).append("INSERT INTO relates VALUES ('").append(s.role).append("', ").append(s.total).append(", '").append(s.amm).append("', '").append(e.getID()).append("', '").append(did).append("', '").append(o.getID()).append("', '").append(did).append("');\n");
+                builder.append(new String(new char[depth + 1]).replace("\0", "  ")).append("INSERT INTO relates VALUES ('").append(s.role).append("', ").append(s.total).append(", '").append(s.amm).append("', '").append(e.getID()).append("', '").append(o.getID()).append("', '").append(did).append("');\n");
             }
         }
         for (Attribute attribute : e.attributes) {
