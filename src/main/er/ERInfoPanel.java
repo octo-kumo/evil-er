@@ -1,6 +1,6 @@
 package main.er;
 
-import com.github.weisj.darklaf.icons.IconLoader;
+import com.github.weisj.darklaf.properties.icons.IconLoader;
 import images.ImageRoot;
 import main.EvilEr;
 import model.er.Attribute;

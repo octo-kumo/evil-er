@@ -4,7 +4,7 @@ import com.github.weisj.darklaf.LafManager;
 import com.github.weisj.darklaf.theme.Theme;
 import com.github.weisj.darklaf.theme.event.ThemeChangeEvent;
 import com.github.weisj.darklaf.theme.event.ThemeChangeListener;
-import com.github.weisj.darklaf.theme.info.ColorToneRule;
+import com.github.weisj.darklaf.theme.spec.ColorToneRule;
 import model.Vector;
 import model.er.Entity;
 

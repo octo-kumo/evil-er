@@ -3,8 +3,8 @@ package main.er;
 import com.github.weisj.darklaf.LafManager;
 import com.github.weisj.darklaf.settings.ThemeSettings;
 import com.github.weisj.darklaf.theme.Theme;
-import com.github.weisj.darklaf.theme.info.AccentColorRule;
-import com.github.weisj.darklaf.theme.info.FontSizeRule;
+import com.github.weisj.darklaf.theme.spec.AccentColorRule;
+import com.github.weisj.darklaf.theme.spec.FontSizeRule;
 import main.EvilEr;
 import main.rs.Converter;
 import main.rs.EvilRs;
@@ -17,6 +17,7 @@ import shapes.lines.Line;
 import utils.Chooser;
 import utils.JFontChooser;
 import utils.Prompts;
+import utils.models.Reactive;
 import utils.models.TransferableImage;
 
 import javax.imageio.ImageIO;
@@ -42,6 +43,7 @@ public class ERMenu extends JMenuBar {
 
     public static final Preferences THEME = Preferences.userRoot().node("theme");
     public static final Preferences DRAWING_FONT = Preferences.userRoot().node("drawingFont");
+    public static final Reactive<Boolean> DEV_MODE = new Reactive<>(false);
     private final EvilEr evilEr;
     private final JFontChooser fontChooser;
     private JDialog fontChooserFrame;
@@ -82,7 +84,7 @@ public class ERMenu extends JMenuBar {
                     Toolkit.getDefaultToolkit().getSystemClipboard().setContents(transferable, null);
                 }
             }));
-            add(new JMenuItem(new AbstractAction("To schema") {
+            if (DEV_MODE.get()) add(new JMenuItem(new AbstractAction("To schema") {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     JDialog dialog = new JDialog(evilEr.frame, "Relational Schema");
@@ -101,12 +103,15 @@ public class ERMenu extends JMenuBar {
                     }
                 }
             }));
-            add(new JMenuItem(new AbstractAction("To sql") {
+            if (DEV_MODE.get()) add(new JMenuItem(new AbstractAction("To sql") {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     SQLConverter.showSQLDialog(Converter.convertToSQLInsert(diagram.entities, "[DID]"), evilEr.frame);
                 }
             }));
+            if (DEV_MODE.get()) add(new JCheckBoxMenuItem("Developer Mode", true) {{
+                setEnabled(false);
+            }});
             add(new JSeparator());
             add(new JMenuItem(new AbstractAction("Export...") {
                 public void actionPerformed(ActionEvent ae) {
@@ -126,7 +131,7 @@ public class ERMenu extends JMenuBar {
                 setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
             }});
             add(new JMenuItem("Cut") {{
-                addActionListener(e -> diagram.copy());
+                addActionListener(e -> diagram.cut());
                 setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
             }});
             add(new JMenuItem("Paste") {{
@@ -260,6 +265,16 @@ public class ERMenu extends JMenuBar {
                             "EVIL ER\nMade by octo-kumo (***REMOVED***)\nVisit repository?", "About", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
                         try {
                             Desktop.getDesktop().browse(new URI("https://github.com/octo-kumo/evil-er"));
+                        } catch (IOException | URISyntaxException ex) {
+                            ex.printStackTrace();
+                        }
+                });
+            }});
+            add(new JMenuItem("Help") {{
+                addActionListener(e -> {
+                    if (JOptionPane.showConfirmDialog(null, "Visit online documentation?", "Help", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
+                        try {
+                            Desktop.getDesktop().browse(new URI("https://github.com/octo-kumo/evil-er/wiki"));
                         } catch (IOException | URISyntaxException ex) {
                             ex.printStackTrace();
                         }
