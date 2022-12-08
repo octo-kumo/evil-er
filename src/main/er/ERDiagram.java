@@ -239,16 +239,12 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
             selection.add(entity);
         }
         for (Entity entity : list) {
-            if (entity instanceof Attribute) {
-                if (((Attribute) entity).getParent() == null) {
-                    ((Attribute) entity).setParent(clipboardTarget);
-                    entity.decre(clipboardTarget);
-                }
+            if (entity instanceof Attribute && ((Attribute) entity).getParent() == null && clipboardTarget != null) {
+                ((Attribute) entity).setParent(clipboardTarget);
+                entity.decre(clipboardTarget);
             }
-            if (entity instanceof Specialization) {
-                if (((Specialization) entity).getSuperclass() == null)
-                    ((Specialization) entity).setSuperclass(clipboardTarget);
-            }
+            if (entity instanceof Specialization && ((Specialization) entity).getSuperclass() == null)
+                ((Specialization) entity).setSuperclass(clipboardTarget);
             if (entity instanceof Relationship) {
                 Relationship r = (Relationship) entity;
                 for (int i = 0; i < r.nodes.size(); i++) {
@@ -421,9 +417,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
             Optional<Entity> found = getIntersect(mouseWorld).filter(entity -> !(entity instanceof Relationship) && !(entity instanceof Attribute));
             connectTarget.set(found.isPresent() ? found.get() : mouseWorld);
         } else if (action.equal(ActionType.ADDING) && clipboard.size() > 0) {
-            getIntersect(mouseWorld).ifPresent(entity -> {
-                clipboardTarget = entity;
-            });
+            getIntersect(mouseWorld).ifPresent(entity -> clipboardTarget = entity);
         }
         repaint();
     }

@@ -5,11 +5,14 @@ import main.er.ERControlPanel;
 import main.er.ERDiagramPanel;
 import main.er.ERInfoPanel;
 import main.er.ERMenu;
+import org.apache.commons.cli.*;
 import utils.Prompts;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
@@ -44,6 +47,35 @@ public class EvilEr extends JPanel {
     }
 
     public static void main(String... args) {
+        Options options = new Options();
+        Option input = new Option("d", "developer mode", false, "unlock hidden options and functions");
+        input.setRequired(false);
+        options.addOption(input);
+        Option output = new Option("h", "help", false, "prints help");
+        output.setRequired(false);
+        options.addOption(output);
+
+        CommandLineParser parser = new DefaultParser();
+        HelpFormatter formatter = new HelpFormatter();
+        CommandLine cmd;
+        try {
+            cmd = parser.parse(options, args);
+            if (cmd.hasOption("h")) {
+                formatter.printHelp("evil er command line options", options);
+                return;
+            }
+            if (cmd.hasOption("d")) {
+                ERMenu.DEV_MODE.set(true);
+                System.out.println("Launching with extra features, enjoy~");
+            }
+        } catch (ParseException e) {
+            System.out.println(e.getMessage());
+            formatter.printHelp("utility-name", options);
+
+            System.exit(1);
+        }
+
+
         RENDER_HINTS = (Map<?, ?>) Toolkit.getDefaultToolkit().getDesktopProperty("awt.font.desktophints");
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         LafManager.install(LafManager.themeForPreferredStyle(LafManager.getPreferredThemeStyle()));
@@ -83,5 +115,17 @@ public class EvilEr extends JPanel {
                 e.printStackTrace();
             }
         });
+
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent we) {
+                String[] ObjButtons = {"Yes", "No"};
+                if (JOptionPane.showOptionDialog(null, "Are you sure you want to exit?", "Evil ER", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, ObjButtons, ObjButtons[1]) == JOptionPane.YES_OPTION)
+                    System.exit(0);
+            }
+        });
+
+        frame.requestFocus();
     }
 }
