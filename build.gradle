@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'kumo.evil-er'
-version = '0.6.1-beta'
+version = '0.6.2-beta'
 application {
     mainClass = 'main.EvilEr'
 }
