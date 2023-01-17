@@ -1,7 +1,6 @@
 package main.er;
 
-import com.github.weisj.darklaf.properties.icons.IconLoader;
-import images.ImageRoot;
+import com.github.weisj.darklaf.iconset.AllIcons;
 import main.EvilEr;
 import model.er.Attribute;
 import model.er.Entity;
@@ -26,11 +25,7 @@ import java.util.stream.IntStream;
 public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
     private final JPanel entityControls;
     private final EvilEr evilEr;
-    public static final Icon CLOSE_ICON;
-
-    static {
-        CLOSE_ICON = IconLoader.get(ImageRoot.class).getIcon("icons/close_black_24dp.svg");
-    }
+    public static final Icon CLOSE_ICON = AllIcons.Action.Delete.get();
 
     public ERInfoPanel(EvilEr evilEr) {
         this.evilEr = evilEr;
@@ -51,23 +46,23 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
         panel.setBorder(new TitledBorder("Entity"));
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-        panel.add(new PlaceholderTextField(entity.getID()) {{
-            setPlaceholder("ID");
-            setEditable(false);
-            addTextListener(this, entity::setID, Function.identity());
-        }});
+//        panel.add(new PlaceholderTextField(entity.getID()) {{
+//            setPlaceholder("ID");
+//            setEditable(false);
+//            addTextListener(this, entity::setID, Function.identity());
+//        }});
         panel.add(new PlaceholderTextField(entity.getName()) {{
             setPlaceholder("Name");
             addTextListener(this, entity::setName, Function.identity());
         }});
-        panel.add(new PlaceholderTextField(String.valueOf(entity.getX())) {{
-            setPlaceholder("X");
-            addTextListener(this, entity::setX, Double::parseDouble);
-        }});
-        panel.add(new PlaceholderTextField(String.valueOf(entity.getY())) {{
-            setPlaceholder("Y");
-            addTextListener(this, entity::setY, Double::parseDouble);
-        }});
+//        panel.add(new PlaceholderTextField(String.valueOf(entity.getX())) {{
+//            setPlaceholder("X");
+//            addTextListener(this, entity::setX, Double::parseDouble);
+//        }});
+//        panel.add(new PlaceholderTextField(String.valueOf(entity.getY())) {{
+//            setPlaceholder("Y");
+//            addTextListener(this, entity::setY, Double::parseDouble);
+//        }});
         panel.add(new JCheckBox("Weak") {{
             setAlignmentX(LEFT_ALIGNMENT);
             addBooleanListener(this, entity::setWeak, entity::isWeak);
@@ -117,7 +112,7 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
         Object[][] data = IntStream.range(0, relationship.nodes.size()).mapToObj(i -> {
             Entity t = relationship.nodes.get(i);
             Relationship.RelationshipSpec spec = relationship.specs.get(i);
-            return new Object[]{t.getName(), spec.amm, spec.total, spec.role, CLOSE_ICON};
+            return new Object[]{t.getName(), spec.getAmm(), spec.isTotal(), spec.getRole(), CLOSE_ICON};
         }).toArray(Object[][]::new);
 
         DefaultTableModel tableModel;
@@ -126,9 +121,9 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
             public void setValueAt(Object value, int row, int column) {
                 super.setValueAt(value, row, column);
                 if (column == 0) relationship.nodes.get(row).setName((String) value);
-                else if (column == 1) relationship.specs.get(row).amm = (String) value;
-                else if (column == 2) relationship.specs.get(row).total = (boolean) value;
-                else if (column == 3) relationship.specs.get(row).role = (String) value;
+                else if (column == 1) relationship.specs.get(row).setAmm((String) value);
+                else if (column == 2) relationship.specs.get(row).setTotal((boolean) value);
+                else if (column == 3) relationship.specs.get(row).setRole((String) value);
                 evilEr.diagramPanel.diagram.repaint();
             }
         }) {

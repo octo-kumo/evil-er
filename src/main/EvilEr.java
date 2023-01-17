@@ -1,6 +1,7 @@
 package main;
 
 import com.github.weisj.darklaf.LafManager;
+import fonts.Fonts;
 import main.er.ERControlPanel;
 import main.er.ERDiagramPanel;
 import main.er.ERInfoPanel;
@@ -25,6 +26,7 @@ public class EvilEr extends JPanel {
     public final ERDiagramPanel diagramPanel;
     public final ERInfoPanel infoPanel;
     public final JSplitPane splitPane;
+    public final FileList fileList;
     public JFrame frame;
 
     public EvilEr(JFrame frame) {
@@ -42,6 +44,9 @@ public class EvilEr extends JPanel {
 
         controlPanel = new ERControlPanel(this);
         add(controlPanel, BorderLayout.NORTH);
+
+        fileList = new FileList(this);
+        add(fileList, BorderLayout.WEST);
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(diagramPanel.diagram.keyManager);
     }
@@ -81,18 +86,12 @@ public class EvilEr extends JPanel {
         LafManager.install(LafManager.themeForPreferredStyle(LafManager.getPreferredThemeStyle()));
         ERMenu.loadThemeFromPreference();
 
-        try {
-            GraphicsEnvironment ge =
-                    GraphicsEnvironment.getLocalGraphicsEnvironment();
-            ge.registerFont(Font.createFont(Font.TRUETYPE_FONT, Objects.requireNonNull(EvilEr.class.getResourceAsStream("/main/zh-cn.ttf"))));
-        } catch (IOException | FontFormatException e) {
-            //Handle exception
-        }
+        Fonts.loadFonts();
 
         JFrame frame = new JFrame("Evil ER :: " + Version.CURRENT);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        EvilEr evilEr;
-        frame.setContentPane(evilEr = new EvilEr(frame));
+        EvilEr evilEr = new EvilEr(frame);
+        frame.setContentPane(evilEr);
         frame.setJMenuBar(new ERMenu(evilEr));
         frame.setAutoRequestFocus(true);
         frame.pack();

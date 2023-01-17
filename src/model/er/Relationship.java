@@ -35,6 +35,7 @@ public class Relationship extends Entity {
     }
 
     public void addNode(Entity node, RelationshipSpec spec) {
+        HAS_NODE_CHANGED = true;
         nodes.add(node);
         specs.add(spec);
         lines.add(new RelationLine(this, node, spec));
@@ -43,6 +44,7 @@ public class Relationship extends Entity {
 
     public boolean set(int index, Entity node) {
         if (index >= nodes.size()) return false;
+        HAS_NODE_CHANGED = true;
         nodes.set(index, node);
         lines.get(index).b = node;
         revalidate();
@@ -51,6 +53,7 @@ public class Relationship extends Entity {
 
     public boolean remove(int index) {
         if (index >= nodes.size()) return false;
+        HAS_NODE_CHANGED = true;
         nodes.remove(index);
         specs.remove(index);
         lines.remove(index);
@@ -59,6 +62,7 @@ public class Relationship extends Entity {
     }
 
     public void remove(Entity entity) {
+        HAS_NODE_CHANGED = true;
         int index = nodes.indexOf(entity);
         if (index != -1) remove(index);
     }
@@ -109,15 +113,15 @@ public class Relationship extends Entity {
 
     public static class RelationshipSpec {
         @Expose
-        public String amm;
+        private String amm;
         @Expose
-        public String role;
+        private String role;
         @Expose
-        public boolean total;
+        private boolean total;
 
-        public int index;
-        public int uniqueIndex;
-        public int dupeCount;
+        private int index;
+        private int uniqueIndex;
+        private int dupeCount;
 
         public RelationshipSpec() {
             this("", false, "");
@@ -140,6 +144,60 @@ public class Relationship extends Entity {
         @Override
         public RelationshipSpec clone() {
             return new RelationshipSpec(amm, total, role);
+        }
+
+        public String getAmm() {
+            return amm;
+        }
+
+        public void setAmm(String amm) {
+            HAS_NODE_CHANGED = true;
+            this.amm = amm;
+        }
+
+        public String getRole() {
+            return role;
+        }
+
+        public void setRole(String role) {
+            HAS_NODE_CHANGED = true;
+            this.role = role;
+        }
+
+        public boolean isTotal() {
+            return total;
+        }
+
+        public void setTotal(boolean total) {
+            HAS_NODE_CHANGED = true;
+            this.total = total;
+        }
+
+        public int getIndex() {
+            return index;
+        }
+
+        public void setIndex(int index) {
+            HAS_NODE_CHANGED = true;
+            this.index = index;
+        }
+
+        public int getUniqueIndex() {
+            return uniqueIndex;
+        }
+
+        public void setUniqueIndex(int uniqueIndex) {
+            HAS_NODE_CHANGED = true;
+            this.uniqueIndex = uniqueIndex;
+        }
+
+        public int getDupeCount() {
+            return dupeCount;
+        }
+
+        public void setDupeCount(int dupeCount) {
+            HAS_NODE_CHANGED = true;
+            this.dupeCount = dupeCount;
         }
     }
 }

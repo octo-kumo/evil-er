@@ -65,7 +65,7 @@ public class Converter {
                     Table found = firstIdentifiableTable(tableMap, entities, e);
                     if (found != null) {
                         System.out.printf("\tAdded table, %s%n", found.getName());
-                        finalTable.add(found, combinedInTo == -1 ? spec.role.isEmpty() ? found.getName() : spec.role : entity.getName(), combinedInTo == -1 || entity.isWeak());
+                        finalTable.add(found, combinedInTo == -1 ? spec.getRole().isEmpty() ? found.getName() : spec.getRole() : entity.getName(), combinedInTo == -1 || entity.isWeak());
                     }
                 });
 
@@ -110,7 +110,7 @@ public class Converter {
 
     public static int findEntityToMerge(Relationship relationship) {
         List<Relationship.RelationshipSpec> specs = relationship.specs;
-        IntStream multiple = IntStream.range(0, relationship.nodes.size()).filter(i -> !specs.get(i).amm.isEmpty() && !Objects.equals(specs.get(i).amm, "1") && specs.get(i).total);
+        IntStream multiple = IntStream.range(0, relationship.nodes.size()).filter(i -> !specs.get(i).getAmm().isEmpty() && !Objects.equals(specs.get(i).getAmm(), "1") && specs.get(i).isTotal());
         int[] collect = multiple.toArray();
         if (collect.length == 1) return collect[0];
         return -1;
@@ -157,7 +157,7 @@ public class Converter {
             for (int i = 0; i < r.nodes.size(); i++) {
                 Relationship.RelationshipSpec s = r.specs.get(i);
                 Entity o = r.nodes.get(i);
-                builder.append(new String(new char[depth + 1]).replace("\0", "  ")).append("INSERT INTO relates VALUES ('").append(s.role).append("', ").append(s.total).append(", '").append(s.amm).append("', '").append(e.getID()).append("', '").append(o.getID()).append("', '").append(did).append("');\n");
+                builder.append(new String(new char[depth + 1]).replace("\0", "  ")).append("INSERT INTO relates VALUES ('").append(s.getRole()).append("', ").append(s.isTotal()).append(", '").append(s.getAmm()).append("', '").append(e.getID()).append("', '").append(o.getID()).append("', '").append(did).append("');\n");
             }
         }
         for (Attribute attribute : e.attributes) {

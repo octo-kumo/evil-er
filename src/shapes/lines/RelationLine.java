@@ -29,7 +29,7 @@ public class RelationLine extends Line<Relationship, Entity> {
         Vector a = getStart();
         Vector b = getEnd();
         FancyLine line = new FancyLine(a, b, g.getContext().getLineStyle());
-        if (spec.total) {
+        if (spec.isTotal()) {
             Stroke stroke = g.getStroke();
             g.setStroke(base);
             g.draw(line);
@@ -54,31 +54,31 @@ public class RelationLine extends Line<Relationship, Entity> {
 
         Vector d = b.minus(a);
         Vector c = a.add(b).div(2);
-        if (!spec.role.isEmpty()) {
+        if (!spec.getRole().isEmpty()) {
             Vector mid = b.add(a).div(2);
             double angle = Vector.alwaysUp(d.angle() - Math.PI / 2) + Math.PI / 2;
             AffineTransform transform = g.getTransform();
             g.translate(mid);
             g.rotate(angle);
-            g.drawStringCenter(spec.role, g.context.background());
+            g.drawStringCenter(spec.getRole(), g.context.background());
             g.setTransform(transform);
         }
-        if (!spec.amm.isEmpty()) {
+        if (!spec.getAmm().isEmpty()) {
             double dist = 10;
             double angle = Vector.alwaysUp(d.angle() + Math.PI / 2) +
-                    (spec.uniqueIndex % 2 == (d.getX() >= 0 ? 1 : 0) ? 0 : Math.PI);
-            g.drawStringCenter(spec.amm, c.add(Math.cos(angle) * dist, Math.sin(angle) * dist));
+                    (spec.getUniqueIndex() % 2 == (d.getX() >= 0 ? 1 : 0) ? 0 : Math.PI);
+            g.drawStringCenter(spec.getAmm(), c.add(Math.cos(angle) * dist, Math.sin(angle) * dist));
         }
     }
 
     public Vector getStart() {
-        return spec.uniqueIndex == 0 ? spec.dupeCount % 2 == 0 ? a.minus(normal.multi(.5)) : a :
-                a.add(normal.multi(bouncingIndex(spec.uniqueIndex) + (spec.dupeCount % 2 == 0 ? -.5 : 0)));
+        return spec.getUniqueIndex() == 0 ? spec.getDupeCount() % 2 == 0 ? a.minus(normal.multi(.5)) : a :
+                a.add(normal.multi(bouncingIndex(spec.getUniqueIndex()) + (spec.getDupeCount() % 2 == 0 ? -.5 : 0)));
     }
 
     public Vector getEnd() {
-        return spec.uniqueIndex == 0 ? spec.dupeCount % 2 == 0 ? b.minus(normal.multi(.5)) : b :
-                b.add(normal.multi(bouncingIndex(spec.uniqueIndex) + (spec.dupeCount % 2 == 0 ? -.5 : 0)));
+        return spec.getUniqueIndex() == 0 ? spec.getDupeCount() % 2 == 0 ? b.minus(normal.multi(.5)) : b :
+                b.add(normal.multi(bouncingIndex(spec.getUniqueIndex()) + (spec.getDupeCount() % 2 == 0 ? -.5 : 0)));
     }
 
     public void setNormal() {
