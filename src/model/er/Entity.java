@@ -139,6 +139,7 @@ public class Entity extends Node {
 
     public Entity setName(String name) {
         this.name = name;
+        HAS_NODE_CHANGED = true;
         return this;
     }
 
@@ -148,15 +149,18 @@ public class Entity extends Node {
 
     public Entity setWeak(boolean weak) {
         this.weak = weak;
+        HAS_NODE_CHANGED = true;
         return this;
     }
 
     public void addAttribute(Attribute attribute) {
         this.attributes.add(attribute.setParent(this));
+        HAS_NODE_CHANGED = true;
     }
 
     public void removeAttribute(Attribute attribute) {
         this.attributes.remove(attribute.setParent(null));
+        HAS_NODE_CHANGED = true;
     }
 
     @Override

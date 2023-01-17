@@ -1,6 +1,7 @@
 package main.er;
 
 import com.github.weisj.darklaf.LafManager;
+import com.github.weisj.darklaf.iconset.AllIcons;
 import com.github.weisj.darklaf.settings.ThemeSettings;
 import com.github.weisj.darklaf.theme.Theme;
 import com.github.weisj.darklaf.theme.spec.AccentColorRule;
@@ -10,9 +11,7 @@ import main.rs.Converter;
 import main.rs.EvilRs;
 import main.rs.RSMenu;
 import main.rs.SQLConverter;
-import model.Vector;
 import model.er.Entity;
-import model.serializers.Serializer;
 import shapes.lines.Line;
 import utils.Chooser;
 import utils.JFontChooser;
@@ -26,10 +25,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -56,28 +52,26 @@ public class ERMenu extends JMenuBar {
         ERDiagram diagram = evilEr.diagramPanel.diagram;
         add(new JMenu("File") {{
             setMnemonic('F');
-            add(new JMenuItem(new AbstractAction("Open") {
+            add(new JMenuItem(new AbstractAction("Open", AllIcons.Action.Search.get()) {
                 public void actionPerformed(ActionEvent ae) {
                     if (JFileChooser.APPROVE_OPTION == Chooser.jsonChooser.showOpenDialog(evilEr))
-                        diagram.readFromFile(Chooser.jsonChooser.getFinal());
+                        diagram.setCurrentFile(Chooser.jsonChooser.getFinal());
                 }
             }));
             add(new JMenuItem("Save") {{
-                addActionListener(e -> diagram.saveToFile(new File("session.json")));
+                setIcon(AllIcons.Action.Save.get());
+                addActionListener(e -> diagram.saveToFile(evilEr.fileList.getProjectPath()));
                 setAccelerator(KeyStroke.getKeyStroke('S', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
             }});
-            add(new JMenuItem(new AbstractAction("Save as...") {
-                public void actionPerformed(ActionEvent ae) {
-                    if (JFileChooser.APPROVE_OPTION == Chooser.jsonChooser.showSaveDialog(evilEr)) {
-                        try (Writer writer = new FileWriter(Chooser.jsonChooser.getFinal())) {
-                            Serializer.serialize(diagram.entities, writer);
-                        } catch (IOException e) {
-                            report(e);
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }));
+            add(new JMenuItem("Save as...") {{
+                setIcon(AllIcons.Action.Save.get());
+                addActionListener(e -> diagram.saveAsFile(evilEr.fileList.getProjectPath()));
+                setAccelerator(KeyStroke.getKeyStroke('S', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() | InputEvent.SHIFT_MASK));
+            }});
+            add(new JCheckBoxMenuItem("File List", true) {{
+                addActionListener(e -> evilEr.fileList.setVisible(getState()));
+            }});
+            add(new JSeparator());
             add(new JMenuItem(new AbstractAction("To clipboard") {
                 public void actionPerformed(ActionEvent ae) {
                     TransferableImage transferable = new TransferableImage(diagram.export());
@@ -280,6 +274,17 @@ public class ERMenu extends JMenuBar {
                         }
                 });
             }});
+            add(new JMenuItem("Report Issue") {{
+                addActionListener(e -> {
+                    if (JOptionPane.showConfirmDialog(null,
+                            "Found a bug? Want to report?", "Report", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
+                        try {
+                            Desktop.getDesktop().browse(new URI("https://github.com/octo-kumo/evil-er/issues/new/choose"));
+                        } catch (IOException | URISyntaxException ex) {
+                            ex.printStackTrace();
+                        }
+                });
+            }});
         }});
     }
 
@@ -356,11 +361,7 @@ public class ERMenu extends JMenuBar {
     }
 
     private void center(ActionEvent evt) {
-        Vector com = evilEr.diagramPanel.diagram.entities.parallelStream().map(e -> (Vector) e).reduce(Vector::add).orElse(Vector.ZERO).div(evilEr.diagramPanel.diagram.entities.size());
-        evilEr.diagramPanel.diagram.origin.set(com.negate()
-                .add(evilEr.diagramPanel.diagram.getWidth() / 2d / evilEr.diagramPanel.diagram.scale,
-                        evilEr.diagramPanel.diagram.getHeight() / 2d / evilEr.diagramPanel.diagram.scale));
-        evilEr.diagramPanel.diagram.repaint();
+        evilEr.diagramPanel.diagram.centralize();
     }
 
     public void openFontChooser() {

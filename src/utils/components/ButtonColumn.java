@@ -51,15 +51,20 @@ public class ButtonColumn extends AbstractCellEditor
         this.action = action;
 
         renderButton = new JButton();
+        renderButton.setBorder(null);
         editButton = new JButton();
         editButton.setFocusPainted(false);
         editButton.addActionListener(this);
+        editButton.setBorder(null);
         originalBorder = editButton.getBorder();
         setFocusBorder(new LineBorder(Color.BLUE));
 
         TableColumnModel columnModel = table.getColumnModel();
         columnModel.getColumn(column).setCellRenderer(this);
         columnModel.getColumn(column).setCellEditor(this);
+        columnModel.getColumn(column).setMaxWidth(18);
+        columnModel.getColumn(column).setMinWidth(18);
+        columnModel.getColumn(column).setPreferredWidth(18);
         table.addMouseListener(this);
     }
 

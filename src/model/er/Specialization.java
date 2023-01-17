@@ -26,6 +26,7 @@ public class Specialization extends Relationship {
     }
 
     public void setSuperclass(Entity superclass) {
+        HAS_NODE_CHANGED = true;
         if (superclass == null) {
             nodes.clear();
             specs.clear();
@@ -66,6 +67,7 @@ public class Specialization extends Relationship {
     }
 
     public void setDisjoint(boolean disjoint) {
+        HAS_NODE_CHANGED = true;
         this.disjoint = disjoint;
     }
 

@@ -39,6 +39,12 @@ public class Chooser extends JFileChooser {
         }
     };
 
+    public static final Chooser folderChooser = new Chooser() {
+        {
+            setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        }
+    };
+
     public File getFinal() {
         return getSelectedFile();
     }

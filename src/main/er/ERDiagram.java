@@ -5,10 +5,7 @@ import main.EvilEr;
 import main.renderer.DiagramGraphics;
 import model.Drawable;
 import model.Vector;
-import model.er.Attribute;
-import model.er.Entity;
-import model.er.Relationship;
-import model.er.Specialization;
+import model.er.*;
 import model.serializers.Serializer;
 import model.ts.AddTransaction;
 import model.ts.DeleteTransaction;
@@ -16,7 +13,7 @@ import model.ts.EntityTransaction;
 import model.ts.TransactionGroup;
 import org.jetbrains.annotations.Nullable;
 import shapes.lines.Line;
-import utils.Examples;
+import utils.Chooser;
 import utils.callbacks.DrawContext;
 import utils.models.Reactive;
 
@@ -27,10 +24,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.List;
 import java.util.*;
 import java.util.function.Predicate;
@@ -78,6 +72,8 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     private Relationship connectBase;
     private Entity clipboardTarget;
 
+    private File currentFile;
+
     public ERDiagram(ERDiagramPanel diagramPanel) {
         this.diagramPanel = diagramPanel;
         setEnabled(true);
@@ -90,13 +86,6 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
         entities = new ArrayList<>();
         addListeners();
-        File file = new File("session.json");
-        if (file.exists()) try {
-            readFromFile(file);
-        } catch (Exception e) {
-            SwingUtilities.invokeLater(() -> Examples.populate(entities));
-        }
-        else SwingUtilities.invokeLater(() -> Examples.populate(entities));
     }
 
     private void addListeners() {
@@ -121,6 +110,8 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         draw(g);
         g.setTransform(transform);
         g.drawStringCenter("@yun", getWidth() - 25, getHeight() - 15);
+        if (currentFile != null)
+            g.drawString(currentFile.getAbsolutePath() + (Node.HAS_NODE_CHANGED ? "*" : ""), 5, 10);
         if (hasFocus()) g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
     }
 
@@ -192,12 +183,12 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         System.out.println(worldToClip);
         entityStream.forEach(e -> {
             clipboard.add(e);
+            e.decre(mouseWorld);
             if (cut) {
                 ERDiagram.this.delete(e);
                 ERDiagram.this.burnBridges(e, entityStream);
                 return;
             }
-            e.decre(mouseWorld);
             if (e instanceof Attribute) {
                 double x = e.getX(), y = e.getY();
                 ((Attribute) e).setParent(null);
@@ -261,6 +252,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     }
 
     public void commit(EntityTransaction transaction) {
+        Node.HAS_NODE_CHANGED = true;
         transaction.redo(entities);
         undoStack.push(transaction);
         redoStack.clear();
@@ -543,16 +535,45 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         repaint();
     }
 
-    public void readFromFile(File file) {
+    public void readFromFile(File file) throws FileNotFoundException {
         try (JsonReader reader = new JsonReader(new FileReader(file))) {
             ArrayList<Entity> deserialized = Serializer.deserialize(reader);
-            entities.clear();
+            reset();
             entities.addAll(deserialized);
+            centralize();
             repaint();
+        } catch (FileNotFoundException e) {
+            reset();
+            throw e;
         } catch (IOException e) {
             report(e);
             e.printStackTrace();
         }
+    }
+
+    private void reset() {
+        selection.clear();
+        entities.clear();
+        scale = 1;
+        origin.set(0, 0);
+        undoStack.clear();
+        redoStack.clear();
+        addingType.set(Entity.Type.Entity);
+        target.set((Entity) null);
+        connectTarget.set((Vector) null);
+        action.set(ActionType.SELECTING);
+    }
+
+    public void saveToFile(String parent) {
+        if (currentFile != null) saveToFile(getCurrentFile());
+        else saveAsFile(parent);
+    }
+
+    public void saveAsFile(String parent) {
+        Chooser.jsonChooser.setCurrentDirectory(new File(parent));
+        Chooser.jsonChooser.setSelectedFile(getCurrentFile());
+        if (JFileChooser.APPROVE_OPTION == Chooser.jsonChooser.showSaveDialog(this))
+            saveToFile(Chooser.jsonChooser.getFinal());
     }
 
     public void saveToFile(File file) {
@@ -563,9 +584,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
             report(e);
             e.printStackTrace();
         }
-        ArrayList<Entity> deserialized = Serializer.deserialize(json);
-        entities.clear();
-        entities.addAll(deserialized);
+        setCurrentFile(file);
         repaint();
     }
 
@@ -575,6 +594,45 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
     public boolean exporting() {
         return exporting;
+    }
+
+    public File getCurrentFile() {
+        return currentFile;
+    }
+
+    public void setCurrentFileQuietly(File currentFile) {
+        this.currentFile = currentFile;
+        repaint();
+    }
+
+    public void setCurrentFile(File currentFile) {
+        if (Objects.equals(currentFile, getCurrentFile())) return;
+        if (Node.HAS_NODE_CHANGED && JOptionPane.showConfirmDialog(this, "You have unsaved changes, discard?", "Warning", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION)
+            return;
+        if (currentFile == null) {
+            reset();
+            this.currentFile = null;
+            Node.HAS_NODE_CHANGED = false;
+        } else {
+            try {
+                readFromFile(currentFile);
+                this.currentFile = currentFile;
+                Node.HAS_NODE_CHANGED = false;
+            } catch (FileNotFoundException e) {
+                this.currentFile = currentFile;
+                Node.HAS_NODE_CHANGED = true;
+                saveToFile(currentFile);
+            } catch (Exception e) {
+                report(e);
+            }
+        }
+        repaint();
+    }
+
+    public void centralize() {
+        Vector com = entities.parallelStream().map(e -> (Vector) e).reduce(Vector::add).orElse(Vector.ZERO).div(entities.size());
+        origin.set(com.negate().add(getWidth() / 2d / scale, getHeight() / 2d / scale));
+        repaint();
     }
 
     enum ActionType {ADDING, CONNECTING, SELECTING}
