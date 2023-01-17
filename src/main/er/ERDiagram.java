@@ -585,6 +585,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
             e.printStackTrace();
         }
         setCurrentFile(file);
+        Node.HAS_NODE_CHANGED = false;
         repaint();
     }
 
