@@ -57,7 +57,9 @@ public class FileList extends JPanel {
         if (file.isDirectory()) return;
         File folder = new File(getProjectPath(), ".evil-trash");
         if (!folder.exists()) folder.mkdirs();
-        file.renameTo(new File(folder, file.getName()));
+        File newFile = new File(folder, file.getName());
+        if (newFile.exists()) newFile = new File(folder, file.getName() + System.currentTimeMillis());
+        file.renameTo(newFile);
         refresh();
     }
 
