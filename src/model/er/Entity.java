@@ -178,8 +178,8 @@ public class Entity extends Node {
     public void drawShape(DiagramGraphics g) {
         drawShape(g, getShape());
         // Ensure at least 7 px per character
-        double newWidth = Math.max(WIDTH, UNIVERSAL_METRICS.stringWidth(getName()) * 1.05f);
-        if (isWeak()) drawShape(g, getShape(newWidth - 6, INNER_HEIGHT));
+        double newWidth = Math.max(WIDTH * getScale(), UNIVERSAL_METRICS.stringWidth(getName()) * 1.05f);
+        if (isWeak()) drawShape(g, getShape(newWidth - 6 * getScale(), INNER_HEIGHT * getScale()));
     }
 
     public void drawShape(DiagramGraphics g, Shape shape) {
@@ -189,8 +189,8 @@ public class Entity extends Node {
 
     public Shape getShape() {
         // Ensure at least 7 px per character
-        double newWidth = Math.max(WIDTH, UNIVERSAL_METRICS.stringWidth(getName()) * 1.05f);
-        return getShape(newWidth, HEIGHT);
+        double newWidth = Math.max(WIDTH * getScale(), UNIVERSAL_METRICS.stringWidth(getName()) * 1.05f);
+        return getShape(newWidth, HEIGHT * getScale());
     }
 
     public Shape getShape(double width, double height) {
@@ -228,5 +228,9 @@ public class Entity extends Node {
 
     public enum Type {
         Entity, Relationship, Attribute, Specialization
+    }
+
+    protected double getScale() {
+        return 1;
     }
 }

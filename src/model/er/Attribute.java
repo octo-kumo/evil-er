@@ -9,8 +9,6 @@ import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 
-import static main.er.ERDiagram.UNIVERSAL_METRICS;
-
 public class Attribute extends Entity {
     private Entity parent;
     @Expose
@@ -85,9 +83,11 @@ public class Attribute extends Entity {
 
     @Override
     public Shape getShape(double width, double height) {
-        // Ensure at least 7 px per character
-        double newWidth = Math.max(width * 0.7, UNIVERSAL_METRICS.stringWidth(getName()) * 1.05f);
-        return new Ellipse2D.Double(-newWidth / 2d, -height * 0.7 / 2d, newWidth, height * 0.7);
+        return new Ellipse2D.Double(-width / 2d, -height / 2d, width, height);
+    }
+
+    protected double getScale() {
+        return 0.7;
     }
 
     public boolean isKey() {
