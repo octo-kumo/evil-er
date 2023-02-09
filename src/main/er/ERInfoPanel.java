@@ -63,10 +63,17 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
 //            setPlaceholder("Y");
 //            addTextListener(this, entity::setY, Double::parseDouble);
 //        }});
-        panel.add(new JCheckBox("Weak") {{
+        panel.add(new JCheckBox(entity instanceof Attribute ? "Multi-valued" : "Weak") {{
             setAlignmentX(LEFT_ALIGNMENT);
             addBooleanListener(this, entity::setWeak, entity::isWeak);
         }});
+        if (entity instanceof Relationship) {
+            Relationship relationship = (Relationship) entity;
+            panel.add(new JCheckBox("Associative") {{
+                setAlignmentX(LEFT_ALIGNMENT);
+                addBooleanListener(this, relationship::setAssociative, relationship::isAssociative);
+            }});
+        }
         return panel;
     }
 
@@ -112,18 +119,25 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
         Object[][] data = IntStream.range(0, relationship.nodes.size()).mapToObj(i -> {
             Entity t = relationship.nodes.get(i);
             Relationship.RelationshipSpec spec = relationship.specs.get(i);
-            return new Object[]{t.getName(), spec.getAmm(), spec.isTotal(), spec.getRole(), CLOSE_ICON};
+            return new Object[]{
+                    t.getName(),
+                    spec.getAmm(),
+                    spec.isTotal(),
+                    spec.isOptional(),
+                    spec.getRole(),
+                    CLOSE_ICON};
         }).toArray(Object[][]::new);
 
         DefaultTableModel tableModel;
         /* Table */
-        panel.add(new JScrollPane(new JTable(tableModel = new DefaultTableModel(data, new String[]{"Name", "Amount", "Total", "Role", ""}) {
+        panel.add(new JScrollPane(new JTable(tableModel = new DefaultTableModel(data, new String[]{"Name", "Amount", "Total", "Optional", "Role", ""}) {
             public void setValueAt(Object value, int row, int column) {
                 super.setValueAt(value, row, column);
                 if (column == 0) relationship.nodes.get(row).setName((String) value);
                 else if (column == 1) relationship.specs.get(row).setAmm((String) value);
                 else if (column == 2) relationship.specs.get(row).setTotal((boolean) value);
-                else if (column == 3) relationship.specs.get(row).setRole((String) value);
+                else if (column == 3) relationship.specs.get(row).setOptional((boolean) value);
+                else if (column == 4) relationship.specs.get(row).setRole((String) value);
                 evilEr.diagramPanel.diagram.repaint();
             }
         }) {
@@ -137,12 +151,12 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
                             evilEr.diagramPanel.diagram.repaint();
                         }
                     }
-                }, 4);
+                }, 5);
             }
 
             @Override
             public Class<?> getColumnClass(int column) {
-                if (column == 2) return Boolean.class;
+                if (column == 2 || column == 3) return Boolean.class;
                 else return String.class;
             }
         }, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER));

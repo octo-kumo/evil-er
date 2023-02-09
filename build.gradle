@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'kumo.evil-er'
-version = '0.7.0-beta'
+version = '0.7.1-beta'
 application {
     mainClass = 'main.EvilEr'
 }
@@ -32,7 +32,7 @@ dependencies {
 }
 jar {
     manifest {
-        attributes 'SplashScreen-Image': 'icon/icon.png',
+        attributes 'SplashScreen-Image': 'images/icons/icon.png',
                 'Implementation-Title': 'ER Diagram',
                 'Implementation-Version': project.version
     }

@@ -6,6 +6,7 @@ import shapes.Diamond;
 import shapes.lines.RelationLine;
 
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +14,8 @@ import java.util.List;
 import static main.er.ERDiagram.UNIVERSAL_METRICS;
 
 public class Relationship extends Entity {
+    @Expose
+    private boolean associative;
     public List<Entity> nodes;
     @Expose
     public List<RelationshipSpec> specs;
@@ -75,9 +78,11 @@ public class Relationship extends Entity {
     }
 
     public void drawShape(DiagramGraphics g) {
+        double newWidth = Math.max(WIDTH, UNIVERSAL_METRICS.stringWidth(getName()) * 1.05f);
+        if (isAssociative()) drawShape(g, new Rectangle2D.Double(-newWidth / 2d, -HEIGHT / 2d, newWidth, HEIGHT));
+
         drawShape(g, getShape());
         // Ensure at least 7 px per character
-        double newWidth = Math.max(WIDTH, UNIVERSAL_METRICS.stringWidth(getName()) * 1.05f);
         if (isWeak()) drawShape(g, getShape(newWidth - 15, INNER_HEIGHT));
     }
 
@@ -111,6 +116,14 @@ public class Relationship extends Entity {
         return clone;
     }
 
+    public boolean isAssociative() {
+        return associative;
+    }
+
+    public void setAssociative(boolean associative) {
+        this.associative = associative;
+    }
+
     public static class RelationshipSpec {
         @Expose
         private String amm;
@@ -118,6 +131,8 @@ public class Relationship extends Entity {
         private String role;
         @Expose
         private boolean total;
+        @Expose
+        private boolean optional;
 
         private int index;
         private int uniqueIndex;
@@ -198,6 +213,15 @@ public class Relationship extends Entity {
         public void setDupeCount(int dupeCount) {
             HAS_NODE_CHANGED = true;
             this.dupeCount = dupeCount;
+        }
+
+        public boolean isOptional() {
+            return optional;
+        }
+
+        public void setOptional(boolean optional) {
+            HAS_NODE_CHANGED = true;
+            this.optional = optional;
         }
     }
 }
