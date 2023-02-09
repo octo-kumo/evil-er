@@ -20,7 +20,7 @@ public class VersionUpgrade {
         });
     }
 
-    public static void upgrade(ArrayList<Entity> entities) {
+    public static void upgradeEntities(ArrayList<Entity> entities) {
         flatten(entities).forEach(e -> {
             if (e.id == null) e.id = UUID.randomUUID().toString();
             if (e instanceof Attribute) {

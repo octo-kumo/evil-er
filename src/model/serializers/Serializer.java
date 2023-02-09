@@ -122,7 +122,7 @@ public class Serializer {
                 r.revalidate();
             }
         }
-        VersionUpgrade.upgrade(entities);
+        VersionUpgrade.upgradeEntities(entities);
     }
 
     private static void postprocessTables(ArrayList<Table> tables) {

@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 public class DiagramGraphics extends Graphics2D {
-    private static final Stroke dashed = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{2}, 0);
     @NotNull
     public final DrawContext context;
     private final Graphics2D g;
@@ -89,8 +88,8 @@ public class DiagramGraphics extends Graphics2D {
     }
 
     public void dashed(Shape shape) {
-        Stroke back = g.getStroke();
-        setStroke(dashed);
+        BasicStroke back = (BasicStroke) g.getStroke();
+        setStroke(new BasicStroke(back.getLineWidth(), back.getEndCap(), back.getLineJoin(), back.getMiterLimit(), new float[]{2}, 0));
         draw(shape);
         setStroke(back);
     }
@@ -99,8 +98,8 @@ public class DiagramGraphics extends Graphics2D {
         setColor(fill);
         fill(shape);
 
-        Stroke back = g.getStroke();
-        setStroke(dashed);
+        BasicStroke back = (BasicStroke) g.getStroke();
+        setStroke(new BasicStroke(back.getLineWidth(), back.getEndCap(), back.getLineJoin(), back.getMiterLimit(), new float[]{2}, 0));
         setColor(outline);
         draw(shape);
         setStroke(back);

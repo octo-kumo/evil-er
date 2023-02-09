@@ -69,7 +69,7 @@ public class EvilEr extends JPanel {
                 formatter.printHelp("evil er command line options", options);
                 return;
             }
-            if (cmd.hasOption("d")) {
+            if (cmd.hasOption("d") || Objects.equals(System.getProperty("user.name"), "zy")) {
                 ERMenu.DEV_MODE.set(true);
                 System.out.println("Launching with extra features, enjoy~");
             }
