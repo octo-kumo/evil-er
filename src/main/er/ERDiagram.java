@@ -173,13 +173,10 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     public void copy(boolean cut) {
         clipboard.clear();
         HashMap<Entity, Entity> worldToClip = new HashMap<>();
-        List<Entity> entityStream = selection.stream()
-                .filter(e -> !(e instanceof Attribute && selection.contains(((Attribute) e).getParent())))
-                .map(entity -> {
-                    if (!cut) worldToClip.put(entity, entity = entity.clone());
-                    return entity;
-                })
-                .collect(Collectors.toList());
+        List<Entity> entityStream = selection.stream().filter(e -> !(e instanceof Attribute && selection.contains(((Attribute) e).getParent()))).map(entity -> {
+            if (!cut) worldToClip.put(entity, entity = entity.clone());
+            return entity;
+        }).collect(Collectors.toList());
         System.out.println(worldToClip);
         entityStream.forEach(e -> {
             clipboard.add(e);
@@ -282,10 +279,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     }
 
     public void burnBridges(Entity entity, List<Entity> toIgnore) {
-        entities.parallelStream()
-                .filter(e -> e instanceof Relationship)
-                .filter(e -> !toIgnore.contains(e))
-                .forEach(r -> ((Relationship) r).remove(entity));
+        entities.parallelStream().filter(e -> e instanceof Relationship).filter(e -> !toIgnore.contains(e)).forEach(r -> ((Relationship) r).remove(entity));
     }
 
     public void setAddingType(Entity.Type type) {
@@ -370,12 +364,8 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         Vector newMouse = unproject(mouse);
         if (SwingUtilities.isLeftMouseButton(e)) {
             if (action.equal(ActionType.SELECTING)) {
-                Vector diff = !e.isControlDown() ? newMouse.minus(mouseWorld) :
-                        newMouse.snapTo(GRID_SIZE).decre(mouseWorld.snapTo(GRID_SIZE))
-                                .incre(target.nonNull() ? target.get().snapTo(GRID_SIZE).minus(target.get()) : Vector.ZERO);
-                selection.stream()
-                        .filter(entity -> !(entity instanceof Attribute) || !selection.contains(((Attribute) entity).getParent()))
-                        .forEach(entity -> entity.incre(diff));
+                Vector diff = !e.isControlDown() ? newMouse.minus(mouseWorld) : newMouse.snapTo(GRID_SIZE).decre(mouseWorld.snapTo(GRID_SIZE)).incre(target.nonNull() ? target.get().snapTo(GRID_SIZE).minus(target.get()) : Vector.ZERO);
+                selection.stream().filter(entity -> !(entity instanceof Attribute) || !selection.contains(((Attribute) entity).getParent())).forEach(entity -> entity.incre(diff));
                 repaint();
             }
         } else if (SwingUtilities.isRightMouseButton(e)) {
@@ -430,12 +420,9 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         Vector pos = clipboardItem.add(mouseWorld); // translate to mouse position, from clipboard world
         Entity parent = null;
         if (clipboardItem instanceof Attribute) {
-            if (((Attribute) clipboardItem).getParent() == null && clipboardTarget != null)
-                parent = clipboardTarget;
+            if (((Attribute) clipboardItem).getParent() == null && clipboardTarget != null) parent = clipboardTarget;
         } else {
-            if (clipboardItem instanceof Specialization
-                    && ((Specialization) clipboardItem).getSuperclass() == null
-                    && clipboardTarget != null)
+            if (clipboardItem instanceof Specialization && ((Specialization) clipboardItem).getSuperclass() == null && clipboardTarget != null)
                 parent = clipboardTarget;
         }
         clipboardItem.set(pos);
@@ -630,9 +617,32 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         repaint();
     }
 
+    public void gridify() {
+        gridify(entities);
+    }
+
+    public void gridify(ArrayList<? extends Entity> entities) {
+        entities.forEach(entity -> {
+            entity.snap(GRID_SIZE);
+            gridify(entity.attributes);
+        });
+    }
+
     public void centralize() {
         Vector com = entities.parallelStream().map(e -> (Vector) e).reduce(Vector::add).orElse(Vector.ZERO).div(entities.size());
         origin.set(com.negate().add(getWidth() / 2d / scale, getHeight() / 2d / scale));
+        repaint();
+//        entities.add((Entity) new Entity("origin").set(origin));
+    }
+
+    public void fitScreen() {
+        Rectangle2D aabb = getAABB();
+        Rectangle bounds = getBounds();
+        this.scale = Math.min(bounds.getWidth() / aabb.getWidth(), bounds.getHeight() / aabb.getHeight());
+        this.origin.set(new Vector(aabb.getCenterX(), aabb.getCenterY())
+                .negate()
+                .add(getX() / scale, getY() / scale)
+                .add(getWidth() / 2d / scale, getHeight() / 2d / scale));
         repaint();
     }
 

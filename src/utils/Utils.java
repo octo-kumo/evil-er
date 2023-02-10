@@ -1,5 +1,6 @@
 package utils;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -16,5 +17,12 @@ public class Utils {
             }
         }
         return input;
+    }
+
+    public static <T> T[] prepend(T[] elements, T... to_prepend) {
+        T[] newArray = Arrays.copyOf(elements, elements.length + to_prepend.length);
+        System.arraycopy(to_prepend, 0, newArray, 0, to_prepend.length);
+        System.arraycopy(elements, 0, newArray, to_prepend.length, elements.length);
+        return newArray;
     }
 }
