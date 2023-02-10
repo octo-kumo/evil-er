@@ -34,10 +34,13 @@ jobs:
         run: ./gradlew build
       - name: Package Files
         run: ./gradlew createAllExecutables
-      - name: Upload Artifacts
+      - name: Upload Artifacts (jar)
         uses: actions/upload-artifact@v3
         with:
-          name: artifacts
-          path: |
-            build/libs/*.jar
-            build/launch4j/evil-er.exe
+          name: jar
+          path: build/libs/*.jar
+      - name: Upload Artifacts (exe)
+        uses: actions/upload-artifact@v3
+        with:
+          name: exe
+          path: build/launch4j/evil-er.exe
