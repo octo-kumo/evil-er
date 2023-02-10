@@ -46,7 +46,10 @@ public class ERDiagramPanel extends JPanel implements ComponentListener {
     }
 
     public void requestNameEdit(Entity entity) {
-        if (inputTarget != null) inputTarget.setName(input.getText());
+        if (inputTarget != null) { // update previous being edited entity's name
+            inputTarget.setName(input.getText());
+            if (diagram.target.get() == inputTarget) diagram.target.set(diagram.target.get());
+        }
 
         if ((inputTarget = entity) == null) {
             input.setVisible(false);
