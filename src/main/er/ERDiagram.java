@@ -69,7 +69,6 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
      * PARAMS
      */
     private boolean exporting = false;
-    private Relationship connectBase;
     private Entity clipboardTarget;
 
     private File currentFile;
@@ -312,11 +311,19 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
                 repaint();
                 break;
             case CONNECTING:
-                if (connectBase != null && connectTarget.get().getClass() == Entity.class) {
-                    connectBase.addNode((Entity) connectTarget.get(), new Relationship.RelationshipSpec("", false));
+                if (target.get() != null &&
+                        target.get() instanceof Relationship &&
+                        connectTarget.get().getClass() == Entity.class) {
+                    ((Relationship) target.get()).addNode((Entity) connectTarget.get(), new Relationship.RelationshipSpec("", false));
+                    selection.add((Entity) connectTarget.get());
+                    target.set(target.get());
                 } else {
                     getIntersect(mouseWorld).ifPresent(entity -> {
-                        if (entity instanceof Relationship) connectBase = (Relationship) entity;
+                        if (entity instanceof Relationship) {
+                            selection.clear();
+                            setTarget(entity);
+                            selection.addAll(((Relationship) entity).nodes);
+                        }
                     });
                 }
                 repaint();
@@ -335,7 +342,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         }
         else if (SwingUtilities.isRightMouseButton(e)) {
             panStart.set(origin);
-            if (action.equal(ActionType.CONNECTING)) action.set(ActionType.SELECTING);
+//            if (action.equal(ActionType.CONNECTING)) action.set(ActionType.SELECTING);
         } else if (SwingUtilities.isMiddleMouseButton(e)) {
             action.set(ActionType.SELECTING);
             selection.clear();
@@ -351,7 +358,6 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
             action.set(ActionType.SELECTING);
             diagramPanel.requestNameEdit(null);
         }
-        if (action.equal(ActionType.CONNECTING) && entity instanceof Relationship) connectBase = (Relationship) entity;
     }
 
     @Override
@@ -379,7 +385,10 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     public void mouseClicked(MouseEvent e) {
         if (SwingUtilities.isLeftMouseButton(e) && !action.equal(ActionType.ADDING)) {
             Optional<Entity> found = getIntersect(unproject(e.getX(), e.getY()));
-            if (found.isPresent() && e.getClickCount() == 2) diagramPanel.requestNameEdit(found.get());
+            if (e.getClickCount() == 2) {
+                if (found.isPresent()) diagramPanel.requestNameEdit(found.get());
+                else if (action.equal(ActionType.CONNECTING)) action.set(ActionType.SELECTING);
+            }
             repaint();
         }
     }
@@ -395,7 +404,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     @Override
     public void mouseMoved(MouseEvent e) {
         mouseWorld.set(unproject(e.getX(), e.getY()));
-        if (action.equal(ActionType.CONNECTING) && connectBase != null) {
+        if (action.equal(ActionType.CONNECTING) && target.get() != null) {
             Optional<Entity> found = getIntersect(mouseWorld).filter(entity -> !(entity instanceof Relationship) && !(entity instanceof Attribute));
             connectTarget.set(found.isPresent() ? found.get() : mouseWorld);
         } else if (action.equal(ActionType.ADDING) && clipboard.size() > 0) {
@@ -438,8 +447,8 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     }
 
     private void drawPendingConnection(DiagramGraphics g) {
-        if (connectBase == null) return;
-        g.dashed(new Line2D.Double(connectBase, connectTarget.get()));
+        if (target.get() == null || connectTarget.get() == null) return;
+        g.dashed(new Line2D.Double(target.get(), connectTarget.get()));
     }
 
     private void drawClipboard(DiagramGraphics g) {
