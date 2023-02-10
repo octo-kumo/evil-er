@@ -1,11 +1,13 @@
 package main.er;
 
 import com.github.weisj.darklaf.LafManager;
+import com.github.weisj.darklaf.components.help.HelpMenuItem;
 import com.github.weisj.darklaf.iconset.AllIcons;
 import com.github.weisj.darklaf.settings.ThemeSettings;
 import com.github.weisj.darklaf.theme.Theme;
 import com.github.weisj.darklaf.theme.spec.AccentColorRule;
 import com.github.weisj.darklaf.theme.spec.FontSizeRule;
+import images.Icons;
 import main.EvilEr;
 import main.rs.Converter;
 import main.rs.EvilRs;
@@ -38,6 +40,7 @@ import static utils.Prompts.report;
 public class ERMenu extends JMenuBar {
 
     public static final Preferences THEME = Preferences.userRoot().node("theme");
+    public static final Preferences SETTINGS = Preferences.userRoot().node("settings");
     public static final Preferences DRAWING_FONT = Preferences.userRoot().node("drawingFont");
     public static final Reactive<Boolean> DEV_MODE = new Reactive<>(false);
     private final EvilEr evilEr;
@@ -58,13 +61,11 @@ public class ERMenu extends JMenuBar {
                         diagram.setCurrentFile(Chooser.jsonChooser.getFinal());
                 }
             }));
-            add(new JMenuItem("Save") {{
-                setIcon(AllIcons.Action.Save.get());
+            add(new JMenuItem("Save", AllIcons.Action.Save.get()) {{
                 addActionListener(e -> diagram.saveToFile(evilEr.fileList.getProjectPath()));
                 setAccelerator(KeyStroke.getKeyStroke('S', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
             }});
             add(new JMenuItem("Save as...") {{
-                setIcon(AllIcons.Action.Save.get());
                 addActionListener(e -> diagram.saveAsFile(evilEr.fileList.getProjectPath()));
                 setAccelerator(KeyStroke.getKeyStroke('S', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() | InputEvent.SHIFT_MASK));
             }});
@@ -107,7 +108,7 @@ public class ERMenu extends JMenuBar {
                 setEnabled(false);
             }});
             add(new JSeparator());
-            add(new JMenuItem(new AbstractAction("Export...") {
+            add(new JMenuItem(new AbstractAction("Export...", Icons.Export) {
                 public void actionPerformed(ActionEvent ae) {
                     if (JFileChooser.APPROVE_OPTION == Chooser.imageChooser.showSaveDialog(evilEr)) try {
                         ImageIO.write(diagram.export(), "PNG", Chooser.imageChooser.getFinal());
@@ -120,19 +121,19 @@ public class ERMenu extends JMenuBar {
         }});
         add(new JMenu("Edit") {{
             setMnemonic('E');
-            add(new JMenuItem("Copy") {{
+            add(new JMenuItem("Copy", AllIcons.Action.Copy.get()) {{
                 addActionListener(e -> diagram.copy());
                 setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
             }});
-            add(new JMenuItem("Cut") {{
+            add(new JMenuItem("Cut", AllIcons.Action.Cut.get()) {{
                 addActionListener(e -> diagram.cut());
                 setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
             }});
-            add(new JMenuItem("Paste") {{
+            add(new JMenuItem("Paste", AllIcons.Action.Paste.get()) {{
                 addActionListener(e -> diagram.paste());
                 setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
             }});
-            add(new JMenuItem("Delete") {{
+            add(new JMenuItem("Delete", AllIcons.Action.Delete.get()) {{
                 addActionListener(e -> diagram.delete());
                 setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
             }});
@@ -145,22 +146,15 @@ public class ERMenu extends JMenuBar {
                 setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
             }});
             add(new JSeparator());
-            add(new JMenuItem("Undo") {{
+            add(new JMenuItem("Undo", AllIcons.Action.Undo.get()) {{
                 addActionListener(e -> diagram.undo());
-                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z,
-                        Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
             }});
-            add(new JMenuItem("Redo") {{
+            add(new JMenuItem("Redo", AllIcons.Action.Redo.get()) {{
                 addActionListener(e -> diagram.redo());
-                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z,
-                        KeyEvent.SHIFT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.SHIFT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
             }});
             add(new JSeparator());
-            add(new JMenuItem("Center") {{
-                addActionListener(ERMenu.this::center);
-                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C,
-                        InputEvent.SHIFT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-            }});
             add(new JMenuItem("Regress") {{
                 addActionListener(evt -> {
                     double total;
@@ -173,17 +167,22 @@ public class ERMenu extends JMenuBar {
                     System.out.println("Regression Complete, Operations = " + ops);
                     diagram.repaint();
                 });
-                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R,
-                        InputEvent.SHIFT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.SHIFT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
             }});
-            add(new JMenuItem(new AbstractAction("Clear") {
-                public void actionPerformed(ActionEvent ae) {
+            add(new JMenuItem("Clear") {{
+                addActionListener(e -> {
                     if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(evilEr, "Do you really want to clear all entities?", "Warning", JOptionPane.YES_NO_OPTION)) {
                         diagram.entities.clear();
                         diagram.repaint();
                     }
-                }
-            }));
+                });
+            }});
+            add(new JMenuItem("Gridify") {{
+                addActionListener(e -> {
+                    diagram.gridify();
+                    diagram.repaint();
+                });
+            }});
         }});
         add(new JMenu("Add") {{
             setMnemonic('A');
@@ -204,6 +203,15 @@ public class ERMenu extends JMenuBar {
         }});
         add(new JMenu("View") {{
             setMnemonic('V');
+            add(new JMenuItem("Center") {{
+                addActionListener(ERMenu.this::center);
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.SHIFT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+            }});
+            add(new JMenuItem("Fit") {{
+                addActionListener(ERMenu.this::fit);
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.SHIFT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+            }});
+            add(new JSeparator());
             add(new JMenu("Line Style") {{
                 ButtonGroup group = new ButtonGroup();
                 Line.LineStyle[] values = Line.LineStyle.values();
@@ -255,8 +263,7 @@ public class ERMenu extends JMenuBar {
             setMnemonic('H');
             add(new JMenuItem("About") {{
                 addActionListener(e -> {
-                    if (JOptionPane.showConfirmDialog(null,
-                            "EVIL ER\nMade by octo-kumo (***REMOVED***)\nVisit repository?", "About", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
+                    if (JOptionPane.showConfirmDialog(null, "EVIL ER\nMade by octo-kumo (***REMOVED***)\nVisit repository?", "About", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
                         try {
                             Desktop.getDesktop().browse(new URI("https://github.com/octo-kumo/evil-er"));
                         } catch (IOException | URISyntaxException ex) {
@@ -264,7 +271,7 @@ public class ERMenu extends JMenuBar {
                         }
                 });
             }});
-            add(new JMenuItem("Help") {{
+            add(new HelpMenuItem("Help") {{
                 addActionListener(e -> {
                     if (JOptionPane.showConfirmDialog(null, "Visit online documentation?", "Help", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
                         try {
@@ -276,8 +283,7 @@ public class ERMenu extends JMenuBar {
             }});
             add(new JMenuItem("Report Issue") {{
                 addActionListener(e -> {
-                    if (JOptionPane.showConfirmDialog(null,
-                            "Found a bug? Want to report?", "Report", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
+                    if (JOptionPane.showConfirmDialog(null, "Found a bug? Want to report?", "Report", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
                         try {
                             Desktop.getDesktop().browse(new URI("https://github.com/octo-kumo/evil-er/issues/new/choose"));
                         } catch (IOException | URISyntaxException ex) {
@@ -302,9 +308,7 @@ public class ERMenu extends JMenuBar {
             Color selectionColor = instance.getAccentColorRule().getSelectionColor();
             if (accentColor != null) THEME.putInt("accentColor", accentColor.getRGB());
             if (selectionColor != null) THEME.putInt("selectionColor", selectionColor.getRGB());
-            ERDiagram.HIGHLIGHT = Theme.isDark(instance.getTheme()) ?
-                    (accentColor == null ? selectionColor == null ? Color.GRAY : selectionColor : accentColor) :
-                    (selectionColor == null ? accentColor == null ? Color.LIGHT_GRAY : accentColor : selectionColor);
+            ERDiagram.HIGHLIGHT = Theme.isDark(instance.getTheme()) ? (accentColor == null ? selectionColor == null ? Color.GRAY : selectionColor : accentColor) : (selectionColor == null ? accentColor == null ? Color.LIGHT_GRAY : accentColor : selectionColor);
             THEME.putInt("fontSize", instance.getFontSizeRule().getPercentage());
 
             THEME.put("theme", instance.getTheme().getName());
@@ -326,14 +330,10 @@ public class ERMenu extends JMenuBar {
             instance.setSelectionColorFollowsSystem(THEME.getBoolean("isSelectionColorFollowsSystem", true));
             instance.setSystemPreferencesEnabled(THEME.getBoolean("isSystemPreferencesEnabled", true));
 
-            instance.setAccentColorRule(AccentColorRule.fromColor(
-                    new Color(THEME.getInt("accentColor", 0xFF0063B1)),
-                    new Color(THEME.getInt("selectionColor", 0xFF7FAFD4))
-            ));
+            instance.setAccentColorRule(AccentColorRule.fromColor(new Color(THEME.getInt("accentColor", 0xFF0063B1)), new Color(THEME.getInt("selectionColor", 0xFF7FAFD4))));
             instance.setFontSizeRule(FontSizeRule.relativeAdjustment(THEME.getInt("fontSize", 100)));
             String theme = THEME.get("theme", null);
-            instance.setTheme(Arrays.stream(LafManager.getRegisteredThemes()).filter(r -> Objects.equals(r.getName(), theme))
-                    .findAny().orElse(LafManager.themeForPreferredStyle(LafManager.getPreferredThemeStyle())));
+            instance.setTheme(Arrays.stream(LafManager.getRegisteredThemes()).filter(r -> Objects.equals(r.getName(), theme)).findAny().orElse(LafManager.themeForPreferredStyle(LafManager.getPreferredThemeStyle())));
             instance.apply();
         } catch (Exception e) {
             e.printStackTrace();
@@ -362,6 +362,10 @@ public class ERMenu extends JMenuBar {
 
     private void center(ActionEvent evt) {
         evilEr.diagramPanel.diagram.centralize();
+    }
+
+    private void fit(ActionEvent evt) {
+        evilEr.diagramPanel.diagram.fitScreen();
     }
 
     public void openFontChooser() {

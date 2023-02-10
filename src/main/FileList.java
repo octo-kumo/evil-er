@@ -2,9 +2,12 @@ package main;
 
 import com.github.weisj.darklaf.components.OverlayScrollPane;
 import com.github.weisj.darklaf.iconset.AllIcons;
+import com.google.common.io.Files;
 import images.Icons;
+import main.er.ERMenu;
 import utils.Chooser;
 import utils.Prompts;
+import utils.Utils;
 import utils.callbacks.ListAction;
 
 import javax.swing.*;
@@ -15,15 +18,22 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystemException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
+import java.util.Optional;
 
 public class FileList extends JPanel {
+    private static final String PROJECT_PATH = "project_path";
     private final TitledBorder title;
     private final JList<File> files;
+    private final EvilEr evilEr;
     private String projectPath;
-    private EvilEr evilEr;
+
+    private static boolean showFolders = true;
+    private static boolean showAllFiles = false;
 
     public FileList(EvilEr evilEr) {
         this.evilEr = evilEr;
@@ -47,24 +57,51 @@ public class FileList extends JPanel {
 
     private void open(File file) {
         if (file == null) return;
-        if (file.isDirectory()) setProjectPath(file.getPath());
+        if (file.isDirectory()) setProjectPath(file.toPath().normalize().toString());
+        else if (Objects.equals(evilEr.diagramPanel.diagram.getCurrentFile(), file)) rename(file);
         else evilEr.diagramPanel.diagram.setCurrentFile(file);
         repaint();
     }
 
     private void delete(File file) {
         if (file == null) return;
-        if (file.isDirectory()) return;
+//        if (file.isDirectory()) return;
+
         File folder = new File(getProjectPath(), ".evil-trash");
-        if (!folder.exists()) folder.mkdirs();
+        if (!folder.exists() && !folder.mkdirs()) {
+            JOptionPane.showMessageDialog(this, "Deletion not executed", "Failed: mkdirs", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         File newFile = new File(folder, file.getName());
         if (newFile.exists()) newFile = new File(folder, file.getName() + System.currentTimeMillis());
-        file.renameTo(newFile);
-        refresh();
+        try {
+            Files.move(file, newFile);
+            refresh();
+        } catch (Exception e) {
+            Prompts.report(e);
+        }
+    }
+
+    private void rename(File file) {
+        Object input = JOptionPane.showInputDialog(evilEr, "What is the new name?", "Rename", JOptionPane.QUESTION_MESSAGE, null, null, file.getName());
+        if (input == null) return;
+        String newName = input.toString();
+        if (!newName.endsWith(".dig")) newName += ".dig";
+        File newFile = new File(getProjectPath(), newName);
+        try {
+            Files.move(file, newFile);
+            if (file.equals(evilEr.diagramPanel.diagram.getCurrentFile()))
+                evilEr.diagramPanel.diagram.setCurrentFileQuietly(newFile);
+            refresh();
+            files.setSelectedValue(newFile, true);
+        } catch (Exception e) {
+            Prompts.report(e);
+        }
     }
 
     private JToolBar createToolbar() {
         JToolBar toolBar = new JToolBar();
+        toolBar.setMargin(new Insets(0, 0, 0, 0));
         toolBar.setFloatable(false);
         toolBar.setRollover(true);
         toolBar.add(new AbstractAction("Open Directory", Icons.MenuOpen) {
@@ -76,10 +113,21 @@ public class FileList extends JPanel {
                 }
             }
         });
-        toolBar.add(new AbstractAction("Up Folder", Icons.UpFolder) {
+//        toolBar.add(new AbstractAction("Up Folder", Icons.UpFolder) {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                setProjectPath(new File(getProjectPath()).getParent());
+//            }
+//        });
+        toolBar.add(new AbstractAction("New Folder", Icons.AddFolder) {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setProjectPath(new File(getProjectPath()).getParent());
+                Object input = JOptionPane.showInputDialog(FileList.this, "New Folder Name", "New Folder", JOptionPane.QUESTION_MESSAGE, Icons.AddFolder, null, null);
+                if (input != null) {
+                    File file = new File(projectPath, input.toString());
+                    if (file.mkdir()) refresh();
+                    else Prompts.report(new FileSystemException("Unable to create folder"));
+                }
             }
         });
         toolBar.add(new AbstractAction("New Diagram", Icons.AddFile) {
@@ -100,8 +148,10 @@ public class FileList extends JPanel {
     }
 
     public void setProjectPath(String projectPath) {
-        if (projectPath == null) projectPath = FileSystemView.getFileSystemView().getDefaultDirectory().getPath();
+        if (projectPath == null)
+            projectPath = ERMenu.SETTINGS.get(PROJECT_PATH, FileSystemView.getFileSystemView().getDefaultDirectory().getPath());
         this.projectPath = projectPath;
+        ERMenu.SETTINGS.put(PROJECT_PATH, projectPath);
         refresh();
     }
 
@@ -117,6 +167,7 @@ public class FileList extends JPanel {
                 if (f1.isDirectory() != f2.isDirectory()) return f1.isDirectory() ? 1 : -1;
                 return f1.compareTo(f2);
             });
+            listData = Utils.prepend(listData, new File(projectPath, ".."));
             files.setListData(listData);
         }
         repaint();
@@ -127,7 +178,9 @@ public class FileList extends JPanel {
     }
 
     private static boolean accept(File file) {
-        return file.isDirectory() || file.getName().endsWith(".dig") || file.getName().endsWith(".json");
+        return (showFolders && file.isDirectory()) ||
+                (showAllFiles || file.getName().endsWith(".dig") ||
+                        file.getName().endsWith(".json"));
     }
 
     private class FileListItem extends Box implements ListCellRenderer<File> {
@@ -165,7 +218,7 @@ public class FileList extends JPanel {
             add(new JMenuItem("Open via System") {{
                 addActionListener(e -> {
                     try {
-                        Desktop.getDesktop().open(selectedFile);
+                        Desktop.getDesktop().open(Optional.ofNullable(selectedFile).orElseGet(() -> new File(projectPath)));
                     } catch (IOException ex) {
                         Prompts.report(ex);
                     }
@@ -181,18 +234,23 @@ public class FileList extends JPanel {
                 });
             }});
             add(new JSeparator());
+            add(new JCheckBoxMenuItem("Show Folders", true) {{
+                addActionListener(e -> {
+                    showFolders = isSelected();
+                    refresh();
+                });
+            }});
+            add(new JCheckBoxMenuItem("Show All Files") {{
+                addActionListener(e -> {
+                    showAllFiles = isSelected();
+                    refresh();
+                });
+            }});
+            add(new JSeparator());
             add(new JMenuItem("Rename") {{
                 setIcon(AllIcons.Files.Text.get());
                 addActionListener(e -> {
-                    String newName = String.valueOf(JOptionPane.showInputDialog(evilEr, "What is the new name?", "Rename", JOptionPane.QUESTION_MESSAGE, null, null, selectedFile.getName()));
-                    if (newName == null) return;
-                    File newFile = new File(getProjectPath(), newName);
-                    if (selectedFile.renameTo(newFile)) {
-                        if (selectedFile.equals(evilEr.diagramPanel.diagram.getCurrentFile()))
-                            evilEr.diagramPanel.diagram.setCurrentFileQuietly(newFile);
-                        refresh();
-                        files.setSelectedValue(newFile, true);
-                    }
+                    rename(selectedFile);
                 });
             }});
             add(new JMenuItem("Delete") {{
