@@ -27,6 +27,11 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
     private final EvilEr evilEr;
     public static final Icon CLOSE_ICON = AllIcons.Action.Delete.get();
 
+    public JPanel entitySec;
+    public JPanel attributeSec;
+    public JPanel relationSec;
+    public JPanel attributesSec;
+
     public ERInfoPanel(EvilEr evilEr) {
         this.evilEr = evilEr;
         setPreferredSize(new Dimension(333, 0));
@@ -269,10 +274,11 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
             entityControls.repaint();
             return;
         }
-        entityControls.add(entityWindow(newEntity));
-        if (newEntity instanceof Attribute) entityControls.add(attributeWindow((Attribute) newEntity));
-        if (newEntity instanceof Relationship) entityControls.add(relationWindow((Relationship) newEntity));
-        entityControls.add(attributesWindow(newEntity));
+        entityControls.add(entitySec = entityWindow(newEntity));
+        if (newEntity instanceof Attribute) entityControls.add(attributeSec = attributeWindow((Attribute) newEntity));
+        if (newEntity instanceof Relationship)
+            entityControls.add(relationSec = relationWindow((Relationship) newEntity));
+        entityControls.add(attributesSec = attributesWindow(newEntity));
         entityControls.revalidate();
         entityControls.repaint();
     }

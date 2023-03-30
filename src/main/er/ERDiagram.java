@@ -83,7 +83,6 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         addFocusListener(this);
         setComponentPopupMenu(new ERPopupMenu(this));
         keyManager = new ERKeyManager(this);
-
         entities = new ArrayList<>();
         addListeners();
     }
@@ -313,8 +312,11 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
                     repaint();
                     break;
                 case CONNECTING:
-                    if (!finishPendingConnection())
-                        tryStartConnectionAtMouse();
+                    if (!finishPendingConnection() && !tryStartConnectionAtMouse()) {
+                        setTarget(null);
+                        action.set(ActionType.SELECTING);
+                        selection.clear();
+                    }
                     repaint();
                     break;
                 case SELECTING:
@@ -331,11 +333,15 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
             }
             if (selection.isEmpty() && !target.nonNull()) {
                 panStart.set(origin);
+                setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
             }
+        } else if (SwingUtilities.isRightMouseButton(e)) {
+            if (action.equal(ActionType.SELECTING)) getIntersect(mouseWorld).ifPresent(this::setTarget);
         } else if (SwingUtilities.isMiddleMouseButton(e)) {
             action.set(ActionType.SELECTING);
             selection.clear();
             clipboard.clear();
+            tryStartConnectionAtMouse();
             repaint();
         }
     }
@@ -353,6 +359,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     @Override
     public void mouseReleased(MouseEvent e) {
         if (SwingUtilities.isMiddleMouseButton(e)) finishPendingConnection();
+        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
     }
 
     @Override
@@ -403,6 +410,12 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
             connectTarget.set(found.isPresent() ? found.get() : mouseWorld);
         } else if (action.equal(ActionType.ADDING) && clipboard.size() > 0) {
             getIntersect(mouseWorld).ifPresent(entity -> clipboardTarget = entity);
+        } else if (action.equal(ActionType.SELECTING)) {
+            if (getIntersect(mouseWorld).isPresent()) {
+                setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            } else {
+                setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+            }
         }
         repaint();
     }
@@ -440,21 +453,23 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         return flatten(entities).filter(predicate);
     }
 
-    private void tryStartConnectionAtMouse() {
-        getIntersect(mouseWorld).ifPresent(entity -> {
-            if (entity instanceof Relationship) {
-                action.set(ActionType.CONNECTING);
-                selection.clear();
-                setTarget(entity);
-                selection.addAll(((Relationship) entity).nodes);
-            }
-        });
+    private boolean tryStartConnectionAtMouse() {
+        Optional<Entity> intersect = getIntersect(mouseWorld);
+        if (intersect.isPresent() && intersect.get() instanceof Relationship) {
+            action.set(ActionType.CONNECTING);
+            selection.clear();
+            setTarget(intersect.get());
+            selection.addAll(((Relationship) intersect.get()).nodes);
+            return true;
+        }
+        return false;
     }
 
     private boolean finishPendingConnection() {
-        if (target.get() == null ||
+        if (target.get() == null || connectTarget.get() == null ||
                 !(target.get() instanceof Relationship) ||
-                connectTarget.get() != null && connectTarget.get().getClass() != Entity.class) return false;
+                connectTarget.get().getClass() != Entity.class) return false;
+        System.out.println(target.get() + " :: " + connectTarget.get());
         ((Relationship) target.get()).addNode((Entity) connectTarget.get(), new Relationship.RelationshipSpec("", false));
         selection.add((Entity) connectTarget.get());
         target.set(target.get());
