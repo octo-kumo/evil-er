@@ -72,6 +72,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
     private Entity clipboardTarget;
 
     private File currentFile;
+    private long lastRender = 0;
 
     public ERDiagram(ERDiagramPanel diagramPanel) {
         this.diagramPanel = diagramPanel;
@@ -94,6 +95,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         });
     }
 
+
     @Override
     protected void paintComponent(Graphics g1d) {
         super.paintComponent(g1d);
@@ -112,6 +114,14 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         if (currentFile != null)
             g.drawString(currentFile.getAbsolutePath() + (Node.HAS_NODE_CHANGED ? "*" : ""), 5, 10);
         if (hasFocus()) g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
+        if (debug.get()) {
+            long et = -(lastRender - (lastRender = System.nanoTime()));
+            double fps = 1000000000d / et;
+
+            g.drawString(String.format("FPS %.3f", fps), 25, getHeight() - 45);
+            g.drawString(String.format("\u00D7%.3f %s", scale, origin), 25, getHeight() - 30);
+            g.drawString(String.format("%s %s (%d)", action.get(), target.get(), selection.size()), 25, getHeight() - 15);
+        }
     }
 
     public void draw(DiagramGraphics g) {
