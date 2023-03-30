@@ -91,6 +91,7 @@ public class EvilEr extends JPanel {
         JFrame frame = new JFrame("Evil ER :: " + Version.CURRENT);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         EvilEr evilEr = new EvilEr(frame);
+        frame.setGlassPane(new GlassPane(frame,evilEr));
         frame.setContentPane(evilEr);
         frame.setJMenuBar(new ERMenu(evilEr));
         frame.setAutoRequestFocus(true);
