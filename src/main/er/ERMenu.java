@@ -10,6 +10,7 @@ import com.github.weisj.darklaf.theme.spec.FontSizeRule;
 import fonts.Fonts;
 import images.Icons;
 import main.EvilEr;
+import main.Onboarding;
 import main.rs.Converter;
 import main.rs.EvilRs;
 import main.rs.RSMenu;
@@ -64,12 +65,6 @@ public class ERMenu extends JMenuBar {
                 addActionListener(e -> evilEr.fileList.setVisible(getState()));
             }});
             add(new JSeparator());
-            add(new JMenuItem(new AbstractAction("To clipboard") {
-                public void actionPerformed(ActionEvent ae) {
-                    TransferableImage transferable = new TransferableImage(diagram.export());
-                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(transferable, null);
-                }
-            }));
             if (DEV_MODE.get()) add(new JMenuItem(new AbstractAction("To schema") {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -109,6 +104,12 @@ public class ERMenu extends JMenuBar {
                     }
                 }
             }));
+            add(new JMenuItem(new AbstractAction("Copy Image") {
+                public void actionPerformed(ActionEvent ae) {
+                    TransferableImage transferable = new TransferableImage(diagram.export());
+                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(transferable, null);
+                }
+            }));
         }});
         add(new EREditMenu(diagram));
         add(new ERAddMenu(diagram));
@@ -143,6 +144,12 @@ public class ERMenu extends JMenuBar {
                         } catch (IOException | URISyntaxException ex) {
                             ex.printStackTrace();
                         }
+                });
+            }});
+            add(new JMenuItem("Onboarding") {{
+                addActionListener(e -> {
+                    Onboarding onboarding = (Onboarding) evilEr.frame.getGlassPane();
+                    onboarding.doOnboarding();
                 });
             }});
         }});

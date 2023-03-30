@@ -16,17 +16,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class GlassPane extends JComponent implements MouseListener {
+public class Onboarding extends JComponent implements MouseListener {
     private static final String HAS_SHOWN_ONBOARDING = "hasShownOnboarding";
+    private final JFrame frame;
     private int process = 0;
     private final List<Tuple<Supplier<JComponent>, String, Runnable>> list;
 
-    public GlassPane(JFrame frame, EvilEr evilEr) {
+    public Onboarding(JFrame frame, EvilEr evilEr) {
+        this.frame = frame;
         setOpaque(false);
-        if (!ERMenu.SETTINGS.getBoolean(HAS_SHOWN_ONBOARDING, false)) {
-            frame.getGlassPane().setVisible(true);
-            addMouseListener(this);
-        }
+        if (!ERMenu.SETTINGS.getBoolean(HAS_SHOWN_ONBOARDING, false)) doOnboarding();
         list = Arrays.asList(
                 new Tuple<>(() -> evilEr.fileList, "You can open diagrams from here", () -> {
                 }),
@@ -62,13 +61,17 @@ public class GlassPane extends JComponent implements MouseListener {
                     evilEr.diagramPanel.diagram.setTarget(evilEr.diagramPanel.diagram.target.get());
                 }),
 //                new Tuple<>(evilEr.infoPanel.)
-                new Tuple<>(() -> evilEr.controlPanel, "This is your control panel! Its kinda useless >_<", () -> {
-                }),
                 new Tuple<>(() -> evilEr.frame.getJMenuBar(), "Be sure to check the menu!", () -> {
                 }),
                 new Tuple<>(() -> evilEr, "Have fun!", () -> {
                 })
         );
+    }
+
+    public void doOnboarding() {
+        process = 0;
+        frame.getGlassPane().setVisible(true);
+        addMouseListener(this);
     }
 
     @Override
