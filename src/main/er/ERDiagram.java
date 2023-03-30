@@ -81,6 +81,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         addMouseMotionListener(this);
         addMouseWheelListener(this);
         addFocusListener(this);
+        setComponentPopupMenu(new ERPopupMenu(this));
         keyManager = new ERKeyManager(this);
 
         entities = new ArrayList<>();
@@ -305,48 +306,37 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         requestFocusInWindow();
         mouseStart.set(e.getX(), e.getY());
         mouseWorld.set(unproject(mouseStart));
-        if (SwingUtilities.isLeftMouseButton(e)) switch (action.get()) {
-            case ADDING:
-                paste();
-                repaint();
-                break;
-            case CONNECTING:
-                if (target.get() != null &&
-                        target.get() instanceof Relationship &&
-                        connectTarget.get().getClass() == Entity.class) {
-                    ((Relationship) target.get()).addNode((Entity) connectTarget.get(), new Relationship.RelationshipSpec("", false));
-                    selection.add((Entity) connectTarget.get());
-                    target.set(target.get());
-                } else {
+        if (SwingUtilities.isLeftMouseButton(e)) {
+            switch (action.get()) {
+                case ADDING:
+                    paste();
+                    repaint();
+                    break;
+                case CONNECTING:
+                    if (!finishPendingConnection())
+                        tryStartConnectionAtMouse();
+                    repaint();
+                    break;
+                case SELECTING:
+                    if (!e.isShiftDown()) selection.clear();
+                    setTarget(null);
                     getIntersect(mouseWorld).ifPresent(entity -> {
-                        if (entity instanceof Relationship) {
-                            selection.clear();
-                            setTarget(entity);
-                            selection.addAll(((Relationship) entity).nodes);
-                        }
+                        if (selection.contains(entity)) {
+                            selection.remove(entity);
+                            setTarget(null);
+                        } else setTarget(entity);
                     });
-                }
-                repaint();
-                break;
-            case SELECTING:
-                if (!e.isShiftDown()) selection.clear();
-                setTarget(null);
-                getIntersect(mouseWorld).ifPresent(entity -> {
-                    if (selection.contains(entity)) {
-                        selection.remove(entity);
-                        setTarget(null);
-                    } else setTarget(entity);
-                });
-                repaint();
-                break;
-        }
-        else if (SwingUtilities.isRightMouseButton(e)) {
-            panStart.set(origin);
-//            if (action.equal(ActionType.CONNECTING)) action.set(ActionType.SELECTING);
+                    repaint();
+                    break;
+            }
+            if (selection.isEmpty() && !target.nonNull()) {
+                panStart.set(origin);
+            }
         } else if (SwingUtilities.isMiddleMouseButton(e)) {
             action.set(ActionType.SELECTING);
             selection.clear();
             clipboard.clear();
+            repaint();
         }
     }
 
@@ -362,6 +352,7 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
     @Override
     public void mouseReleased(MouseEvent e) {
+        if (SwingUtilities.isMiddleMouseButton(e)) finishPendingConnection();
     }
 
     @Override
@@ -370,13 +361,16 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
         Vector newMouse = unproject(mouse);
         if (SwingUtilities.isLeftMouseButton(e)) {
             if (action.equal(ActionType.SELECTING)) {
-                Vector diff = !e.isControlDown() ? newMouse.minus(mouseWorld) : newMouse.snapTo(GRID_SIZE).decre(mouseWorld.snapTo(GRID_SIZE)).incre(target.nonNull() ? target.get().snapTo(GRID_SIZE).minus(target.get()) : Vector.ZERO);
-                selection.stream().filter(entity -> !(entity instanceof Attribute) || !selection.contains(((Attribute) entity).getParent())).forEach(entity -> entity.incre(diff));
+                if (selection.isEmpty()) {
+                    origin.set(panStart.add(mouse.minus(mouseStart).div(scale)));
+                } else {
+                    Vector diff = !e.isControlDown() ? newMouse.minus(mouseWorld) : newMouse.snapTo(GRID_SIZE).decre(mouseWorld.snapTo(GRID_SIZE)).incre(target.nonNull() ? target.get().snapTo(GRID_SIZE).minus(target.get()) : Vector.ZERO);
+                    selection.stream().filter(entity -> !(entity instanceof Attribute) || !selection.contains(((Attribute) entity).getParent())).forEach(entity -> entity.incre(diff));
+                }
                 repaint();
             }
-        } else if (SwingUtilities.isRightMouseButton(e)) {
-            origin.set(panStart.add(mouse.minus(mouseStart).div(scale)));
-            repaint();
+        } else if (SwingUtilities.isMiddleMouseButton(e)) {
+            if (action.equal(ActionType.CONNECTING)) repaint();
         }
         mouseWorld.set(newMouse);
     }
@@ -444,6 +438,27 @@ public class ERDiagram extends JComponent implements MouseListener, MouseMotionL
 
     public Stream<Entity> find(Predicate<Entity> predicate) {
         return flatten(entities).filter(predicate);
+    }
+
+    private void tryStartConnectionAtMouse() {
+        getIntersect(mouseWorld).ifPresent(entity -> {
+            if (entity instanceof Relationship) {
+                action.set(ActionType.CONNECTING);
+                selection.clear();
+                setTarget(entity);
+                selection.addAll(((Relationship) entity).nodes);
+            }
+        });
+    }
+
+    private boolean finishPendingConnection() {
+        if (target.get() == null ||
+                !(target.get() instanceof Relationship) ||
+                connectTarget.get() != null && connectTarget.get().getClass() != Entity.class) return false;
+        ((Relationship) target.get()).addNode((Entity) connectTarget.get(), new Relationship.RelationshipSpec("", false));
+        selection.add((Entity) connectTarget.get());
+        target.set(target.get());
+        return true;
     }
 
     private void drawPendingConnection(DiagramGraphics g) {

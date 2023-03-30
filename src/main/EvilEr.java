@@ -32,7 +32,6 @@ public class EvilEr extends JPanel {
     public EvilEr(JFrame frame) {
         this.frame = frame;
         setLayout(new BorderLayout());
-
         diagramPanel = new ERDiagramPanel();
         infoPanel = new ERInfoPanel(this);
 
@@ -48,6 +47,7 @@ public class EvilEr extends JPanel {
         fileList = new FileList(this);
         add(fileList, BorderLayout.WEST);
 
+        new Fonts(this);
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(diagramPanel.diagram.keyManager);
     }
 

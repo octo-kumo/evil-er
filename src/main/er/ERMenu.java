@@ -7,6 +7,7 @@ import com.github.weisj.darklaf.settings.ThemeSettings;
 import com.github.weisj.darklaf.theme.Theme;
 import com.github.weisj.darklaf.theme.spec.AccentColorRule;
 import com.github.weisj.darklaf.theme.spec.FontSizeRule;
+import fonts.Fonts;
 import images.Icons;
 import main.EvilEr;
 import main.rs.Converter;
@@ -16,7 +17,6 @@ import main.rs.SQLConverter;
 import model.er.Entity;
 import shapes.lines.Line;
 import utils.Chooser;
-import utils.JFontChooser;
 import utils.Prompts;
 import utils.models.Reactive;
 import utils.models.TransferableImage;
@@ -32,7 +32,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import static utils.Prompts.report;
@@ -41,17 +40,9 @@ public class ERMenu extends JMenuBar {
 
     public static final Preferences THEME = Preferences.userRoot().node("theme");
     public static final Preferences SETTINGS = Preferences.userRoot().node("settings");
-    public static final Preferences DRAWING_FONT = Preferences.userRoot().node("drawingFont");
     public static final Reactive<Boolean> DEV_MODE = new Reactive<>(false);
-    private final EvilEr evilEr;
-    private final JFontChooser fontChooser;
-    private JDialog fontChooserFrame;
 
     public ERMenu(EvilEr evilEr) {
-        this.evilEr = evilEr;
-        this.fontChooser = new JFontChooser();
-        resetFontSelector();
-
         ERDiagram diagram = evilEr.diagramPanel.diagram;
         add(new JMenu("File") {{
             setMnemonic('F');
@@ -119,146 +110,9 @@ public class ERMenu extends JMenuBar {
                 }
             }));
         }});
-        add(new JMenu("Edit") {{
-            setMnemonic('E');
-            add(new JMenuItem("Copy", AllIcons.Action.Copy.get()) {{
-                addActionListener(e -> diagram.copy());
-                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-            }});
-            add(new JMenuItem("Cut", AllIcons.Action.Cut.get()) {{
-                addActionListener(e -> diagram.cut());
-                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-            }});
-            add(new JMenuItem("Paste", AllIcons.Action.Paste.get()) {{
-                addActionListener(e -> diagram.paste());
-                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-            }});
-            add(new JMenuItem("Delete", AllIcons.Action.Delete.get()) {{
-                addActionListener(e -> diagram.delete());
-                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-            }});
-            add(new JMenuItem("Select All") {{
-                addActionListener(e -> {
-                    diagram.selection.clear();
-                    diagram.selection.addAll(diagram.entities);
-                    diagram.repaint();
-                });
-                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-            }});
-            add(new JSeparator());
-            add(new JMenuItem("Undo", AllIcons.Action.Undo.get()) {{
-                addActionListener(e -> diagram.undo());
-                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-            }});
-            add(new JMenuItem("Redo", AllIcons.Action.Redo.get()) {{
-                addActionListener(e -> diagram.redo());
-                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.SHIFT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-            }});
-            add(new JSeparator());
-            add(new JMenuItem("Regress") {{
-                addActionListener(evt -> {
-                    double total;
-                    int ops = 0;
-                    do {
-                        total = Entity.applyForces(diagram.entities, 100);
-                        ops++;
-                    } while (total > 1 && ops < 100);
-                    center(null);
-                    System.out.println("Regression Complete, Operations = " + ops);
-                    diagram.repaint();
-                });
-                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.SHIFT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-            }});
-            add(new JMenuItem("Clear") {{
-                addActionListener(e -> {
-                    if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(evilEr, "Do you really want to clear all entities?", "Warning", JOptionPane.YES_NO_OPTION)) {
-                        diagram.entities.clear();
-                        diagram.repaint();
-                    }
-                });
-            }});
-            add(new JMenuItem("Gridify") {{
-                addActionListener(e -> {
-                    diagram.gridify();
-                    diagram.repaint();
-                });
-            }});
-        }});
-        add(new JMenu("Add") {{
-            setMnemonic('A');
-            char[] mnemonics = new char[]{'e', 'r', 'a', 's'};
-            Entity.Type[] values = Entity.Type.values();
-            for (int i = 0; i < values.length; i++) {
-                Entity.Type type = values[i];
-                final char mnemonic = mnemonics[i];
-                add(new JMenuItem(type.name()) {{
-                    addActionListener(e -> diagram.setAddingType(type));
-                    setAccelerator(KeyStroke.getKeyStroke(KeyEvent.getExtendedKeyCodeForChar(mnemonic), 0));
-                }});
-            }
-            add(new JCheckBoxMenuItem("Locked") {{
-                diagram.locked.addListener(this::setState);
-                addActionListener(e -> diagram.locked.set(getState()));
-            }});
-        }});
-        add(new JMenu("View") {{
-            setMnemonic('V');
-            add(new JMenuItem("Center") {{
-                addActionListener(ERMenu.this::center);
-                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.SHIFT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-            }});
-            add(new JMenuItem("Fit") {{
-                addActionListener(ERMenu.this::fit);
-                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.SHIFT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-            }});
-            add(new JSeparator());
-            add(new JMenu("Line Style") {{
-                ButtonGroup group = new ButtonGroup();
-                Line.LineStyle[] values = Line.LineStyle.values();
-                Arrays.sort(values);
-                JRadioButtonMenuItem[] buttons = new JRadioButtonMenuItem[values.length];
-                for (int i = 0; i < values.length; i++) {
-                    Line.LineStyle type = values[i];
-                    group.add(add(buttons[i] = new JRadioButtonMenuItem(type.toString())));
-                    buttons[i].addActionListener(evt -> diagram.lineStyle.set(type));
-                }
-                diagram.lineStyle.addListener(s -> group.setSelected(buttons[Arrays.binarySearch(values, s)].getModel(), true));
-            }});
-            add(new JCheckBoxMenuItem("Debug") {{
-                diagram.debug.addListener(this::setState);
-                addActionListener(e -> {
-                    diagram.debug.set(getState());
-                    diagram.repaint();
-                });
-            }});
-            add(new JCheckBoxMenuItem("AABB") {{
-                diagram.aabb.addListener(this::setState);
-                addActionListener(e -> {
-                    diagram.aabb.set(getState());
-                    diagram.repaint();
-                });
-            }});
-            add(new JCheckBoxMenuItem("Grid") {{
-                diagram.grid.addListener(this::setState);
-                addActionListener(e -> {
-                    diagram.grid.set(getState());
-                    diagram.repaint();
-                });
-            }});
-            add(new JMenuItem("Toggle Info Panel") {{
-                addActionListener(e -> {
-                    int width = evilEr.splitPane.getWidth() - evilEr.splitPane.getDividerSize();
-                    double pos = 1d * evilEr.splitPane.getDividerLocation() / width;
-                    evilEr.splitPane.setDividerLocation(pos == 1 ? width - 256 : width);
-                });
-            }});
-            add(new JMenuItem("Font...") {{
-                addActionListener(e -> openFontChooser());
-            }});
-            add(new JMenuItem("Theme...") {{
-                addActionListener(e -> ThemeSettings.showSettingsDialog(this));
-            }});
-        }});
+        add(new EREditMenu(diagram));
+        add(new ERAddMenu(diagram));
+        add(new ERViewMenu(diagram));
         add(new JMenu("Help") {{
             setMnemonic('H');
             add(new JMenuItem("About") {{
@@ -342,68 +196,149 @@ public class ERMenu extends JMenuBar {
         saveThemeToPreference();
     }
 
-    private void resetFontSelector() {
-        String name = DRAWING_FONT.get("fontName", EvilEr.DEFAULT_FONT.getFamily());
-        int size = DRAWING_FONT.getInt("fontSize", EvilEr.DEFAULT_FONT.getSize());
-        int style = DRAWING_FONT.getInt("fontStyle", EvilEr.DEFAULT_FONT.getStyle());
 
-        fontChooser.setSelectedFontFamily(name);
-        fontChooser.setSelectedFontSize(size);
-        fontChooser.setSelectedFontStyle(style);
-        evilEr.diagramPanel.diagram.setFont(fontChooser.getSelectedFont());
-    }
-
-    private void persistFontSelector() {
-        DRAWING_FONT.put("fontName", fontChooser.getSelectedFontFamily());
-        DRAWING_FONT.getInt("fontSize", fontChooser.getSelectedFontSize());
-        DRAWING_FONT.getInt("fontStyle", fontChooser.getSelectedFontStyle());
-        evilEr.diagramPanel.diagram.setFont(fontChooser.getSelectedFont());
-    }
-
-    private void center(ActionEvent evt) {
-        evilEr.diagramPanel.diagram.centralize();
-    }
-
-    private void fit(ActionEvent evt) {
-        evilEr.diagramPanel.diagram.fitScreen();
-    }
-
-    public void openFontChooser() {
-        if (fontChooserFrame == null) {
-            fontChooserFrame = new JDialog(evilEr.frame, "Choose Font");
-            fontChooserFrame.setContentPane(new JPanel() {{
-                setLayout(new BorderLayout());
-                add(fontChooser, BorderLayout.CENTER);
-                add(new JPanel() {{
-                    setLayout(new FlowLayout(FlowLayout.RIGHT));
-                    add(new JButton("Cancel") {{
-                        addActionListener(e -> {
-                            resetFontSelector();
-                            fontChooserFrame.setVisible(false);
-                        });
-                    }});
-                    add(new JButton("Reset") {{
-                        addActionListener(e -> {
-                            try {
-                                DRAWING_FONT.clear();
-                                resetFontSelector();
-                            } catch (BackingStoreException ex) {
-                                Prompts.report(ex);
-                            }
-                        });
-                    }});
-                    add(new JButton("Apply") {{
-                        addActionListener(e -> {
-                            persistFontSelector();
-                            fontChooserFrame.setVisible(false);
-                        });
-                    }});
-                }}, BorderLayout.SOUTH);
+    public static class ERAddMenu extends JMenu {
+        public ERAddMenu(ERDiagram diagram) {
+            super("Add");
+            setMnemonic('A');
+            char[] mnemonics = new char[]{'e', 'r', 'a', 's'};
+            Entity.Type[] values = Entity.Type.values();
+            for (int i = 0; i < values.length; i++) {
+                Entity.Type type = values[i];
+                final char mnemonic = mnemonics[i];
+                add(new JMenuItem(type.name()) {{
+                    addActionListener(e -> diagram.setAddingType(type));
+                    setAccelerator(KeyStroke.getKeyStroke(KeyEvent.getExtendedKeyCodeForChar(mnemonic), 0));
+                }});
+            }
+            add(new JCheckBoxMenuItem("Locked") {{
+                diagram.locked.addListener(this::setState);
+                addActionListener(e -> diagram.locked.set(getState()));
             }});
-            fontChooserFrame.pack();
         }
-        SwingUtilities.updateComponentTreeUI(fontChooserFrame);
-        fontChooserFrame.setLocationRelativeTo(evilEr);
-        fontChooserFrame.setVisible(true);
+    }
+
+    public static class EREditMenu extends JMenu {
+        public EREditMenu(ERDiagram diagram) {
+            super("Edit");
+            setMnemonic('E');
+            add(new JMenuItem("Copy", AllIcons.Action.Copy.get()) {{
+                addActionListener(e -> diagram.copy());
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+            }});
+            add(new JMenuItem("Cut", AllIcons.Action.Cut.get()) {{
+                addActionListener(e -> diagram.cut());
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+            }});
+            add(new JMenuItem("Paste", AllIcons.Action.Paste.get()) {{
+                addActionListener(e -> diagram.paste());
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+            }});
+            add(new JMenuItem("Delete", AllIcons.Action.Delete.get()) {{
+                addActionListener(e -> diagram.delete());
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+            }});
+            add(new JMenuItem("Select All") {{
+                addActionListener(e -> {
+                    diagram.selection.clear();
+                    diagram.selection.addAll(diagram.entities);
+                    diagram.repaint();
+                });
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+            }});
+            add(new JSeparator());
+            add(new JMenuItem("Undo", AllIcons.Action.Undo.get()) {{
+                addActionListener(e -> diagram.undo());
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+            }});
+            add(new JMenuItem("Redo", AllIcons.Action.Redo.get()) {{
+                addActionListener(e -> diagram.redo());
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.SHIFT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+            }});
+            add(new JSeparator());
+            add(new JMenuItem("Regress") {{
+                addActionListener(evt -> {
+                    double total;
+                    int ops = 0;
+                    do {
+                        total = Entity.applyForces(diagram.entities, 100);
+                        ops++;
+                    } while (total > 1 && ops < 100);
+                    diagram.centralize();
+                    System.out.println("Regression Complete, Operations = " + ops);
+                    diagram.repaint();
+                });
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.SHIFT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+            }});
+            add(new JMenuItem("Clear") {{
+                addActionListener(e -> {
+                    if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(SwingUtilities.windowForComponent(this), "Do you really want to clear all entities?", "Warning", JOptionPane.YES_NO_OPTION)) {
+                        diagram.entities.clear();
+                        diagram.repaint();
+                    }
+                });
+            }});
+            add(new JMenuItem("Gridify") {{
+                addActionListener(e -> {
+                    diagram.gridify();
+                    diagram.repaint();
+                });
+            }});
+        }
+    }
+
+    public static class ERViewMenu extends JMenu {
+        public ERViewMenu(ERDiagram diagram) {
+            super("View");
+            setMnemonic('V');
+            add(new JMenuItem("Center") {{
+                addActionListener(evt -> diagram.centralize());
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.SHIFT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+            }});
+            add(new JMenuItem("Fit") {{
+                addActionListener(evt -> diagram.fitScreen());
+                setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.SHIFT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+            }});
+            add(new JSeparator());
+            add(new JMenu("Line Style") {{
+                ButtonGroup group = new ButtonGroup();
+                Line.LineStyle[] values = Line.LineStyle.values();
+                Arrays.sort(values);
+                JRadioButtonMenuItem[] buttons = new JRadioButtonMenuItem[values.length];
+                for (int i = 0; i < values.length; i++) {
+                    Line.LineStyle type = values[i];
+                    group.add(add(buttons[i] = new JRadioButtonMenuItem(type.toString())));
+                    buttons[i].addActionListener(evt -> diagram.lineStyle.set(type));
+                }
+                diagram.lineStyle.addListener(s -> group.setSelected(buttons[Arrays.binarySearch(values, s)].getModel(), true));
+            }});
+            add(new JCheckBoxMenuItem("Debug") {{
+                diagram.debug.addListener(this::setState);
+                addActionListener(e -> {
+                    diagram.debug.set(getState());
+                    diagram.repaint();
+                });
+            }});
+            add(new JCheckBoxMenuItem("AABB") {{
+                diagram.aabb.addListener(this::setState);
+                addActionListener(e -> {
+                    diagram.aabb.set(getState());
+                    diagram.repaint();
+                });
+            }});
+            add(new JCheckBoxMenuItem("Grid") {{
+                diagram.grid.addListener(this::setState);
+                addActionListener(e -> {
+                    diagram.grid.set(getState());
+                    diagram.repaint();
+                });
+            }});
+            add(new JMenuItem("Font...") {{
+                addActionListener(e -> Fonts.open());
+            }});
+            add(new JMenuItem("Theme...") {{
+                addActionListener(e -> ThemeSettings.showSettingsDialog(this));
+            }});
+        }
     }
 }

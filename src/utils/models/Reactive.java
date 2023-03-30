@@ -36,6 +36,10 @@ public class Reactive<T> {
         listeners.remove(listener);
     }
 
+    public boolean isNull() {
+        return get() == null;
+    }
+
     public boolean nonNull() {
         return get() != null;
     }
