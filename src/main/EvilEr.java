@@ -2,7 +2,6 @@ package main;
 
 import com.github.weisj.darklaf.LafManager;
 import fonts.Fonts;
-import main.er.ERControlPanel;
 import main.er.ERDiagramPanel;
 import main.er.ERInfoPanel;
 import main.er.ERMenu;
@@ -22,7 +21,6 @@ import java.util.Objects;
 public class EvilEr extends JPanel {
     public static final Font DEFAULT_FONT = new Font(null);
     public static Map<?, ?> RENDER_HINTS;
-    public final ERControlPanel controlPanel;
     public final ERDiagramPanel diagramPanel;
     public final ERInfoPanel infoPanel;
     public final JSplitPane splitPane;
@@ -40,9 +38,6 @@ public class EvilEr extends JPanel {
         splitPane.setDividerLocation(0.9);
         splitPane.setResizeWeight(1);
         add(splitPane, BorderLayout.CENTER);
-
-        controlPanel = new ERControlPanel(this);
-        add(controlPanel, BorderLayout.NORTH);
 
         fileList = new FileList(this);
         add(fileList, BorderLayout.WEST);
@@ -91,7 +86,7 @@ public class EvilEr extends JPanel {
         JFrame frame = new JFrame("Evil ER :: " + Version.CURRENT);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         EvilEr evilEr = new EvilEr(frame);
-        frame.setGlassPane(new GlassPane(frame,evilEr));
+        frame.setGlassPane(new Onboarding(frame, evilEr));
         frame.setContentPane(evilEr);
         frame.setJMenuBar(new ERMenu(evilEr));
         frame.setAutoRequestFocus(true);

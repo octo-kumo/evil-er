@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'kumo.evil-er'
-version = '0.7.1-beta'
+version = '0.7.2-beta'
 application {
     mainClass = 'main.EvilEr'
 }
@@ -38,7 +38,7 @@ jar {
     }
 }
 launch4j {
-    outfile = 'evil-er.exe'
+    outfile = "evil-er-${project.version}.exe"
     mainClassName = project.mainClassName
     icon = "${projectDir}/icons/icon.ico"
     jarTask = project.tasks.shadowJar

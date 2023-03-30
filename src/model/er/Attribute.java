@@ -46,7 +46,7 @@ public class Attribute extends Entity {
             if (parent.isWeak()) g.dashed(shape);
             else drawShape(g, shape);
         }
-        if (g.getContext().drawDebugInfo()) {
+        if (g.getContext().drawDebugInfo() && getDataType() != null) {
             g.scale(0.7, 0.7);
             g.drawStringCenter(getDataType() + "(" + getDataParam() + ")", 0, -12);
         }

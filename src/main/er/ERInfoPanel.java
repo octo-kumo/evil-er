@@ -50,24 +50,25 @@ public class ERInfoPanel extends JPanel implements ChangeListener<Entity> {
         JPanel panel = new JPanel();
         panel.setBorder(new TitledBorder("Entity"));
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-
-//        panel.add(new PlaceholderTextField(entity.getID()) {{
-//            setPlaceholder("ID");
-//            setEditable(false);
-//            addTextListener(this, entity::setID, Function.identity());
-//        }});
+        if (ERMenu.DEV_MODE.get()) panel.add(new PlaceholderTextField(entity.getID()) {{
+            setPlaceholder("ID");
+            setEditable(false);
+            addTextListener(this, entity::setID, Function.identity());
+        }});
         panel.add(new PlaceholderTextField(entity.getName()) {{
             setPlaceholder("Name");
             addTextListener(this, entity::setName, Function.identity());
         }});
-//        panel.add(new PlaceholderTextField(String.valueOf(entity.getX())) {{
-//            setPlaceholder("X");
-//            addTextListener(this, entity::setX, Double::parseDouble);
-//        }});
-//        panel.add(new PlaceholderTextField(String.valueOf(entity.getY())) {{
-//            setPlaceholder("Y");
-//            addTextListener(this, entity::setY, Double::parseDouble);
-//        }});
+        if (ERMenu.DEV_MODE.get()) {
+            panel.add(new PlaceholderTextField(String.valueOf(entity.getX())) {{
+                setPlaceholder("X");
+                addTextListener(this, entity::setX, Double::parseDouble);
+            }});
+            panel.add(new PlaceholderTextField(String.valueOf(entity.getY())) {{
+                setPlaceholder("Y");
+                addTextListener(this, entity::setY, Double::parseDouble);
+            }});
+        }
         panel.add(new JCheckBox(entity instanceof Attribute ? "Multi-valued" : "Weak") {{
             setAlignmentX(LEFT_ALIGNMENT);
             addBooleanListener(this, entity::setWeak, entity::isWeak);
