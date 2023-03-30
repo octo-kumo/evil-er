@@ -2,6 +2,7 @@ package main;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
+import main.er.ERMenu;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.swing.*;
@@ -16,6 +17,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 public class Version implements Comparable<Version> {
+    public static final String CHECK_UPDATES = "checkUpdates";
     public static final Gson gson = new Gson();
     public static final Version CURRENT = new Version(Version.class.getPackage().getImplementationVersion() == null ? "in-dev" : Version.class.getPackage().getImplementationVersion());
     private final String version;
@@ -60,6 +62,10 @@ public class Version implements Comparable<Version> {
         if (that == null) return false;
         if (this.getClass() != that.getClass()) return false;
         return this.compareTo((Version) that) == 0;
+    }
+
+    public static void checkForUpdates() {
+        if (ERMenu.SETTINGS.getBoolean(CHECK_UPDATES, true)) asyncUpdate();
     }
 
     public static void asyncUpdate() {
@@ -135,14 +141,5 @@ public class Version implements Comparable<Version> {
         public String created_at;
         public String updated_at;
         public String browser_download_url;
-    }
-
-    public static boolean isInteger(String s) {
-        try {
-            Integer.parseInt(s);
-        } catch (NumberFormatException | NullPointerException e) {
-            return false;
-        }
-        return true;
     }
 }

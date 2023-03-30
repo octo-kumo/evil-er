@@ -204,7 +204,7 @@ public class Entity extends Node {
     }
 
     public String toString() {
-        return String.format("<%s : %.2f, %.2f>", getClass().getSimpleName(), getX(), getY());
+        return String.format("<%s : \"%s\" : %.1f, %.1f>", getClass().getSimpleName(), getName(), getX(), getY());
     }
 
     @Override

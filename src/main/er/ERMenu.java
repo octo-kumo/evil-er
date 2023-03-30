@@ -11,6 +11,7 @@ import fonts.Fonts;
 import images.Icons;
 import main.EvilEr;
 import main.Onboarding;
+import main.Version;
 import main.rs.Converter;
 import main.rs.EvilRs;
 import main.rs.RSMenu;
@@ -124,6 +125,12 @@ public class ERMenu extends JMenuBar {
                         } catch (IOException | URISyntaxException ex) {
                             ex.printStackTrace();
                         }
+                });
+            }});
+            add(new JCheckBoxMenuItem("Check for updates", SETTINGS.getBoolean(Version.CHECK_UPDATES, true)) {{
+                addActionListener(e -> {
+                    SETTINGS.putBoolean(Version.CHECK_UPDATES, isSelected());
+                    if (isSelected()) Version.asyncUpdate();
                 });
             }});
             add(new HelpMenuItem("Help") {{

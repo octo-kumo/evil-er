@@ -94,8 +94,7 @@ public class EvilEr extends JPanel {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
         frame.requestFocus();
-
-        Version.asyncUpdate();
+        Version.checkForUpdates();
         SwingUtilities.invokeLater(() -> {
             try {
                 frame.setIconImages(Arrays.asList(
