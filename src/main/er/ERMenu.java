@@ -119,7 +119,7 @@ public class ERMenu extends JMenuBar {
             setMnemonic('H');
             add(new JMenuItem("About") {{
                 addActionListener(e -> {
-                    if (JOptionPane.showConfirmDialog(null, "EVIL ER\nMade by octo-kumo (***REMOVED***)\nVisit repository?", "About", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
+                    if (JOptionPane.showConfirmDialog(null, "EVIL ER\nMade by octo-kumo (Zhao Yun)\nVisit repository?", "About", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
                         try {
                             Desktop.getDesktop().browse(new URI("https://github.com/octo-kumo/evil-er"));
                         } catch (IOException | URISyntaxException ex) {
